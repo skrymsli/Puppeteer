@@ -1,10 +1,10 @@
--- Detects casts and records the aura times in HMUnit
+-- Detects casts and records the aura times in PTUnit
 
-if not HMUtil.IsSuperWowPresent() then
+if not PTUtil.IsSuperWowPresent() then
     return
 end
 
-local turtle = HMUtil.IsTurtleWow()
+local turtle = PTUtil.IsTurtleWow()
 -- Value is duration
 local trackedCastedAuras = {
     -- Druid
@@ -128,21 +128,21 @@ local aoeAuras = {
 
 -- Paladins always get their own special stuff..
 -- Their buffs are aoe but apply to the whole raid for a specific class
-local aoeClassAuras = HMUtil.ToSet({
+local aoeClassAuras = PTUtil.ToSet({
     "Greater Blessing of Wisdom", "Greater Blessing of Might", "Greater Blssing of Salvation", 
     "Greater Blessing of Sanctuary", "Greater Blessing of Kings"
 })
 
 local function applyTimedAura(spellName, units)
     for _, unit in ipairs(units) do
-        HMUnit.Get(unit).AuraTimes[spellName] = {["startTime"] = GetTime(), ["duration"] = trackedCastedAuras[spellName]}
-        for ui in HealersMate.UnitFrames(unit) do
+        PTUnit.Get(unit).AuraTimes[spellName] = {["startTime"] = GetTime(), ["duration"] = trackedCastedAuras[spellName]}
+        for ui in Puppeteer.UnitFrames(unit) do
             ui:UpdateAuras()
         end
     end
 end
 
-local castEventFrame = CreateFrame("Frame", "HMAuraTrackingCasts")
+local castEventFrame = CreateFrame("Frame", "PTAuraTrackingCasts")
 castEventFrame:RegisterEvent("UNIT_CASTEVENT")
 castEventFrame:SetScript("OnEvent", function()
     local caster, target, event, spellID, duration = arg1, arg2, arg3, arg4, arg5
@@ -153,22 +153,22 @@ castEventFrame:SetScript("OnEvent", function()
             if target == "" then
                 target = caster
             end
-            local units = HMGuidRoster.GetUnits(target)
+            local units = PTGuidRoster.GetUnits(target)
             if not units then
                 return
             end
             if aoeAuras[spellName] then
-                local targets = HMUtil.GetSurroundingPartyMembers(target, aoeAuras[spellName])
+                local targets = PTUtil.GetSurroundingPartyMembers(target, aoeAuras[spellName])
                 for _, unit in ipairs(targets) do
-                    local units = HMGuidRoster.GetAllUnits(unit)
+                    local units = PTGuidRoster.GetAllUnits(unit)
                     applyTimedAura(spellName, units)
                 end
             elseif aoeClassAuras[spellName] then
-                local class = HMUtil.GetClass(target)
-                local targets = HMUtil.GetSurroundingRaidMembers(target, 100)
+                local class = PTUtil.GetClass(target)
+                local targets = PTUtil.GetSurroundingRaidMembers(target, 100)
                 for _, unit in ipairs(targets) do
-                    if HMUtil.GetClass(unit) == class then
-                        local units = HMGuidRoster.GetAllUnits(unit)
+                    if PTUtil.GetClass(unit) == class then
+                        local units = PTGuidRoster.GetAllUnits(unit)
                         applyTimedAura(spellName, units)
                     end
                 end

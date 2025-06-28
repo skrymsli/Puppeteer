@@ -1,6 +1,6 @@
-HealersMate.DistanceScannerFrame = CreateFrame("Frame", "HMDistanceScannerFrame", UIParent)
+Puppeteer.DistanceScannerFrame = CreateFrame("Frame", "PTDistanceScannerFrame", UIParent)
 
-local util = HMUtil
+local util = PTUtil
 local compost = AceLibrary("Compost-2.0")
 local TRACKING_MIN_DIST = 20
 local TRACKING_MAX_DIST = 60
@@ -8,8 +8,8 @@ local SIGHT_MAX_DIST = 80
 
 local almostAllUnits = util.CloneTable(util.AllUnits) -- Everything except the player
 table.remove(almostAllUnits, util.IndexOf(almostAllUnits, "player"))
-if HMUnitProxy then
-    HMUnitProxy.RegisterUpdateListener(function()
+if PTUnitProxy then
+    PTUnitProxy.RegisterUpdateListener(function()
         almostAllUnits = util.CloneTable(util.AllUnits) -- Everything except the player
         table.remove(almostAllUnits, util.IndexOf(almostAllUnits, "player"))
     end)
@@ -28,13 +28,13 @@ end
 local TRACKING_UPDATE_INTERVAL = 1.25
 
 local _G = getfenv(0)
-if HMUtil.IsSuperWowPresent() then
-    setmetatable(HMUnitProxy, {__index = getfenv(1)})
-    setfenv(1, HMUnitProxy)
+if PTUtil.IsSuperWowPresent() then
+    setmetatable(PTUnitProxy, {__index = getfenv(1)})
+    setfenv(1, PTUnitProxy)
 end
 
-function HealersMate.RunTrackingScan()
-    local UnitFrames = HealersMate.UnitFrames
+function Puppeteer.RunTrackingScan()
+    local UnitFrames = Puppeteer.UnitFrames
     local time = GetTime()
     if time > nextTrackingUpdate then
         nextTrackingUpdate = time + TRACKING_UPDATE_INTERVAL
@@ -43,13 +43,13 @@ function HealersMate.RunTrackingScan()
         compost:Erase(distanceTrackedUnits)
         local prevSightTrackedUnits = sightTrackedUnits
         sightTrackedUnits = compost:GetTable()
-        if HMGuidRoster then
-            for guid, cache in pairs(HMUnit.GetAllUnits()) do
-                HealersMate.EvaluateTracking(guid)
+        if PTGuidRoster then
+            for guid, cache in pairs(PTUnit.GetAllUnits()) do
+                Puppeteer.EvaluateTracking(guid)
             end
         else
             for _, unit in ipairs(almostAllUnits) do
-                HealersMate.EvaluateTracking(unit)
+                Puppeteer.EvaluateTracking(unit)
             end
         end
 
@@ -59,14 +59,12 @@ function HealersMate.RunTrackingScan()
             end
         end
         compost:Reclaim(prevSightTrackedUnits)
-        --HealersMate.hmprint("Tracking dist "..table.getn(distanceTrackedUnits))
-        --HealersMate.hmprint("Tracking sight "..table.getn(sightTrackedUnits))
     end
 
     if time > nextUpdate then
         nextUpdate = time + 0.1
         for _, unit in ipairs(distanceTrackedUnits) do
-            local cache = HMUnit.Get(unit)
+            local cache = PTUnit.Get(unit)
             if cache and cache:UpdateDistance() then
                 for ui in UnitFrames(unit) do
                     ui:UpdateRange()
@@ -74,7 +72,7 @@ function HealersMate.RunTrackingScan()
             end
         end
         for _, unit in ipairs(sightTrackedUnits) do
-            local cache = HMUnit.Get(unit)
+            local cache = PTUnit.Get(unit)
             if cache and cache:UpdateSight() then
                 for ui in UnitFrames(unit) do
                     ui:UpdateSight()
@@ -84,9 +82,9 @@ function HealersMate.RunTrackingScan()
     end
 end
 
-function HealersMate.EvaluateTracking(unit, update)
-    local UnitFrames = HealersMate.UnitFrames
-    local cache = HMUnit.Get(unit)
+function Puppeteer.EvaluateTracking(unit, update)
+    local UnitFrames = Puppeteer.UnitFrames
+    local cache = PTUnit.Get(unit)
     local distanceChanged = cache:UpdateDistance()
     local sightChanged = cache:UpdateSight()
     local new = cache:CheckNew()
@@ -102,8 +100,8 @@ function HealersMate.EvaluateTracking(unit, update)
         end
     end
     local isTarget = UnitIsUnit(unit, "target")
-    if HMGuidRoster then
-        unit = HMGuidRoster.ResolveUnitGuid(unit)
+    if PTGuidRoster then
+        unit = PTGuidRoster.ResolveUnitGuid(unit)
     end
     if isTarget or (dist < TRACKING_MAX_DIST and dist > TRACKING_MIN_DIST) then -- Only closely track units that are close to the range threshold
         if not update or not util.ArrayContains(distanceTrackedUnits, unit) then
@@ -117,6 +115,6 @@ function HealersMate.EvaluateTracking(unit, update)
     end
 end
 
-function HealersMate.StartDistanceScanner()
-    HealersMate.DistanceScannerFrame:SetScript("OnUpdate", HealersMate.RunTrackingScan)
+function Puppeteer.StartDistanceScanner()
+    Puppeteer.DistanceScannerFrame:SetScript("OnUpdate", Puppeteer.RunTrackingScan)
 end

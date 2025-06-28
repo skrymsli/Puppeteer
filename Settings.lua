@@ -1,10 +1,10 @@
-HealersMateSettings = {}
+PuppeteerSettings = {}
 
-local util = getglobal("HMUtil")
+local util = getglobal("PTUtil")
 
 local _, playerClass = UnitClass("player")
 
-function HealersMateSettings.UpdateTrackedDebuffTypes()
+function PuppeteerSettings.UpdateTrackedDebuffTypes()
     local debuffTypeCureSpells = {
         ["PALADIN"] = {
             ["Purify"] = {"Poison", "Disease"},
@@ -52,15 +52,15 @@ function HealersMateSettings.UpdateTrackedDebuffTypes()
             end
         end
     end
-    HealersMateSettings.TrackedDebuffTypesSet = trackedDebuffTypes
+    PuppeteerSettings.TrackedDebuffTypesSet = trackedDebuffTypes
     trackedDebuffTypes = util.ToArray(trackedDebuffTypes)
 
-    HealersMateSettings.TrackedDebuffTypes = trackedDebuffTypes
+    PuppeteerSettings.TrackedDebuffTypes = trackedDebuffTypes
 end
 
-function HealersMateSettings.SetDefaults()
-    if not HMOptions then
-        HMOptions = {}
+function PuppeteerSettings.SetDefaults()
+    if not PTOptions then
+        PTOptions = {}
     end
     
     local OPTIONS_VERSION = 2
@@ -103,7 +103,7 @@ function HealersMateSettings.SetDefaults()
                 ["Long"] = 60 * 2 -- >2 min
             },
             ["CastWhen"] = "Mouse Up", -- Mouse Up, Mouse Down
-            ["AutoResurrect"] = HealersMate.ResurrectionSpells[util.GetClass("player")] ~= nil,
+            ["AutoResurrect"] = Puppeteer.ResurrectionSpells[util.GetClass("player")] ~= nil,
             ["UseHealPredictions"] = true,
             ["SetMouseover"] = true,
             ["LFTAutoRole"] = true, -- Turtle WoW
@@ -159,31 +159,31 @@ function HealersMateSettings.SetDefaults()
             }
         }
 
-        if HMOptions.OptionsVersion and HMOptions.OptionsVersion < OPTIONS_VERSION then
+        if PTOptions.OptionsVersion and PTOptions.OptionsVersion < OPTIONS_VERSION then
             for _, upgrade in ipairs(optionsUpgrades) do
-                if upgrade:shouldUpgrade(HMOptions) then
-                    local prevVersion = HMOptions.OptionsVersion
-                    HMOptions = upgrade:upgrade(HMOptions)
-                    DEFAULT_CHAT_FRAME:AddMessage("[HealersMate] Upgraded options from version "..
+                if upgrade:shouldUpgrade(PTOptions) then
+                    local prevVersion = PTOptions.OptionsVersion
+                    PTOptions = upgrade:upgrade(PTOptions)
+                    DEFAULT_CHAT_FRAME:AddMessage("[Puppeteer] Upgraded options from version "..
                         prevVersion.." to "..upgrade.version)
                 end
             end
         end
     
         for field, value in pairs(defaults) do
-            if HMOptions[field] == nil then
+            if PTOptions[field] == nil then
                 if type(value) == "table" then
-                    HMOptions[field] = HMUtil.CloneTable(value, true)
+                    PTOptions[field] = PTUtil.CloneTable(value, true)
                 else
-                    HMOptions[field] = value
+                    PTOptions[field] = value
                 end
             elseif type(value) == "table" then
                 for field2, value2 in pairs(value) do
-                    if HMOptions[field][field2] == nil then
+                    if PTOptions[field][field2] == nil then
                         if type(value2) == "table" then
-                            HMOptions[field][field2] = HMUtil.CloneTable(value2, true)
+                            PTOptions[field][field2] = PTUtil.CloneTable(value2, true)
                         else
-                            HMOptions[field][field2] = value2
+                            PTOptions[field][field2] = value2
                         end
                     end
                 end
@@ -194,8 +194,8 @@ end
 
 -- This file needs serious cleaning and refactoring
 
-setmetatable(HealersMateSettings, {__index = getfenv(1)})
-setfenv(1, HealersMateSettings)
+setmetatable(PuppeteerSettings, {__index = getfenv(1)})
+setfenv(1, PuppeteerSettings)
 
 TrackedBuffs = nil -- Default tracked is variable based on class
 TrackedDebuffs = nil -- Default tracked is variable based on class
@@ -297,21 +297,21 @@ EditedSpells = {}
 SpellsContext = {}
 
 function GetSelectedProfileName(frame)
-    local selected = HMOptions.ChosenProfiles[frame]
-    if not HMDefaultProfiles[selected] then
+    local selected = PTOptions.ChosenProfiles[frame]
+    if not PTDefaultProfiles[selected] then
         selected = "Default"
     end
     return selected
 end
 
 function GetSelectedProfile(frame)
-    return HMDefaultProfiles[GetSelectedProfileName(frame)]
+    return PTDefaultProfiles[GetSelectedProfileName(frame)]
 end
 
 
 function InitSettings()
     --Used too set custom tooltip information when you mouse over things; like in the settings checkboxes
-    local MyTooltip = CreateFrame("GameTooltip", "HMSettingsInfoTooltip", UIParent, "GameTooltipTemplate")
+    local MyTooltip = CreateFrame("GameTooltip", "PTSettingsInfoTooltip", UIParent, "GameTooltipTemplate")
 
     --Fucntion that is called to set the text of a custom tooltip and where to display it.
     local function ShowTooltip(AttachTo, TooltipText1, TooltipText2)
@@ -324,8 +324,8 @@ function InitSettings()
             MyTooltip:AddLine(TooltipText2, 0.5, 1, 0.5)
         end
             
-        HMSettingsInfoTooltipTextLeft1:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
-        HMSettingsInfoTooltipTextLeft2:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
+        PTSettingsInfoTooltipTextLeft1:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
+        PTSettingsInfoTooltipTextLeft2:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
         
         MyTooltip:Show()
     end
@@ -399,14 +399,14 @@ function InitSettings()
     containerBorder.title.header:SetAllPoints()
 
     containerBorder.title.text = containerBorder.title:CreateFontString(nil, "HIGH", "GameFontNormal")
-    containerBorder.title.text:SetText("HealersMate Settings")
+    containerBorder.title.text:SetText("Puppeteer Settings")
     containerBorder.title.text:SetPoint("TOP", 0, -14)
 
 
 
     function resetSpells()
         EditedSpells = {}
-        for context, spells in pairs(HMSpells) do
+        for context, spells in pairs(PTSpells) do
             EditedSpells[context] = {}
             local copy = EditedSpells[context]
             for modifier, buttons in pairs(spells) do
@@ -489,10 +489,10 @@ function InitSettings()
         ShowTargetCheckbox:SetPoint("LEFT", ShowTargetLabel, "RIGHT", 5, yCheckboxOffset)
         ShowTargetCheckbox:SetWidth(20) -- width
         ShowTargetCheckbox:SetHeight(20) -- height
-        ShowTargetCheckbox:SetChecked(HMOptions.AlwaysShowTargetFrame)
+        ShowTargetCheckbox:SetChecked(PTOptions.AlwaysShowTargetFrame)
         ShowTargetCheckbox:SetScript("OnClick", function()
-            HMOptions.AlwaysShowTargetFrame = ShowTargetCheckbox:GetChecked() == 1
-            HealersMate.CheckTarget()
+            PTOptions.AlwaysShowTargetFrame = ShowTargetCheckbox:GetChecked() == 1
+            Puppeteer.CheckTarget()
         end)
         ApplyTooltip(ShowTargetCheckbox, "Always show the target frame, regardless of whether you have a target or not")
     end
@@ -515,10 +515,10 @@ function InitSettings()
         CheckboxFriendly:SetPoint("LEFT", CheckboxFriendlyLabel, "RIGHT", 5, yCheckboxOffset)
         CheckboxFriendly:SetWidth(20) -- width
         CheckboxFriendly:SetHeight(20) -- height
-        CheckboxFriendly:SetChecked(HMOptions.ShowTargets.Friendly)
+        CheckboxFriendly:SetChecked(PTOptions.ShowTargets.Friendly)
         CheckboxFriendly:SetScript("OnClick", function()
-            HMOptions.ShowTargets.Friendly = CheckboxFriendly:GetChecked() == 1
-            HealersMate.CheckTarget()
+            PTOptions.ShowTargets.Friendly = CheckboxFriendly:GetChecked() == 1
+            Puppeteer.CheckTarget()
         end)
         ApplyTooltip(CheckboxFriendly, "Show the Target frame when targeting friendlies", 
             "No effect if Always Show Target is checked")
@@ -533,10 +533,10 @@ function InitSettings()
         CheckboxHostile:SetPoint("LEFT", CheckboxEnemyLabel, "RIGHT", 5, yCheckboxOffset)
         CheckboxHostile:SetWidth(20) -- width
         CheckboxHostile:SetHeight(20) -- height
-        CheckboxHostile:SetChecked(HMOptions.ShowTargets.Hostile)
+        CheckboxHostile:SetChecked(PTOptions.ShowTargets.Hostile)
         CheckboxHostile:SetScript("OnClick", function()
-            HMOptions.ShowTargets.Hostile = CheckboxHostile:GetChecked() == 1
-            HealersMate.CheckTarget()
+            PTOptions.ShowTargets.Hostile = CheckboxHostile:GetChecked() == 1
+            Puppeteer.CheckTarget()
         end)
         ApplyTooltip(CheckboxHostile, "Show the Target frame when targeting hostiles", 
             "No effect if Always Show Target is checked")
@@ -552,9 +552,9 @@ function InitSettings()
     CheckboxAutoTarget:SetPoint("LEFT", CheckboxAutoTargetLabel, "RIGHT", 5, yCheckboxOffset)
     CheckboxAutoTarget:SetWidth(20) -- width
     CheckboxAutoTarget:SetHeight(20) -- height
-    CheckboxAutoTarget:SetChecked(HMOptions.AutoTarget)
+    CheckboxAutoTarget:SetChecked(PTOptions.AutoTarget)
     CheckboxAutoTarget:SetScript("OnClick", function()
-        HMOptions.AutoTarget = CheckboxAutoTarget:GetChecked() == 1
+        PTOptions.AutoTarget = CheckboxAutoTarget:GetChecked() == 1
     end)
     ApplyTooltip(CheckboxAutoTarget, "If enabled, casting a spell on a player will also cause you to target them")
 
@@ -580,9 +580,9 @@ function InitSettings()
         AutoResurrectCheckbox:SetPoint("LEFT", AutoResurrectLabel, "RIGHT", 5, yCheckboxOffset)
         AutoResurrectCheckbox:SetWidth(20) -- width
         AutoResurrectCheckbox:SetHeight(20) -- height
-        AutoResurrectCheckbox:SetChecked(HMOptions.AutoResurrect)
+        AutoResurrectCheckbox:SetChecked(PTOptions.AutoResurrect)
         AutoResurrectCheckbox:SetScript("OnClick", function()
-            HMOptions.AutoResurrect = AutoResurrectCheckbox:GetChecked() == 1
+            PTOptions.AutoResurrect = AutoResurrectCheckbox:GetChecked() == 1
         end)
         ApplyTooltip(AutoResurrectCheckbox, "Cast your resurrection spell when clicking on a dead target instead of bound spells",
             "Special binds, such as \"Target\", can still be used")
@@ -609,8 +609,8 @@ function InitSettings()
                 arg1 = key,
                 func = function(targetArg)
                     UIDropDownMenu_SetSelectedName(castWhenDropdown, targetArg, false)
-                    HMOptions.CastWhen = targetArg
-                    for _, ui in ipairs(HealersMate.AllUnitFrames) do
+                    PTOptions.CastWhen = targetArg
+                    for _, ui in ipairs(Puppeteer.AllUnitFrames) do
                         ui:RegisterClicks()
                     end
                 end
@@ -623,7 +623,7 @@ function InitSettings()
                 UIDropDownMenu_AddButton(targetOption)
             end
             if UIDropDownMenu_GetSelectedName(castWhenDropdown) == nil then
-                UIDropDownMenu_SetSelectedName(castWhenDropdown, HMOptions.CastWhen, false)
+                UIDropDownMenu_SetSelectedName(castWhenDropdown, PTOptions.CastWhen, false)
             end
         end)
     end
@@ -650,9 +650,9 @@ function InitSettings()
         CheckboxShowSpellsTooltip:SetPoint("LEFT", CheckboxShowSpellsTooltipLabel, "RIGHT", 5, yCheckboxOffset)
         CheckboxShowSpellsTooltip:SetWidth(20) -- width
         CheckboxShowSpellsTooltip:SetHeight(20) -- height
-        CheckboxShowSpellsTooltip:SetChecked(HMOptions.SpellsTooltip.Enabled)
+        CheckboxShowSpellsTooltip:SetChecked(PTOptions.SpellsTooltip.Enabled)
         CheckboxShowSpellsTooltip:SetScript("OnClick", function()
-            HMOptions.SpellsTooltip.Enabled = CheckboxShowSpellsTooltip:GetChecked() == 1
+            PTOptions.SpellsTooltip.Enabled = CheckboxShowSpellsTooltip:GetChecked() == 1
         end)
         ApplyTooltip(CheckboxShowSpellsTooltip, "Show the spells tooltip when hovering over frames")
     end
@@ -668,9 +668,9 @@ function InitSettings()
         ShowPercManaCostCheckbox:SetPoint("LEFT", ShowPercManaCostLabel, "RIGHT", 5, yCheckboxOffset)
         ShowPercManaCostCheckbox:SetWidth(20) -- width
         ShowPercManaCostCheckbox:SetHeight(20) -- height
-        ShowPercManaCostCheckbox:SetChecked(HMOptions.SpellsTooltip.ShowManaPercentCost)
+        ShowPercManaCostCheckbox:SetChecked(PTOptions.SpellsTooltip.ShowManaPercentCost)
         ShowPercManaCostCheckbox:SetScript("OnClick", function()
-            HMOptions.SpellsTooltip.ShowManaPercentCost = ShowPercManaCostCheckbox:GetChecked() == 1
+            PTOptions.SpellsTooltip.ShowManaPercentCost = ShowPercManaCostCheckbox:GetChecked() == 1
         end)
         ApplyTooltip(ShowPercManaCostCheckbox, "Show the percent mana cost in the spells tooltip", "Does nothing for non-mana users")
 
@@ -682,9 +682,9 @@ function InitSettings()
         ShowManaCostCheckbox:SetPoint("LEFT", ShowManaCostLabel, "RIGHT", 5, yCheckboxOffset)
         ShowManaCostCheckbox:SetWidth(20) -- width
         ShowManaCostCheckbox:SetHeight(20) -- height
-        ShowManaCostCheckbox:SetChecked(HMOptions.SpellsTooltip.ShowManaCost)
+        ShowManaCostCheckbox:SetChecked(PTOptions.SpellsTooltip.ShowManaCost)
         ShowManaCostCheckbox:SetScript("OnClick", function()
-            HMOptions.SpellsTooltip.ShowManaCost = ShowManaCostCheckbox:GetChecked() == 1
+            PTOptions.SpellsTooltip.ShowManaCost = ShowManaCostCheckbox:GetChecked() == 1
         end)
         ApplyTooltip(ShowManaCostCheckbox, "Show the number mana cost in the spells tooltip", "Does nothing for non-mana users")
     end
@@ -700,7 +700,7 @@ function InitSettings()
         HideCastsAboveEditBox:SetPoint("LEFT", HideCastsAboveLabel, "RIGHT", 10, yCheckboxOffset)
         HideCastsAboveEditBox:SetWidth(30)
         HideCastsAboveEditBox:SetHeight(20)
-        HideCastsAboveEditBox:SetText(tostring(HMOptions.SpellsTooltip.HideCastsAbove))
+        HideCastsAboveEditBox:SetText(tostring(PTOptions.SpellsTooltip.HideCastsAbove))
         HideCastsAboveEditBox:SetAutoFocus(false)
         HideCastsAboveEditBox:SetScript("OnTextChanged" , function()
             local num = tonumber(this:GetText())
@@ -708,13 +708,13 @@ function InitSettings()
                 return
             end
             num = math.floor(num)
-            HMOptions.SpellsTooltip.HideCastsAbove = num
+            PTOptions.SpellsTooltip.HideCastsAbove = num
         end)
         HideCastsAboveEditBox:SetScript("OnEnterPressed", function()
             this:ClearFocus()
         end)
         HideCastsAboveEditBox:SetScript("OnEditFocusLost", function()
-            this:SetText(tostring(HMOptions.SpellsTooltip.HideCastsAbove))
+            this:SetText(tostring(PTOptions.SpellsTooltip.HideCastsAbove))
         end)
         ApplyTooltip(HideCastsAboveEditBox, "Hides the cast count for a spell if above this threshold")
 
@@ -726,7 +726,7 @@ function InitSettings()
         CriticalCastsLevelEditBox:SetPoint("LEFT", CriticalCastsLevelLabel, "RIGHT", 10, 0)
         CriticalCastsLevelEditBox:SetWidth(30)
         CriticalCastsLevelEditBox:SetHeight(20)
-        CriticalCastsLevelEditBox:SetText(tostring(HMOptions.SpellsTooltip.CriticalCastsLevel))
+        CriticalCastsLevelEditBox:SetText(tostring(PTOptions.SpellsTooltip.CriticalCastsLevel))
         CriticalCastsLevelEditBox:SetAutoFocus(false)
         CriticalCastsLevelEditBox:SetScript("OnTextChanged" , function()
             local num = tonumber(this:GetText())
@@ -734,13 +734,13 @@ function InitSettings()
                 return
             end
             num = math.floor(num)
-            HMOptions.SpellsTooltip.CriticalCastsLevel = num
+            PTOptions.SpellsTooltip.CriticalCastsLevel = num
         end)
         CriticalCastsLevelEditBox:SetScript("OnEnterPressed", function()
             this:ClearFocus()
         end)
         CriticalCastsLevelEditBox:SetScript("OnEditFocusLost", function()
-            this:SetText(tostring(HMOptions.SpellsTooltip.CriticalCastsLevel))
+            this:SetText(tostring(PTOptions.SpellsTooltip.CriticalCastsLevel))
         end)
         ApplyTooltip(CriticalCastsLevelEditBox, "At how many casts to show yellow casts text")
     end
@@ -756,9 +756,9 @@ function InitSettings()
         AbbreviateKeysCheckbox:SetPoint("LEFT", AbbreviateKeysLabel, "RIGHT", 5, yCheckboxOffset)
         AbbreviateKeysCheckbox:SetWidth(20) -- width
         AbbreviateKeysCheckbox:SetHeight(20) -- height
-        AbbreviateKeysCheckbox:SetChecked(HMOptions.SpellsTooltip.AbbreviatedKeys)
+        AbbreviateKeysCheckbox:SetChecked(PTOptions.SpellsTooltip.AbbreviatedKeys)
         AbbreviateKeysCheckbox:SetScript("OnClick", function()
-            HMOptions.SpellsTooltip.AbbreviatedKeys = AbbreviateKeysCheckbox:GetChecked() == 1
+            PTOptions.SpellsTooltip.AbbreviatedKeys = AbbreviateKeysCheckbox:GetChecked() == 1
         end)
         ApplyTooltip(AbbreviateKeysCheckbox, "Shortens keys to 1 letter")
 
@@ -770,9 +770,9 @@ function InitSettings()
         ColorKeysCheckbox:SetPoint("LEFT", ColorKeysLabel, "RIGHT", 5, yCheckboxOffset)
         ColorKeysCheckbox:SetWidth(20) -- width
         ColorKeysCheckbox:SetHeight(20) -- height
-        ColorKeysCheckbox:SetChecked(HMOptions.SpellsTooltip.ColoredKeys)
+        ColorKeysCheckbox:SetChecked(PTOptions.SpellsTooltip.ColoredKeys)
         ColorKeysCheckbox:SetScript("OnClick", function()
-            HMOptions.SpellsTooltip.ColoredKeys = ColorKeysCheckbox:GetChecked() == 1
+            PTOptions.SpellsTooltip.ColoredKeys = ColorKeysCheckbox:GetChecked() == 1
         end)
         ApplyTooltip(ColorKeysCheckbox, "Color code the keys as opposed to all being white")
     end
@@ -798,7 +798,7 @@ function InitSettings()
                 arg1 = key,
                 func = function(targetArg)
                     UIDropDownMenu_SetSelectedName(showPowerAsDropdown, targetArg, false)
-                    HMOptions.SpellsTooltip.ShowPowerAs = targetArg
+                    PTOptions.SpellsTooltip.ShowPowerAs = targetArg
                 end
             })
         end
@@ -809,7 +809,7 @@ function InitSettings()
                 UIDropDownMenu_AddButton(targetOption)
             end
             if UIDropDownMenu_GetSelectedName(showPowerAsDropdown) == nil then
-                UIDropDownMenu_SetSelectedName(showPowerAsDropdown, HMOptions.SpellsTooltip.ShowPowerAs, false)
+                UIDropDownMenu_SetSelectedName(showPowerAsDropdown, PTOptions.SpellsTooltip.ShowPowerAs, false)
             end
         end)
     end
@@ -825,20 +825,20 @@ function InitSettings()
         ShowPowerBarCheckbox:SetPoint("LEFT", ShowPowerBarLabel, "RIGHT", 5, yCheckboxOffset)
         ShowPowerBarCheckbox:SetWidth(20) -- width
         ShowPowerBarCheckbox:SetHeight(20) -- height
-        ShowPowerBarCheckbox:SetChecked(HMOptions.SpellsTooltip.ShowPowerBar)
+        ShowPowerBarCheckbox:SetChecked(PTOptions.SpellsTooltip.ShowPowerBar)
         ShowPowerBarCheckbox:SetScript("OnClick", function()
-            HMOptions.SpellsTooltip.ShowPowerBar = ShowPowerBarCheckbox:GetChecked() == 1
-            if HMOptions.SpellsTooltip.ShowPowerBar then
-                HealersMate.SpellsTooltipPowerBar:Show()
+            PTOptions.SpellsTooltip.ShowPowerBar = ShowPowerBarCheckbox:GetChecked() == 1
+            if PTOptions.SpellsTooltip.ShowPowerBar then
+                Puppeteer.SpellsTooltipPowerBar:Show()
             else
-                HealersMate.SpellsTooltipPowerBar:Hide()
+                Puppeteer.SpellsTooltipPowerBar:Hide()
             end
         end)
         ApplyTooltip(ShowPowerBarCheckbox, "Show a power bar in the spells tooltip")
 
         -- Disable power bar now if it's disabled
-        if not HMOptions.SpellsTooltip.ShowPowerBar then
-            HealersMate.SpellsTooltipPowerBar:Hide()
+        if not PTOptions.SpellsTooltip.ShowPowerBar then
+            Puppeteer.SpellsTooltipPowerBar:Hide()
         end
     end
 
@@ -863,7 +863,7 @@ function InitSettings()
                 arg1 = key,
                 func = function(targetArg)
                     UIDropDownMenu_SetSelectedName(attachToDropdown, targetArg, false)
-                    HMOptions.SpellsTooltip.AttachTo = targetArg
+                    PTOptions.SpellsTooltip.AttachTo = targetArg
                 end
             })
         end
@@ -874,7 +874,7 @@ function InitSettings()
                 UIDropDownMenu_AddButton(targetOption)
             end
             if UIDropDownMenu_GetSelectedName(attachToDropdown) == nil then
-                UIDropDownMenu_SetSelectedName(attachToDropdown, HMOptions.SpellsTooltip.AttachTo, false)
+                UIDropDownMenu_SetSelectedName(attachToDropdown, PTOptions.SpellsTooltip.AttachTo, false)
             end
         end)
     end
@@ -900,7 +900,7 @@ function InitSettings()
                 arg1 = key,
                 func = function(targetArg)
                     UIDropDownMenu_SetSelectedName(anchorDropdown, targetArg, false)
-                    HMOptions.SpellsTooltip.Anchor = targetArg
+                    PTOptions.SpellsTooltip.Anchor = targetArg
                 end
             })
         end
@@ -911,7 +911,7 @@ function InitSettings()
                 UIDropDownMenu_AddButton(targetOption)
             end
             if UIDropDownMenu_GetSelectedName(anchorDropdown) == nil then
-                UIDropDownMenu_SetSelectedName(anchorDropdown, HMOptions.SpellsTooltip.Anchor, false)
+                UIDropDownMenu_SetSelectedName(anchorDropdown, PTOptions.SpellsTooltip.Anchor, false)
             end
         end)
     end
@@ -938,9 +938,9 @@ function InitSettings()
         CheckboxMoveAll:SetPoint("LEFT", CheckboxMoveAllLabel, "RIGHT", 5, yCheckboxOffset)
         CheckboxMoveAll:SetWidth(20)
         CheckboxMoveAll:SetHeight(20)
-        CheckboxMoveAll:SetChecked(HMOptions.FrameDrag.MoveAll)
+        CheckboxMoveAll:SetChecked(PTOptions.FrameDrag.MoveAll)
         CheckboxMoveAll:SetScript("OnClick", function()
-            HMOptions.FrameDrag.MoveAll = CheckboxMoveAll:GetChecked() == 1
+            PTOptions.FrameDrag.MoveAll = CheckboxMoveAll:GetChecked() == 1
         end)
         ApplyTooltip(CheckboxMoveAll, "If enabled, all frames will be moved when dragging", "Use the inverse key to move a single frame; Opposite effect if disabled")
 
@@ -963,7 +963,7 @@ function InitSettings()
                 arg1 = key,
                 func = function(targetArg)
                     UIDropDownMenu_SetSelectedName(inverseKeyDropdown, targetArg, false)
-                    HMOptions.FrameDrag.AltMoveKey = targetArg
+                    PTOptions.FrameDrag.AltMoveKey = targetArg
                 end
             })
         end
@@ -974,7 +974,7 @@ function InitSettings()
                 UIDropDownMenu_AddButton(targetOption)
             end
             if UIDropDownMenu_GetSelectedName(inverseKeyDropdown) == nil then
-                UIDropDownMenu_SetSelectedName(inverseKeyDropdown, HMOptions.FrameDrag.AltMoveKey, false)
+                UIDropDownMenu_SetSelectedName(inverseKeyDropdown, PTOptions.FrameDrag.AltMoveKey, false)
             end
         end)
     end
@@ -990,10 +990,10 @@ function InitSettings()
         CheckboxHealPredict:SetPoint("LEFT", CheckboxHealPredictLabel, "RIGHT", 5, yCheckboxOffset)
         CheckboxHealPredict:SetWidth(20)
         CheckboxHealPredict:SetHeight(20)
-        CheckboxHealPredict:SetChecked(HMOptions.UseHealPredictions)
+        CheckboxHealPredict:SetChecked(PTOptions.UseHealPredictions)
         CheckboxHealPredict:SetScript("OnClick", function()
-            HMOptions.UseHealPredictions = CheckboxHealPredict:GetChecked() == 1
-            HealersMate.UpdateAllIncomingHealing()
+            PTOptions.UseHealPredictions = CheckboxHealPredict:GetChecked() == 1
+            Puppeteer.UpdateAllIncomingHealing()
         end)
         ApplyTooltip(CheckboxHealPredict, "See predictions on incoming healing", 
             "Improved predictions if using SuperWoW")
@@ -1017,10 +1017,10 @@ function InitSettings()
         CheckboxInParty:SetPoint("LEFT", InPartyLabel, "RIGHT", 5, yCheckboxOffset)
         CheckboxInParty:SetWidth(20) -- width
         CheckboxInParty:SetHeight(20) -- height
-        CheckboxInParty:SetChecked(HMOptions.DisablePartyFrames.InParty)
+        CheckboxInParty:SetChecked(PTOptions.DisablePartyFrames.InParty)
         CheckboxInParty:SetScript("OnClick", function()
-            HMOptions.DisablePartyFrames.InParty = CheckboxInParty:GetChecked() == 1
-            HealersMate.CheckPartyFramesEnabled()
+            PTOptions.DisablePartyFrames.InParty = CheckboxInParty:GetChecked() == 1
+            Puppeteer.CheckPartyFramesEnabled()
         end)
         ApplyTooltip(CheckboxInParty, "Hide default party frames while in party", "This may cause issues with other addons")
 
@@ -1034,10 +1034,10 @@ function InitSettings()
         CheckboxInRaid:SetPoint("LEFT", InRaidLabel, "RIGHT", 5, yCheckboxOffset)
         CheckboxInRaid:SetWidth(20) -- width
         CheckboxInRaid:SetHeight(20) -- height
-        CheckboxInRaid:SetChecked(HMOptions.DisablePartyFrames.InRaid)
+        CheckboxInRaid:SetChecked(PTOptions.DisablePartyFrames.InRaid)
         CheckboxInRaid:SetScript("OnClick", function()
-            HMOptions.DisablePartyFrames.InRaid = CheckboxInRaid:GetChecked() == 1
-            HealersMate.CheckPartyFramesEnabled()
+            PTOptions.DisablePartyFrames.InRaid = CheckboxInRaid:GetChecked() == 1
+            Puppeteer.CheckPartyFramesEnabled()
         end)
         ApplyTooltip(CheckboxInRaid, "Hide default party frames while in raid", "This may cause issues with other addons")
     end
@@ -1065,10 +1065,10 @@ function InitSettings()
             CheckboxLFTAutoRole:SetPoint("LEFT", LFTAutoRoleLabel, "RIGHT", 5, yCheckboxOffset)
             CheckboxLFTAutoRole:SetWidth(20)
             CheckboxLFTAutoRole:SetHeight(20)
-            CheckboxLFTAutoRole:SetChecked(HMOptions.LFTAutoRole)
+            CheckboxLFTAutoRole:SetChecked(PTOptions.LFTAutoRole)
             CheckboxLFTAutoRole:SetScript("OnClick", function()
-                HMOptions.LFTAutoRole = CheckboxLFTAutoRole:GetChecked() == 1
-                HealersMate.SetLFTAutoRoleEnabled(HMOptions.LFTAutoRole)
+                PTOptions.LFTAutoRole = CheckboxLFTAutoRole:GetChecked() == 1
+                Puppeteer.SetLFTAutoRoleEnabled(PTOptions.LFTAutoRole)
             end)
             ApplyTooltip(CheckboxLFTAutoRole, "Automatically assign roles when joining LFT groups", 
                 "This functionality was created for 1.17.2 and may break in future updates")
@@ -1108,12 +1108,12 @@ function InitSettings()
         CheckboxMouseover:SetPoint("LEFT", CheckboxMouseoverLabel, "RIGHT", 5, yCheckboxOffset)
         CheckboxMouseover:SetWidth(20)
         CheckboxMouseover:SetHeight(20)
-        CheckboxMouseover:SetChecked(HMOptions.SetMouseover)
+        CheckboxMouseover:SetChecked(PTOptions.SetMouseover)
         if not superwow then
             CheckboxMouseover:Disable()
         end
         CheckboxMouseover:SetScript("OnClick", function()
-            HMOptions.SetMouseover = CheckboxMouseover:GetChecked() == 1
+            PTOptions.SetMouseover = CheckboxMouseover:GetChecked() == 1
         end)
         ApplyTooltip(CheckboxMouseover, "Requires SuperWoW Mod To Work", 
             "If enabled, hovering over frames will set your mouseover target")
@@ -1196,10 +1196,10 @@ function InitSettings()
         label:SetPoint("RIGHT", profileDropdown, "RIGHT", -40, 5)
         label:SetText("Choose Style")
 
-        local targets = util.ToArray(HMDefaultProfiles)
+        local targets = util.ToArray(PTDefaultProfiles)
         util.RemoveElement(targets, "Base")
         table.sort(targets, function(a, b)
-            return (HMProfileManager.DefaultProfileOrder[a] or 1000) < (HMProfileManager.DefaultProfileOrder[b] or 1000)
+            return (PTProfileManager.DefaultProfileOrder[a] or 1000) < (PTProfileManager.DefaultProfileOrder[b] or 1000)
         end)
         local profileOptions = {}
 
@@ -1210,27 +1210,26 @@ function InitSettings()
                 func = function(targetArg)
                     UIDropDownMenu_SetSelectedName(profileDropdown, targetArg, false)
                     local selectedFrame = UIDropDownMenu_GetSelectedName(frameDropdown)
-                    HMOptions.ChosenProfiles[selectedFrame] = targetArg
+                    PTOptions.ChosenProfiles[selectedFrame] = targetArg
 
                     if selectedFrame == "Focus" and not util.IsSuperWowPresent() then
                         return
                     end
 
                     -- Here's some probably buggy profile hotswapping
-                    local group = HealersMate.UnitFrameGroups[selectedFrame]
+                    local group = Puppeteer.UnitFrameGroups[selectedFrame]
                     group.profile = GetSelectedProfile(selectedFrame)
                     local oldUIs = group.uis
                     group.uis = {}
                     group:ResetFrameLevel() -- Need to lower frame or the added UIs are somehow under it
                     for unit, ui in pairs(oldUIs) do
-                        --HealersMate.hmprint(unit)
                         ui:GetRootContainer():SetParent(nil)
                         -- Forget about the old UI, and cause a fat memory leak why not
                         ui:GetRootContainer():Hide()
-                        local newUI = HMUnitFrame:New(unit, ui.isCustomUnit)
-                        util.RemoveElement(HealersMate.AllUnitFrames, ui)
-                        table.insert(HealersMate.AllUnitFrames, newUI)
-                        local unitUIs = HealersMate.GetUnitFrames(unit)
+                        local newUI = PTUnitFrame:New(unit, ui.isCustomUnit)
+                        util.RemoveElement(Puppeteer.AllUnitFrames, ui)
+                        table.insert(Puppeteer.AllUnitFrames, newUI)
+                        local unitUIs = Puppeteer.GetUnitFrames(unit)
                         util.RemoveElement(unitUIs, ui)
                         table.insert(unitUIs, newUI)
                         group:AddUI(newUI, true)
@@ -1240,7 +1239,7 @@ function InitSettings()
                             newUI:Hide()
                         end
                     end
-                    HealersMate.CheckGroup()
+                    Puppeteer.CheckGroup()
                     group:UpdateUIPositions()
                     group:ApplyProfile()
                 end
@@ -1297,7 +1296,7 @@ function InitSettings()
     end
 
     do
-        local editFrame = CreateFrame("Frame", "HMPreLoadScriptFrame", container)
+        local editFrame = CreateFrame("Frame", "PTPreLoadScriptFrame", container)
         editFrame:SetWidth(325)
         editFrame:SetHeight(230)
         editFrame:SetPoint("CENTER", 0, 0)
@@ -1340,13 +1339,13 @@ function InitSettings()
             editFrame:Hide()
         end)
         editBox:SetScript("OnEditFocusGained", function()
-            this:SetText(HMOptions.Scripts[this.editScript])
+            this:SetText(PTOptions.Scripts[this.editScript])
         end)
         editBox:SetScript("OnEditFocusLost", function()
             if not this.editScript then
                 return
             end
-            HMOptions.Scripts[this.editScript] = this:GetText()
+            PTOptions.Scripts[this.editScript] = this:GetText()
             editFrame:Hide()
         end)
         
@@ -1427,11 +1426,11 @@ function InitSettings()
 
     local TxtAboutLabel = AboutFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     TxtAboutLabel:SetPoint("CENTER", AboutFrame, "CENTER", 0, 100)
-    TxtAboutLabel:SetText("HealersMate Version "..HealersMate.VERSION..
-    "\n\n\nOriginal Author: i2ichardt\nEmail: rj299@yahoo.com"..
-    "\n\nMaintainer: OldManAlpha\nDiscord: oldmana\nTurtle IGN: Oldmana, Lowall, Jmdruid"..
+    TxtAboutLabel:SetText("Puppeteer Version "..Puppeteer.VERSION..
+    "\n\n\nPuppeteer Author: OldManAlpha\nDiscord: oldmana\nTurtle IGN: Oldmana, Lowall, Jmdruid"..
+    "\n\nHealersMate Original Author: i2ichardt\nEmail: rj299@yahoo.com"..
     "\n\nContributers: Turtle WoW Community, ChatGPT"..
-    "\n\n\nCheck For Updates, Report Issues, Make Suggestions:\n https://github.com/i2ichardt/HealersMate")
+    "\n\n\nCheck For Updates, Report Issues, Make Suggestions:\n https://github.com/OldManAlpha/Puppeteer")
 
     --START--Combobox
 
@@ -1450,7 +1449,7 @@ function InitSettings()
             end
         end
 
-    local modifierDropdown = CreateFrame("Frame", "HM_ModifierDropdownList", spellsFrame, "UIDropDownMenuTemplate")
+    local modifierDropdown = CreateFrame("Frame", "PT_ModifierDropdownList", spellsFrame, "UIDropDownMenuTemplate")
     --modifierDropdown:SetPoint("CENTER", keyLabel, "RIGHT", 10, -5)
     modifierDropdown:SetPoint("TOP", -35, -50)
     --modifierDropdown:SetWidth(120)
@@ -1554,7 +1553,7 @@ function InitSettings()
 
         local txtLabel = spellsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         txtLabel:SetPoint("RIGHT", txt, "LEFT", -10, 0)
-        txtLabel:SetText(CustomButtonNames[button] or HealersMate.ReadableButtonMap[button])
+        txtLabel:SetText(CustomButtonNames[button] or Puppeteer.ReadableButtonMap[button])
     end
 
     for i, button in ipairs(CustomButtonOrder) do
@@ -1589,7 +1588,7 @@ function InitSettings()
     spellApplyButton:SetScript("OnClick", function()
         saveSpellEditBoxes()
         for context, spells in pairs(EditedSpells) do
-            local Spells = HMSpells[context]
+            local Spells = PTSpells[context]
             for modifier, buttons in pairs(spells) do
                 Spells[modifier] = {}
                 for button, spell in pairs(buttons) do
@@ -1610,7 +1609,7 @@ function InitSettings()
     spellApplyButtonNoClose:SetScript("OnClick", function()
         saveSpellEditBoxes()
         for context, spells in pairs(EditedSpells) do
-            local Spells = HMSpells[context]
+            local Spells = PTSpells[context]
             for modifier, buttons in pairs(spells) do
                 Spells[modifier] = {}
                 for button, spell in pairs(buttons) do
@@ -1679,7 +1678,7 @@ function InitSettings()
                 colorize("Macro: Summon", 0.6, 1, 0.6).."\n\n"..
             colorize("Information on Macros: ", 1, 0.6, 0.6).."When clicking on a unit with macro binds, you will automatically"..
                 " target them for a split second, allowing you to use the \"target\" unit in your macros. Additionally, the "..
-                "global \"HM_MacroTarget\" is exposed, allowing you to see the actual unit that was clicked, such as "..
+                "global \"PT_MacroTarget\" is exposed, allowing you to see the actual unit that was clicked, such as "..
                 "\"party1\". Beware that clicking on a focus will produce fake units, such as \"focus1\".")
         end
     end

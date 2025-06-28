@@ -1,15 +1,15 @@
 -- Predicts healing based on previously seen healing.
--- This library currently is not independent and relies on some HealersMate code.
+-- This library currently is not independent and relies on some Puppeteer code.
 
-if not HMUtil.IsSuperWowPresent() then
+if not PTUtil.IsSuperWowPresent() then
     return
 end
 
-HMHealPredict = {}
+PTHealPredict = {}
 
 local _G = getfenv(0)
-setmetatable(HMHealPredict, {__index = getfenv(1)})
-setfenv(1, HMHealPredict)
+setmetatable(PTHealPredict, {__index = getfenv(1)})
+setfenv(1, PTHealPredict)
 
 local compost = AceLibrary("Compost-2.0")
 
@@ -34,15 +34,15 @@ ResurrectionTargets = {} -- Key: Receiver | Value: {Caster: {"startTime", "castT
 -- An array of functions that listen to changes to incoming healing
 Listeners = {}
 
-local hmprint
-local colorize = HMUtil.Colorize
+local print
+local colorize = PTUtil.Colorize
 
-local PRAYER_OF_HEALING_IDS = HMUtil.ToSet({596, 996, 10960, 10961, 25316})
-local ResurrectionSpells = HMUtil.ToSet({
+local PRAYER_OF_HEALING_IDS = PTUtil.ToSet({596, 996, 10960, 10961, 25316})
+local ResurrectionSpells = PTUtil.ToSet({
     "Resurrection", "Revive Champion", "Redemption", "Ancestral Spirit", "Rebirth"
 })
 
-local TRACKED_HOTS = HMUtil.ToSet({
+local TRACKED_HOTS = PTUtil.ToSet({
     "Rejuvenation", "Regrowth", -- Druid
     "Renew", -- Priest
     "Mend Pet", -- Hunter
@@ -50,11 +50,11 @@ local TRACKED_HOTS = HMUtil.ToSet({
 })
 
 function OnLoad()
-    hmprint = HealersMate.hmprint
-    if not HMHealCache then
-        setglobal("HMHealCache", {})
+    print = Puppeteer.print
+    if not PTHealCache then
+        setglobal("PTHealCache", {})
     end
-    HealCache = HMHealCache
+    HealCache = PTHealCache
 
     local hardcodedHots = {
         -- Bandages
@@ -81,13 +81,13 @@ function OnLoad()
         HealCache[k.."-HoT"] = v
     end
 
-    if not HMPlayerHealCache then
-        setglobal("HMPlayerHealCache", {})
+    if not PTPlayerHealCache then
+        setglobal("PTPlayerHealCache", {})
     end
-    if not HMPlayerHealCache[GetRealmName()] then
-        HMPlayerHealCache[GetRealmName()] = {}
+    if not PTPlayerHealCache[GetRealmName()] then
+        PTPlayerHealCache[GetRealmName()] = {}
     end
-    PlayerHealCache = HMPlayerHealCache[GetRealmName()]
+    PlayerHealCache = PTPlayerHealCache[GetRealmName()]
 end
 
 -- Get the expected heal of a player's spell
@@ -255,16 +255,16 @@ function UpdateCache(heal, name)
 
     if not PRAYER_OF_HEALING_IDS[spellID] then
         if lastCastedSpell["target"] == "" then
-            --hmprint(colorize("Don't have a target of spell cast for "..name.."'s "..spellID, 1, 0, 0))
+            --print(colorize("Don't have a target of spell cast for "..name.."'s "..spellID, 1, 0, 0))
             return
         end
-        local cache = HMUnit.Get(lastCastedSpell["target"])
-        if not cache or cache == HMUnit then
-            --hmprint(colorize("Could not find "..name.."'s unit while updating cache!", 1, 0, 0))
+        local cache = PTUnit.Get(lastCastedSpell["target"])
+        if not cache or cache == PTUnit then
+            --print(colorize("Could not find "..name.."'s unit while updating cache!", 1, 0, 0))
             return
         end
         if cache.HasHealingModifier then
-            --hmprint(colorize("Not updating cache for "..name.."'s "..spellID.." because of healing modifier", 0.5, 0.5, 0.5))
+            --print(colorize("Not updating cache for "..name.."'s "..spellID.." because of healing modifier", 0.5, 0.5, 0.5))
             return
         end
     end
@@ -276,7 +276,7 @@ function UpdateCache(heal, name)
         local prevHeal = HealCache[spellID]
         local adjustedHeal = trimDecimal(prevHeal + ((heal - prevHeal) * GENERIC_CHANGE_FACTOR), 2)
         HealCache[spellID] = adjustedHeal
-        hmprint(colorize("Generic "..spellID..": "..prevHeal.." -> "..adjustedHeal, 0, 0.8, 0.8))
+        print(colorize("Generic "..spellID..": "..prevHeal.." -> "..adjustedHeal, 0, 0.8, 0.8))
     end
 
     if not PlayerHealCache[name] then
@@ -286,7 +286,7 @@ function UpdateCache(heal, name)
     local playerCache = PlayerHealCache[name]
     if not playerCache[spellID] then
         playerCache[spellID] = heal
-        hmprint(colorize("Created cache for "..name.."'s "..spellID, 1, 0.5, 1))
+        print(colorize("Created cache for "..name.."'s "..spellID, 1, 0.5, 1))
     end
     local prevHeal = playerCache[spellID]
     local adjustedHeal = trimDecimal(prevHeal + ((heal - prevHeal) * PLAYER_CHANGE_FACTOR), 2)
@@ -294,7 +294,7 @@ function UpdateCache(heal, name)
     playerCache["lastSeen"] = time()
 
     compost:Reclaim(lastCastedSpell)
-    hmprint(colorize(name.."'s "..spellID..": "..prevHeal.." -> "..adjustedHeal, 0, 0.8, 0.2))
+    print(colorize(name.."'s "..spellID..": "..prevHeal.." -> "..adjustedHeal, 0, 0.8, 0.2))
 end
 
 function UpdateCacheHot(spellName, heal, targetGuid, targetName, casterGuid, casterName)
@@ -315,13 +315,13 @@ function UpdateCacheHot(spellName, heal, targetGuid, targetName, casterGuid, cas
         end
         local spellID = hot["id"]
 
-        local cache = HMUnit.Get(targetGuid)
-        if not cache or cache == HMUnit then
-            hmprint(colorize("Could not find "..targetName.."'s unit while updating cache!", 1, 0, 0))
+        local cache = PTUnit.Get(targetGuid)
+        if not cache or cache == PTUnit then
+            print(colorize("Could not find "..targetName.."'s unit while updating cache!", 1, 0, 0))
             return
         end
         if cache.HasHealingModifier then
-            hmprint(colorize("Not updating cache for "..casterName.."'s "..spellID.." because of healing modifier", 0.5, 0.5, 0.5))
+            print(colorize("Not updating cache for "..casterName.."'s "..spellID.." because of healing modifier", 0.5, 0.5, 0.5))
             return
         end
         -- Update the player-specific cache
@@ -329,10 +329,10 @@ function UpdateCacheHot(spellName, heal, targetGuid, targetName, casterGuid, cas
         spellID = spellID.."-HoT"
         if not playerCache[spellID] then
             playerCache[spellID] = heal
-            hmprint(colorize("Created cache for "..casterName.."'s "..spellID.." ("..spellName..")", 1, 0.5, 1))
+            print(colorize("Created cache for "..casterName.."'s "..spellID.." ("..spellName..")", 1, 0.5, 1))
         end
         PlayerHealCache[casterName][spellID] = heal
-        hmprint(colorize(casterName.."'s "..spellID.." ("..spellName..")"..": "..prevHeal.." -> "..heal, 0, 0.8, 0.2))
+        print(colorize(casterName.."'s "..spellID.." ("..spellName..")"..": "..prevHeal.." -> "..heal, 0, 0.8, 0.2))
     end
 end
 
@@ -356,7 +356,7 @@ end
 
 local roster = AceLibrary("RosterLib-2.0")
 local function getGuidFromLogName(name)
-    local petName, owner = HMUtil.cmatch(name, "%s (%s)")
+    local petName, owner = PTUtil.cmatch(name, "%s (%s)")
     local unit
     if owner then -- A pet is being healed
         local ownerUnit = roster:GetUnitIDFromName(owner)
@@ -369,7 +369,7 @@ local function getGuidFromLogName(name)
     end
     if not unit then
         -- Check custom units
-        for _, guid in pairs(HMUnitProxy.CustomUnitGUIDMap) do
+        for _, guid in pairs(PTUnitProxy.CustomUnitGUIDMap) do
             if UnitName(guid) == name then
                 return guid
             end
@@ -386,7 +386,7 @@ local function getSelfGuid()
     return guid
 end
 
-local eventFrame = CreateFrame("Frame", "HMHealPredictCasts")
+local eventFrame = CreateFrame("Frame", "PTHealPredictCasts")
 eventFrame:RegisterEvent("UNIT_CASTEVENT")
 eventFrame:SetScript("OnEvent", function()
     local caster, target, event, spellID, duration = arg1, arg2, arg3, arg4, arg5
@@ -446,7 +446,7 @@ eventFrame:SetScript("OnEvent", function()
 
         if TRACKED_HOTS[spellName] then
             if spellName == "Mend Pet" then -- Mend pet doesn't "target" the pet, so we have to acquire the pet
-                local units = HMGuidRoster.GetUnits(caster)
+                local units = PTGuidRoster.GetUnits(caster)
                 if not units then
                     return
                 end
@@ -483,7 +483,7 @@ eventFrame:SetScript("OnEvent", function()
             local expectedHeal = GetExpectedHeal(casterName, spellID)
             AddIncomingCast(target, caster, spellID, expectedHeal, duration)
         elseif PRAYER_OF_HEALING_IDS[spellID] then
-            local inRange = HMUtil.GetSurroundingPartyMembers(caster)
+            local inRange = PTUtil.GetSurroundingPartyMembers(caster)
             local casterName = UnitName(caster)
             local expectedHeal = GetExpectedHeal(casterName, spellID)
             AddIncomingMultiCast(inRange, caster, spellID, expectedHeal, duration)
@@ -501,7 +501,7 @@ eventFrame:SetScript("OnUpdate", function()
         for receiver, casts in pairs(IncomingHeals) do
             for caster, cast in pairs(casts) do
                 if cast["startTime"] + 15 < time then
-                    hmprint(colorize("Removed "..caster.."'s heal on "..receiver.." for taking too long", 1, 0, 0))
+                    print(colorize("Removed "..caster.."'s heal on "..receiver.." for taking too long", 1, 0, 0))
                     compost:Reclaim(cast)
                     casts[caster] = nil
                     UpdateTarget(receiver)
@@ -512,7 +512,7 @@ eventFrame:SetScript("OnUpdate", function()
         for receiver, hots in pairs(IncomingHots) do
             for name, hot in pairs(hots) do
                 if hot["startTime"] + 25 < time then
-                    hmprint(colorize("Removed "..hot["caster"].."'s "..name.." (HoT) on "..
+                    print(colorize("Removed "..hot["caster"].."'s "..name.." (HoT) on "..
                         receiver.." for taking too long", 1, 0, 0))
                     compost:Reclaim(hot)
                     hots[name] = nil
@@ -524,7 +524,7 @@ eventFrame:SetScript("OnUpdate", function()
         for target, resses in pairs(ResurrectionTargets) do
             for caster, res in pairs(resses) do
                 if res["startTime"] + 20 < time then
-                    hmprint(colorize("Removed "..caster.."'s resurrection on "..
+                    print(colorize("Removed "..caster.."'s resurrection on "..
                         target.." for taking too long", 1, 0, 0))
                     compost:Reclaim(res)
                     resses[caster] = nil
@@ -539,9 +539,9 @@ eventFrame:SetScript("OnUpdate", function()
     end
 end)
 
-local cmatch = HMUtil.cmatch
+local cmatch = PTUtil.cmatch
 
-local combatLogFrame = CreateFrame("Frame", "HMHealPredictCombatLog")
+local combatLogFrame = CreateFrame("Frame", "PTHealPredictCombatLog")
 combatLogFrame:RegisterEvent("CHAT_MSG_SPELL_SELF_BUFF")
 combatLogFrame:RegisterEvent("CHAT_MSG_SPELL_FRIENDLYPLAYER_BUFF")
 combatLogFrame:RegisterEvent("CHAT_MSG_SPELL_HOSTILEPLAYER_BUFF") -- Needed to see casts coming from other players to yourself
@@ -581,7 +581,7 @@ combatLogFrame:SetScript("OnEvent", function()
     end
 end)
 
-local periodicCombatLogFrame = CreateFrame("Frame", "HMHealPredictPerCombatLog")
+local periodicCombatLogFrame = CreateFrame("Frame", "PTHealPredictPerCombatLog")
 periodicCombatLogFrame:RegisterEvent("CHAT_MSG_SPELL_PERIODIC_SELF_BUFFS")
 periodicCombatLogFrame:RegisterEvent("CHAT_MSG_SPELL_PERIODIC_FRIENDLYPLAYER_BUFFS")
 periodicCombatLogFrame:RegisterEvent("CHAT_MSG_SPELL_PERIODIC_PARTY_BUFFS")
@@ -620,7 +620,7 @@ periodicCombatLogFrame:SetScript("OnEvent", function()
     end
 end)
 
-local auraCombatLogFrame = CreateFrame("Frame", "HMHealPredictAuraCombatLog")
+local auraCombatLogFrame = CreateFrame("Frame", "PTHealPredictAuraCombatLog")
 auraCombatLogFrame:RegisterEvent("CHAT_MSG_SPELL_AURA_GONE_OTHER")
 auraCombatLogFrame:RegisterEvent("CHAT_MSG_SPELL_AURA_GONE_PARTY")
 auraCombatLogFrame:RegisterEvent("CHAT_MSG_SPELL_AURA_GONE_SELF")
@@ -644,7 +644,7 @@ end)
 
 -- Set the GUIDs to listen to
 function SetRelevantGUIDs(guidArray)
-    RelevantGUIDs = HMUtil.ToSet(guidArray)
+    RelevantGUIDs = PTUtil.ToSet(guidArray)
 end
 
 -- Provided listener function will receive the arguments: Updated GUID, Updated Incoming Healing

@@ -1,70 +1,70 @@
-HMUnitFrame = {}
+PTUnitFrame = {}
 
-HMUnitFrame.owningGroup = nil
+PTUnitFrame.owningGroup = nil
 
-HMUnitFrame.unit = nil
-HMUnitFrame.isCustomUnit = false
-HMUnitFrame.guidUnit = nil -- Used for custom units
+PTUnitFrame.unit = nil
+PTUnitFrame.isCustomUnit = false
+PTUnitFrame.guidUnit = nil -- Used for custom units
 
-HMUnitFrame.rootContainer = nil -- Contains the main container and the overlay
-HMUnitFrame.overlayContainer = nil -- Contains elements that should not be affected by opacity
-HMUnitFrame.container = nil -- Most elements are contained in this
-HMUnitFrame.nameText = nil
-HMUnitFrame.healthBar = nil
-HMUnitFrame.incomingHealthBar = nil
-HMUnitFrame.incomingDirectHealthBar = nil
-HMUnitFrame.healthText = nil
-HMUnitFrame.missingHealthText = nil
-HMUnitFrame.incomingHealText = nil
-HMUnitFrame.powerBar = nil
-HMUnitFrame.powerText = nil
-HMUnitFrame.roleIcon = nil
-HMUnitFrame.button = nil
-HMUnitFrame.auraPanel = nil
-HMUnitFrame.scrollingDamageFrame = nil -- Unimplemented
-HMUnitFrame.scrollingHealFrame = nil -- Unimplemented
-HMUnitFrame.auraIconPool = {} -- map: {"frame", "icon", "stackText"}
-HMUnitFrame.auraIcons = {} -- map: {"frame", "icon", "stackText"}
+PTUnitFrame.rootContainer = nil -- Contains the main container and the overlay
+PTUnitFrame.overlayContainer = nil -- Contains elements that should not be affected by opacity
+PTUnitFrame.container = nil -- Most elements are contained in this
+PTUnitFrame.nameText = nil
+PTUnitFrame.healthBar = nil
+PTUnitFrame.incomingHealthBar = nil
+PTUnitFrame.incomingDirectHealthBar = nil
+PTUnitFrame.healthText = nil
+PTUnitFrame.missingHealthText = nil
+PTUnitFrame.incomingHealText = nil
+PTUnitFrame.powerBar = nil
+PTUnitFrame.powerText = nil
+PTUnitFrame.roleIcon = nil
+PTUnitFrame.button = nil
+PTUnitFrame.auraPanel = nil
+PTUnitFrame.scrollingDamageFrame = nil -- Unimplemented
+PTUnitFrame.scrollingHealFrame = nil -- Unimplemented
+PTUnitFrame.auraIconPool = {} -- map: {"frame", "icon", "stackText"}
+PTUnitFrame.auraIcons = {} -- map: {"frame", "icon", "stackText"}
 
-HMUnitFrame.targetOutline = nil
+PTUnitFrame.targetOutline = nil
 
-HMUnitFrame.targeted = false
+PTUnitFrame.targeted = false
 
-HMUnitFrame.flashTexture = nil -- {"frame", "texture"}
-HMUnitFrame.flashTime = 0
-HMUnitFrame.lastHealthPercent = 0
+PTUnitFrame.flashTexture = nil -- {"frame", "texture"}
+PTUnitFrame.flashTime = 0
+PTUnitFrame.lastHealthPercent = 0
 
-HMUnitFrame.incomingHealing = 0
-HMUnitFrame.incomingDirectHealing = 0
+PTUnitFrame.incomingHealing = 0
+PTUnitFrame.incomingDirectHealing = 0
 
-HMUnitFrame.hovered = false
-HMUnitFrame.pressed = false
+PTUnitFrame.hovered = false
+PTUnitFrame.pressed = false
 
-HMUnitFrame.distanceText = nil
-HMUnitFrame.lineOfSightIcon = nil -- map: {"frame", "icon"}
+PTUnitFrame.distanceText = nil
+PTUnitFrame.lineOfSightIcon = nil -- map: {"frame", "icon"}
 
-HMUnitFrame.inRange = true
-HMUnitFrame.distance = 0
-HMUnitFrame.inSight = true
+PTUnitFrame.inRange = true
+PTUnitFrame.distance = 0
+PTUnitFrame.inSight = true
 
-HMUnitFrame.fakeStats = {} -- Used for displaying a fake party/raid
+PTUnitFrame.fakeStats = {} -- Used for displaying a fake party/raid
 
 local _G = getfenv(0)
-if HMUtil.IsSuperWowPresent() then
-    setmetatable(HMUnitProxy, {__index = getfenv(1)})
-    setfenv(1, HMUnitProxy)
+if PTUtil.IsSuperWowPresent() then
+    setmetatable(PTUnitProxy, {__index = getfenv(1)})
+    setfenv(1, PTUnitProxy)
 end
 
 -- Singleton references, assigned in constructor
-local HM
-local util = HMUtil
+local PT
+local util = PTUtil
 
 local compost = AceLibrary("Compost-2.0")
 
-function HMUnitFrame:New(unit, isCustomUnit)
-    HM = HealersMate -- Need to do this in the constructor or else it doesn't exist yet
+function PTUnitFrame:New(unit, isCustomUnit)
+    PT = Puppeteer -- Need to do this in the constructor or else it doesn't exist yet
     local obj = {unit = unit, isCustomUnit = isCustomUnit, auraIconPool = {}, 
-        auraIcons = {}, fakeStats = HMUnitFrame.GenerateFakeStats()}
+        auraIcons = {}, fakeStats = PTUnitFrame.GenerateFakeStats()}
     setmetatable(obj, self)
     self.__index = self
     return obj
@@ -80,7 +80,7 @@ local fakeNames = {"Leeroyjenkins", "Realsigred", "Appledog", "Exdraclespy", "Di
     "Erazergus", "Scarlatina", "Holdrim", "Soulbane", "Debilitated", "Doorooid", "Palefire", "Tellarna", 
     "Breathofwing", "Chillaf", "Hulena", "Hyperiann", "Bluebeam", "Daevana", "Adriena", "Aeywynn", "Bluaa", 
     "Chadd", "Leutry", "Mouzer", "Qiner"}
-function HMUnitFrame.GenerateFakeStats()
+function PTUnitFrame.GenerateFakeStats()
 
     local name = fakeNames[math.random(table.getn(fakeNames))]
 
@@ -103,10 +103,10 @@ function HMUnitFrame.GenerateFakeStats()
     local currentPower = math.random(1, maxPower)
 
     local debuffType
-    local trackedDebuffCount = table.getn(HealersMateSettings.TrackedDebuffTypes)
+    local trackedDebuffCount = table.getn(PuppeteerSettings.TrackedDebuffTypes)
     if trackedDebuffCount > 0 then
         if math.random(1, 10) == 1 then
-            debuffType = HealersMateSettings.TrackedDebuffTypes[math.random(trackedDebuffCount)]
+            debuffType = PuppeteerSettings.TrackedDebuffTypes[math.random(trackedDebuffCount)]
         end
     end
 
@@ -130,47 +130,47 @@ function HMUnitFrame.GenerateFakeStats()
     return fakeStats
 end
 
-function HMUnitFrame:GetUnit()
+function PTUnitFrame:GetUnit()
     return self.unit
 end
 
-function HMUnitFrame:GetResolvedUnit()
+function PTUnitFrame:GetResolvedUnit()
     return not self.isCustomUnit and self.unit or self.guidUnit
 end
 
-function HMUnitFrame:GetRootContainer()
+function PTUnitFrame:GetRootContainer()
     return self.rootContainer
 end
 
-function HMUnitFrame:GetContainer()
+function PTUnitFrame:GetContainer()
     return self.container
 end
 
-function HMUnitFrame:Show()
+function PTUnitFrame:Show()
     self.container:Show()
     self.rootContainer:Show()
     self:UpdateAll()
 end
 
-function HMUnitFrame:Hide()
+function PTUnitFrame:Hide()
     if not self:IsFake() then
         self.container:Hide()
         self.rootContainer:Hide()
     end
 end
 
-function HMUnitFrame:IsShown()
+function PTUnitFrame:IsShown()
     return self.rootContainer:IsShown()
 end
 
-function HMUnitFrame:SetOwningGroup(group)
+function PTUnitFrame:SetOwningGroup(group)
     self.owningGroup = group
     self:Initialize()
     self:GetRootContainer():SetParent(group:GetContainer())
 end
 
-function HMUnitFrame:RegisterClicks()
-    local buttons = HMOptions.CastWhen == "Mouse Up" and util.GetUpButtons() or util.GetDownButtons()
+function PTUnitFrame:RegisterClicks()
+    local buttons = PTOptions.CastWhen == "Mouse Up" and util.GetUpButtons() or util.GetDownButtons()
     self.button:RegisterForClicks(unpack(buttons))
     for _, aura in ipairs(self.auraIcons) do
         aura.frame:RegisterForClicks(unpack(buttons))
@@ -180,7 +180,7 @@ function HMUnitFrame:RegisterClicks()
     end
 end
 
-function HMUnitFrame:UpdateAll()
+function PTUnitFrame:UpdateAll()
     self:UpdateAuras()
     self:UpdateHealth()
     self:UpdatePower()
@@ -191,17 +191,17 @@ function HMUnitFrame:UpdateAll()
     self:UpdateRaidMark()
 end
 
-function HMUnitFrame:GetShowDistanceThreshold()
+function PTUnitFrame:GetShowDistanceThreshold()
     local threshold = self:GetProfile().ShowDistanceThreshold
     return self:IsEnemy() and threshold.Hostile or threshold.Friendly
 end
 
-function HMUnitFrame:GetOutOfRangeThreshold()
+function PTUnitFrame:GetOutOfRangeThreshold()
     local threshold = self:GetProfile().OutOfRangeThreshold
     return self:IsEnemy() and threshold.Hostile or threshold.Friendly
 end
 
-function HMUnitFrame:UpdateRange()
+function PTUnitFrame:UpdateRange()
     local wasInRange = self.inRange
     self.distance = self:GetCache():GetDistance()
     self.inRange = math.ceil(self.distance) < self:GetOutOfRangeThreshold()
@@ -212,7 +212,7 @@ function HMUnitFrame:UpdateRange()
     self:UpdateRangeText()
 end
 
-function HMUnitFrame:UpdateSight()
+function PTUnitFrame:UpdateSight()
     self.inSight = self:GetCache():IsInSight()
     local frame = self.lineOfSightIcon.frame
     if frame:IsShown() ~= self.inSight then
@@ -226,7 +226,7 @@ function HMUnitFrame:UpdateSight()
 end
 
 local preciseDistance = util.CanClientGetPreciseDistance()
-function HMUnitFrame:UpdateRangeText()
+function PTUnitFrame:UpdateRangeText()
     local dist = math.ceil(self.distance)
     local distanceText = self.distanceText
     local text = ""
@@ -253,7 +253,7 @@ function HMUnitFrame:UpdateRangeText()
     distanceText:SetText(text)
 end
 
-function HMUnitFrame:UpdateOpacity()
+function PTUnitFrame:UpdateOpacity()
     local profile = self:GetProfile()
     
     local alpha = 1
@@ -268,7 +268,7 @@ function HMUnitFrame:UpdateOpacity()
 end
 
 -- Evaluate if the unit of this frame is the target and update the target outline if the state has changed
-function HMUnitFrame:EvaluateTarget()
+function PTUnitFrame:EvaluateTarget()
     if self.unit == "target" then -- "target" frames should not show a border since it's obvious they're the target
         return
     end
@@ -279,7 +279,7 @@ function HMUnitFrame:EvaluateTarget()
     end
 end
 
-function HMUnitFrame:UpdateOutline()
+function PTUnitFrame:UpdateOutline()
     local aggro = self:HasAggro()
     local targeted = self.targeted
 
@@ -295,7 +295,7 @@ function HMUnitFrame:UpdateOutline()
     self:SetOutlineColor(r, g, b)
 end
 
-function HMUnitFrame:SetOutlineColor(r, g, b)
+function PTUnitFrame:SetOutlineColor(r, g, b)
     if r then
         self.targetOutline:Show()
         self.targetOutline:SetBackdropBorderColor(r, g, b, 0.75)
@@ -304,7 +304,7 @@ function HMUnitFrame:SetOutlineColor(r, g, b)
     end
 end
 
-function HMUnitFrame:UpdateRaidMark()
+function PTUnitFrame:UpdateRaidMark()
     local unit = self:GetResolvedUnit()
     local fake = self:IsFake()
     if not unit and not fake then
@@ -331,7 +331,7 @@ function HMUnitFrame:UpdateRaidMark()
     self.raidMarkIcon.frame:Show()
 end
 
-function HMUnitFrame:Flash()
+function PTUnitFrame:Flash()
     local FLASH_TIME = 0.15
     local START_OPACITY = self:GetProfile().FlashOpacity / 100
 
@@ -344,11 +344,11 @@ function HMUnitFrame:Flash()
     frame.startOpacity = START_OPACITY
 
     if not frame:GetScript("OnUpdate") then
-        frame:SetScript("OnUpdate", HMUnitFrame.Flash_OnUpdate)
+        frame:SetScript("OnUpdate", PTUnitFrame.Flash_OnUpdate)
     end
 end
 
-function HMUnitFrame.Flash_OnUpdate()
+function PTUnitFrame.Flash_OnUpdate()
     local frame = this
     local self = frame.unitFrame
     local FLASH_TIME = frame.flashTime
@@ -363,23 +363,23 @@ function HMUnitFrame.Flash_OnUpdate()
 end
 
 -- If direct healing is nil, it will be assumed that all the incoming healing is direct healing
-function HMUnitFrame:SetIncomingHealing(incomingHealing, incomingDirectHealing)
+function PTUnitFrame:SetIncomingHealing(incomingHealing, incomingDirectHealing)
     self.incomingHealing = incomingHealing
     self.incomingDirectHealing = incomingDirectHealing or incomingHealing
     self:UpdateHealth()
 end
 
-function HMUnitFrame:UpdateIncomingHealing()
-    if HMHealPredict then
+function PTUnitFrame:UpdateIncomingHealing()
+    if PTHealPredict then
         local _, guid = UnitExists(self:GetUnit())
-        self:SetIncomingHealing(HMHealPredict.GetIncomingHealing(guid))
+        self:SetIncomingHealing(PTHealPredict.GetIncomingHealing(guid))
     else
         local name = UnitName(self:GetUnit())
-        self:SetIncomingHealing(HealersMate.HealComm:getHeal(name))
+        self:SetIncomingHealing(Puppeteer.HealComm:getHeal(name))
     end
 end
 
-function HMUnitFrame:GetCurrentHealth()
+function PTUnitFrame:GetCurrentHealth()
     if self:IsFake() then
         if not self.fakeStats.online then
             return 0
@@ -389,28 +389,28 @@ function HMUnitFrame:GetCurrentHealth()
     return UnitHealth(self.unit)
 end
 
-function HMUnitFrame:GetMaxHealth()
+function PTUnitFrame:GetMaxHealth()
     if self:IsFake() then
         return self.fakeStats.maxHealth
     end
     return UnitHealthMax(self.unit)
 end
 
-function HMUnitFrame:GetCurrentPower()
+function PTUnitFrame:GetCurrentPower()
     if self:IsFake() then
         return self.fakeStats.currentPower
     end
     return UnitMana(self.unit)
 end
 
-function HMUnitFrame:GetMaxPower()
+function PTUnitFrame:GetMaxPower()
     if self:IsFake() then
         return self.fakeStats.maxPower
     end
     return UnitManaMax(self.unit)
 end
 
-function HMUnitFrame:ShouldShowMissingHealth()
+function PTUnitFrame:ShouldShowMissingHealth()
     local profile = self:GetProfile()
     local currentHealth = self:GetCurrentHealth()
     if currentHealth == 0 then
@@ -427,7 +427,7 @@ end
 -- "Class" - Uses the unit's class color
 -- "Default" - Does not color the text
 -- Array RGB - Colors the text as the RGB values
-function HMUnitFrame:ColorizeText(inputText, color)
+function PTUnitFrame:ColorizeText(inputText, color)
     if color == "Class" then
         local r, g, b = util.GetClassColor(self:GetClass())
         return util.Colorize(inputText, r, g, b)
@@ -437,7 +437,7 @@ function HMUnitFrame:ColorizeText(inputText, color)
     return inputText
 end
 
-function HMUnitFrame:UpdateHealth()
+function PTUnitFrame:UpdateHealth()
     local fake = self:IsFake()
     if not UnitExists(self.unit) and not fake then
         if self.isCustomUnit or self.unit == "target" then
@@ -606,7 +606,7 @@ function HMUnitFrame:UpdateHealth()
 end
 
 local greenToRedColors = {{1, 0, 0}, {1, 0.3, 0}, {1, 1, 0}, {0.6, 0.92, 0}, {0, 0.8, 0}}
-function HMUnitFrame:SetHealthBarValue(value)
+function PTUnitFrame:SetHealthBarValue(value)
     local unit = self.unit
     local healthBar = self.healthBar
     local incomingHealthBar = self.incomingHealthBar
@@ -707,12 +707,12 @@ function HMUnitFrame:SetHealthBarValue(value)
 end
 
 -- Returns the r, g, b of the current dispellable debuff color, or nil if none
-function HMUnitFrame:GetDebuffColor()
+function PTUnitFrame:GetDebuffColor()
     local enemy = self:IsEnemy()
     if not enemy then -- Do not display debuff colors for enemies
-        for _, trackedDebuffType in ipairs(HealersMateSettings.TrackedDebuffTypes) do
+        for _, trackedDebuffType in ipairs(PuppeteerSettings.TrackedDebuffTypes) do
             if self:GetAfflictedDebuffTypes()[trackedDebuffType] then
-                local debuffTypeColor = HealersMateSettings.DebuffTypeColors[trackedDebuffType]
+                local debuffTypeColor = PuppeteerSettings.DebuffTypeColors[trackedDebuffType]
                 return debuffTypeColor[1], debuffTypeColor[2], debuffTypeColor[3]
             end
         end
@@ -720,12 +720,12 @@ function HMUnitFrame:GetDebuffColor()
 
     local fake = self:IsFake()
     if fake and self.fakeStats.debuffType then
-        local debuffTypeColor = HealersMateSettings.DebuffTypeColors[self.fakeStats.debuffType]
+        local debuffTypeColor = PuppeteerSettings.DebuffTypeColors[self.fakeStats.debuffType]
         return debuffTypeColor[1], debuffTypeColor[2], debuffTypeColor[3]
     end
 end
 
-function HMUnitFrame:UpdatePower()
+function PTUnitFrame:UpdatePower()
     local profile = self:GetProfile()
     local unit = self.unit
     local powerBar = self.powerBar
@@ -779,21 +779,21 @@ if util.IsSuperWowPresent() then
         durationTextFlashColorsRange[seconds] = {colors[2], colors[1]}
     end
 end
-function HMUnitFrame:AllocateAura()
+function PTUnitFrame:AllocateAura()
     local frame = CreateFrame("Button", nil, self.auraPanel, "UIPanelButtonTemplate")
     frame.unitFrame = self
     frame:SetNormalTexture(nil)
     frame:SetHighlightTexture(nil)
     frame:SetPushedTexture(nil)
-    local buttons = HMOptions.CastWhen == "Mouse Up" and util.GetUpButtons() or util.GetDownButtons()
+    local buttons = PTOptions.CastWhen == "Mouse Up" and util.GetUpButtons() or util.GetDownButtons()
     frame:RegisterForClicks(unpack(buttons))
     frame:EnableMouse(true)
 
-    frame:SetScript("OnEnter", HMUnitFrame.Aura_OnEnter)
-    frame:SetScript("OnLeave", HMUnitFrame.Aura_OnLeave)
-    frame:SetScript("OnClick", HMUnitFrame.Aura_OnClick)
-    frame:SetScript("OnMouseUp", HMUnitFrame.Aura_OnMouseUp)
-    frame:SetScript("OnMouseDown", HMUnitFrame.Aura_OnMouseDown)
+    frame:SetScript("OnEnter", PTUnitFrame.Aura_OnEnter)
+    frame:SetScript("OnLeave", PTUnitFrame.Aura_OnLeave)
+    frame:SetScript("OnClick", PTUnitFrame.Aura_OnClick)
+    frame:SetScript("OnMouseUp", PTUnitFrame.Aura_OnMouseUp)
+    frame:SetScript("OnMouseDown", PTUnitFrame.Aura_OnMouseDown)
     
     local icon = frame:CreateTexture(nil, "OVERLAY")
     local stackText = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -866,7 +866,7 @@ function HMUnitFrame:AllocateAura()
 end
 
 -- Get an icon from the available pool. Automatically inserts into the used pool.
-function HMUnitFrame:GetUnusedAura()
+function PTUnitFrame:GetUnusedAura()
     local aura
     if table.getn(self.auraIconPool) > 0 then
         aura = table.remove(self.auraIconPool, table.getn(self.auraIconPool))
@@ -878,7 +878,7 @@ function HMUnitFrame:GetUnusedAura()
     return aura
 end
 
-function HMUnitFrame:ReleaseAuras()
+function PTUnitFrame:ReleaseAuras()
     if table.getn(self.auraIcons) == 0 then
         return
     end
@@ -906,20 +906,20 @@ function HMUnitFrame:ReleaseAuras()
 end
 
 do
-    local trackedBuffs = HealersMateSettings.TrackedBuffs
-    function HMUnitFrame.BuffSorter(a, b)
+    local trackedBuffs = PuppeteerSettings.TrackedBuffs
+    function PTUnitFrame.BuffSorter(a, b)
         return trackedBuffs[a.name] < trackedBuffs[b.name]
     end
 end
 
 do
-    local trackedDebuffs = HealersMateSettings.TrackedDebuffs
-    function HMUnitFrame.DebuffSorter(a, b)
+    local trackedDebuffs = PuppeteerSettings.TrackedDebuffs
+    function PTUnitFrame.DebuffSorter(a, b)
         return trackedDebuffs[a.name] < trackedDebuffs[b.name]
     end
 end
 
-function HMUnitFrame:UpdateAuras()
+function PTUnitFrame:UpdateAuras()
     local profile = self:GetProfile()
     local unit = self.unit
     local enemy = self:IsEnemy()
@@ -928,7 +928,7 @@ function HMUnitFrame:UpdateAuras()
 
     local cache = self:GetCache()
     
-    local trackedBuffs = HealersMateSettings.TrackedBuffs
+    local trackedBuffs = PuppeteerSettings.TrackedBuffs
 
     local buffs = compost:GetTable() -- Buffs that are tracked because of matching name
     for name, array in pairs(cache.BuffsMap) do
@@ -942,8 +942,8 @@ function HMUnitFrame:UpdateAuras()
     end
     
 
-    local trackedDebuffs = HealersMateSettings.TrackedDebuffs
-    local trackedDebuffTypes = HealersMateSettings.TrackedDebuffTypesSet
+    local trackedDebuffs = PuppeteerSettings.TrackedDebuffs
+    local trackedDebuffTypes = PuppeteerSettings.TrackedDebuffTypesSet
 
     local debuffs = compost:GetTable() -- Debuffs that are tracked because of matching name, later combined with typed debuffs
     local typedDebuffs = compost:GetTable() -- Debuffs that are tracked because it's a tracked type (like "Magic" or "Disease")
@@ -997,20 +997,20 @@ function HMUnitFrame:UpdateAuras()
     compost:Reclaim(typedDebuffs)
 
     -- Prevent lingering tooltips when the icon is removed or is changed to a different aura
-    if not HM.GameTooltip.OwningFrame or not HM.GameTooltip.OwningFrame:IsShown() or 
-            HM.GameTooltip.IconTexture ~= HM.GameTooltip.OwningIcon:GetTexture() then
-        HM.GameTooltip:Hide()
+    if not PT.GameTooltip.OwningFrame or not PT.GameTooltip.OwningFrame:IsShown() or 
+            PT.GameTooltip.IconTexture ~= PT.GameTooltip.OwningIcon:GetTexture() then
+        PT.GameTooltip:Hide()
     end
 end
 
 
-function HMUnitFrame.Aura_OnEnter()
+function PTUnitFrame.Aura_OnEnter()
     local self = this.unitFrame
     local aura = this.aura
     local index = this.auraIndex
     local type = this.auraType
 
-    local tooltip = HM.GameTooltip
+    local tooltip = PT.GameTooltip
     local cache = self:GetCache()
     tooltip:SetOwner(this, "ANCHOR_BOTTOMLEFT")
     tooltip.OwningFrame = this
@@ -1039,11 +1039,11 @@ function HMUnitFrame.Aura_OnEnter()
     end
 end
 
-function HMUnitFrame.Aura_OnLeave()
-    HM.GameTooltip:Hide()
-    HM.GameTooltip.OwningFrame = nil
-    HM.GameTooltip.OwningIcon = nil
-    HM.GameTooltip.IconTexture = nil
+function PTUnitFrame.Aura_OnLeave()
+    PT.GameTooltip:Hide()
+    PT.GameTooltip.OwningFrame = nil
+    PT.GameTooltip.OwningIcon = nil
+    PT.GameTooltip.IconTexture = nil
     -- Don't check mouse position for leaving, because it could cause the tooltip to stay if the icon is on the edge
     this.unitFrame.button:GetScript("OnLeave")()
 end
@@ -1058,14 +1058,14 @@ do
         end
     end
 
-    HMUnitFrame.Aura_OnClick = wrapButtonScript("OnClick")
+    PTUnitFrame.Aura_OnClick = wrapButtonScript("OnClick")
 
-    HMUnitFrame.Aura_OnMouseUp = wrapButtonScript("OnMouseUp")
+    PTUnitFrame.Aura_OnMouseUp = wrapButtonScript("OnMouseUp")
 
-    HMUnitFrame.Aura_OnMouseDown = wrapButtonScript("OnMouseDown")
+    PTUnitFrame.Aura_OnMouseDown = wrapButtonScript("OnMouseDown")
 end
 
-function HMUnitFrame:CreateAura(aura, name, index, texturePath, stacks, xOffset, yOffset, type, size)
+function PTUnitFrame:CreateAura(aura, name, index, texturePath, stacks, xOffset, yOffset, type, size)
     local frame = aura.frame
     frame:SetWidth(size)
     frame:SetHeight(size)
@@ -1108,11 +1108,11 @@ function HMUnitFrame:CreateAura(aura, name, index, texturePath, stacks, xOffset,
             CooldownFrame_SetTimer(durationUI, start, duration, 1)
 
             if duration < 60 then
-                durationUI.displayAt = HMOptions.ShowAuraTimesAt.Short
+                durationUI.displayAt = PTOptions.ShowAuraTimesAt.Short
             elseif duration <= 60 * 2 then
-                durationUI.displayAt = HMOptions.ShowAuraTimesAt.Medium
+                durationUI.displayAt = PTOptions.ShowAuraTimesAt.Medium
             else
-                durationUI.displayAt = HMOptions.ShowAuraTimesAt.Long
+                durationUI.displayAt = PTOptions.ShowAuraTimesAt.Long
             end
 
             -- To prevent having a frame where the duration is not updated
@@ -1122,7 +1122,7 @@ function HMUnitFrame:CreateAura(aura, name, index, texturePath, stacks, xOffset,
     end
 end
 
-function HMUnitFrame:Initialize()
+function PTUnitFrame:Initialize()
     local unit = self.unit
 
     local profile = self:GetProfile()
@@ -1179,18 +1179,18 @@ function HMUnitFrame:Initialize()
 
     local healthBar = CreateFrame("StatusBar", unit.."HealthBar", container)
     self.healthBar = healthBar
-    healthBar:SetStatusBarTexture(HM.BarStyles[profile.HealthBarStyle])
+    healthBar:SetStatusBarTexture(PT.BarStyles[profile.HealthBarStyle])
     healthBar:SetMinMaxValues(0, 1)
 
     local incomingHealthBar = CreateFrame("StatusBar", unit.."IncomingHealthBar", container)
     self.incomingHealthBar = incomingHealthBar
-    incomingHealthBar:SetStatusBarTexture(HM.BarStyles[profile.HealthBarStyle])
+    incomingHealthBar:SetStatusBarTexture(PT.BarStyles[profile.HealthBarStyle])
     incomingHealthBar:SetMinMaxValues(0, 1)
     incomingHealthBar:SetFrameLevel(healthBar:GetFrameLevel() - 1)
 
     local incomingDirectHealthBar = CreateFrame("StatusBar", unit.."IncomingDirectHealthBar", container)
     self.incomingDirectHealthBar = incomingDirectHealthBar
-    incomingDirectHealthBar:SetStatusBarTexture(HM.BarStyles[profile.HealthBarStyle])
+    incomingDirectHealthBar:SetStatusBarTexture(PT.BarStyles[profile.HealthBarStyle])
     incomingDirectHealthBar:SetMinMaxValues(0, 1)
     incomingDirectHealthBar:SetFrameLevel(healthBar:GetFrameLevel() - 1)
 
@@ -1220,7 +1220,7 @@ function HMUnitFrame:Initialize()
 
     local powerBar = CreateFrame("StatusBar", unit.."PowerStatusBar", container)
     self.powerBar = powerBar
-    powerBar:SetStatusBarTexture(HM.BarStyles[profile.PowerBarStyle])
+    powerBar:SetStatusBarTexture(PT.BarStyles[profile.PowerBarStyle])
     powerBar:SetMinMaxValues(0, 1)
     powerBar:SetValue(1)
     powerBar:SetStatusBarColor(0, 0, 1)
@@ -1247,44 +1247,44 @@ function HMUnitFrame:Initialize()
             return
         end
         local buttonType = arg1
-        HM.ClickHandler(buttonType, unit, self)
+        PT.ClickHandler(buttonType, unit, self)
     end)
     button:SetScript("OnMouseDown", function()
         local buttonType = arg1
-        HM.CurrentlyHeldButton = HealersMateSettings.CustomButtonNames[buttonType] or HM.ReadableButtonMap[buttonType]
-        HM.ReapplySpellsTooltip()
+        PT.CurrentlyHeldButton = PuppeteerSettings.CustomButtonNames[buttonType] or PT.ReadableButtonMap[buttonType]
+        PT.ReapplySpellsTooltip()
         self.pressed = true
         self:AdjustHealthPosition()
     end)
     button:SetScript("OnMouseUp", function()
-        HM.CurrentlyHeldButton = nil
-        HM.ReapplySpellsTooltip()
+        PT.CurrentlyHeldButton = nil
+        PT.ReapplySpellsTooltip()
         self.pressed = false
         self:AdjustHealthPosition()
     end)
     button:SetScript("OnEnter", function()
         local attachTooltipTo
-        if HMOptions.SpellsTooltip.AttachTo == "Frame" then
+        if PTOptions.SpellsTooltip.AttachTo == "Frame" then
             attachTooltipTo = self.rootContainer
-        elseif HMOptions.SpellsTooltip.AttachTo == "Group" then
+        elseif PTOptions.SpellsTooltip.AttachTo == "Group" then
             attachTooltipTo = self.owningGroup:GetContainer()
-        elseif HMOptions.SpellsTooltip.AttachTo == "Screen" then
+        elseif PTOptions.SpellsTooltip.AttachTo == "Screen" then
             attachTooltipTo = UIParent
         else
             attachTooltipTo = self.button
         end
-        HM.ApplySpellsTooltip(attachTooltipTo, unit, self.button)
+        PT.ApplySpellsTooltip(attachTooltipTo, unit, self.button)
         self.hovered = true
         self:UpdateHealth()
-        if HMOptions.SetMouseover and util.IsSuperWowPresent() then
+        if PTOptions.SetMouseover and util.IsSuperWowPresent() then
             SetMouseoverUnit(self:GetResolvedUnit())
         end
     end)
     button:SetScript("OnLeave", function()
-        HM.HideSpellsTooltip()
+        PT.HideSpellsTooltip()
         self.hovered = false
         self:UpdateHealth()
-        if HMOptions.SetMouseover and util.IsSuperWowPresent() then
+        if PTOptions.SetMouseover and util.IsSuperWowPresent() then
             SetMouseoverUnit(nil)
         end
     end)
@@ -1340,7 +1340,7 @@ function HMUnitFrame:Initialize()
     self:SizeElements()
 end
 
-function HMUnitFrame:SizeElements()
+function PTUnitFrame:SizeElements()
     local profile = self:GetProfile()
     local width = profile.Width
     local healthBarHeight = profile.HealthBarHeight
@@ -1425,7 +1425,7 @@ function HMUnitFrame:SizeElements()
     container:SetHeight(self:GetHeight())
 end
 
-function HMUnitFrame:AdjustHealthPosition()
+function PTUnitFrame:AdjustHealthPosition()
     local profile = self:GetProfile()
 
     local healthTexts = profile.HealthTexts
@@ -1458,7 +1458,7 @@ local alignmentAnchorMap = {
         ["BOTTOM"] = "BOTTOMRIGHT",
     }
 }
-function HMUnitFrame:UpdateComponent(component, props, xOffset, yOffset)
+function PTUnitFrame:UpdateComponent(component, props, xOffset, yOffset)
     xOffset = xOffset or 0
     yOffset = yOffset or 0
 
@@ -1482,73 +1482,73 @@ function HMUnitFrame:UpdateComponent(component, props, xOffset, yOffset)
     component:SetPoint(alignment, anchor, alignment, props:GetOffsetX() + xOffset, props:GetOffsetY() + yOffset)
 end
 
-function HMUnitFrame:GetCache()
-    return HMUnit.Get(self.unit) or HMUnit
+function PTUnitFrame:GetCache()
+    return PTUnit.Get(self.unit) or PTUnit
 end
 
-function HMUnitFrame:GetAfflictedDebuffTypes()
+function PTUnitFrame:GetAfflictedDebuffTypes()
     return self:GetCache().AfflictedDebuffTypes
 end
 
-function HMUnitFrame:GetWidth()
+function PTUnitFrame:GetWidth()
     return self:GetProfile().Width
 end
 
-function HMUnitFrame:GetHeight()
+function PTUnitFrame:GetHeight()
     return self:GetProfile():GetHeight()
 end
 
-function HMUnitFrame:GetName()
+function PTUnitFrame:GetName()
     if self:IsFake() then
         return self.fakeStats.name
     end
     return UnitName(self.unit)
 end
 
-function HMUnitFrame:GetClass()
+function PTUnitFrame:GetClass()
     if self:IsFake() then
         return self.fakeStats.class
     end
     return util.GetClass(self.unit)
 end
 
-function HMUnitFrame:IsPlayer()
+function PTUnitFrame:IsPlayer()
     return UnitIsPlayer(self.unit)
 end
 
-function HMUnitFrame:IsEnemy()
+function PTUnitFrame:IsEnemy()
     return UnitCanAttack("player", self.unit)
 end
 
-function HMUnitFrame:IsFake()
-    return HealersMate.TestUI and not UnitExists(self.unit)
+function PTUnitFrame:IsFake()
+    return Puppeteer.TestUI and not UnitExists(self.unit)
 end
 
-function HMUnitFrame:GetRole()
-    return HealersMate.GetUnitAssignedRole(self:GetUnit())
+function PTUnitFrame:GetRole()
+    return Puppeteer.GetUnitAssignedRole(self:GetUnit())
 end
 
-function HMUnitFrame:HasAggro()
+function PTUnitFrame:HasAggro()
     local unit = self:GetUnit()
     if self.isCustomUnit then
         if not self.guidUnit then
             return false
         end
-        unit = HMUnitProxy.ResolveCustomUnit(self.guidUnit)
+        unit = PTUnitProxy.ResolveCustomUnit(self.guidUnit)
         if not unit then
             return false
         end
     end
-    return HealersMate.Banzai:GetUnitAggroByUnitId(unit)
+    return Puppeteer.Banzai:GetUnitAggroByUnitId(unit)
 end
 
-local roleTexturesPath = HMUtil.GetAssetsPath().."textures\\roles\\"
+local roleTexturesPath = PTUtil.GetAssetsPath().."textures\\roles\\"
 local roleTextures = {
     ["Tank"] = roleTexturesPath.."Tank",
     ["Healer"] = roleTexturesPath.."Healer",
     ["Damage"] = roleTexturesPath.."Damage"
 }
-function HMUnitFrame:UpdateRole()
+function PTUnitFrame:UpdateRole()
     local role = self:GetRole()
     self.roleIcon.icon:SetTexture(roleTextures[role])
     if role then
@@ -1558,6 +1558,6 @@ function HMUnitFrame:UpdateRole()
     end
 end
 
-function HMUnitFrame:GetProfile()
+function PTUnitFrame:GetProfile()
     return self.owningGroup:GetProfile()
 end

@@ -1,14 +1,14 @@
-HMProfileManager = {}
+PTProfileManager = {}
 
-HMDefaultProfiles = {}
+PTDefaultProfiles = {}
 
-HMUserProfiles = {}
+PTUserProfiles = {}
 
 local _G = getfenv(0)
-setmetatable(HMProfileManager, {__index = getfenv(1)})
-setfenv(1, HMProfileManager)
+setmetatable(PTProfileManager, {__index = getfenv(1)})
+setfenv(1, PTProfileManager)
 
-local util = getglobal("HMUtil")
+local util = _G.PTUtil
 
 DefaultProfileOrder = {
     "Default", "Default (Short Bar)", "Small", "Very Small", "Very Small (Horizontal)", "Long", "Long (Small)", 
@@ -17,19 +17,19 @@ DefaultProfileOrder = {
 DefaultProfileOrder = util.ToSet(DefaultProfileOrder, true)
 
 function GetProfile(name)
-    return HMDefaultProfiles[name]
+    return PTDefaultProfiles[name]
 end
 
 function CreateProfile(name, baseName)
-    HMDefaultProfiles[name] = HMUIProfile:New(GetProfile(baseName or "Default"))
-    return HMDefaultProfiles[name]
+    PTDefaultProfiles[name] = PTUIProfile:New(GetProfile(baseName or "Default"))
+    return PTDefaultProfiles[name]
 end
 
 function InitializeDefaultProfiles()
-    HMUIProfile.SetDefaults()
+    PTUIProfile.SetDefaults()
 
     -- Master base profile
-    HMDefaultProfiles["Base"] = HMUIProfile:New()
+    PTDefaultProfiles["Base"] = PTUIProfile:New()
 
     do
         local profile = CreateProfile("Long", "Base")

@@ -1,20 +1,20 @@
 -- A utility to map guids to units
 
-if not HMUtil.IsSuperWowPresent() then
+if not PTUtil.IsSuperWowPresent() then
     return
 end
 
-HMGuidRoster = {}
+PTGuidRoster = {}
 
 local _G = getfenv(0)
-setmetatable(HMGuidRoster, {__index = getfenv(1)})
-setfenv(1, HMGuidRoster)
+setmetatable(PTGuidRoster, {__index = getfenv(1)})
+setfenv(1, PTGuidRoster)
 
 local compost = AceLibrary("Compost-2.0")
 
-HMUnitProxy.ImportFunctions(HMGuidRoster)
+PTUnitProxy.ImportFunctions(PTGuidRoster)
 
-local util = HMUtil
+local util = PTUtil
 
 GuidUnitMap = {}
 GuidFrameMap = {}
@@ -34,7 +34,7 @@ function PopulateRoster()
             AddUnit(guid, unit)
         end
     end
-    for unit, guid in pairs(HMUnitProxy.CustomUnitGUIDMap) do
+    for unit, guid in pairs(PTUnitProxy.CustomUnitGUIDMap) do
         AddUnit(guid, unit)
     end
 end
@@ -76,7 +76,7 @@ end
 -- Resolves the GUID of the real unit, custom unit, or returns the unit itself if it's already a GUID.
 -- If the unit is "target" and there's no target, this returns nil.
 function ResolveUnitGuid(unit)
-    local guid = GetUnitGuid(unit) or HMUnitProxy.CustomUnitGUIDMap[unit] or unit
+    local guid = GetUnitGuid(unit) or PTUnitProxy.CustomUnitGUIDMap[unit] or unit
     if guid ~= "target" then
         return guid
     end

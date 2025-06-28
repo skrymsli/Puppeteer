@@ -1,37 +1,37 @@
-HMUnitFrameGroup = {}
+PTUnitFrameGroup = {}
 
-HMUnitFrameGroup.name = "???"
+PTUnitFrameGroup.name = "???"
 
-HMUnitFrameGroup.profile = nil
+PTUnitFrameGroup.profile = nil
 
-HMUnitFrameGroup.container = nil
-HMUnitFrameGroup.borderFrame = nil
-HMUnitFrameGroup.header = nil
-HMUnitFrameGroup.label = nil
-HMUnitFrameGroup.uis = nil
-HMUnitFrameGroup.units = nil
+PTUnitFrameGroup.container = nil
+PTUnitFrameGroup.borderFrame = nil
+PTUnitFrameGroup.header = nil
+PTUnitFrameGroup.label = nil
+PTUnitFrameGroup.uis = nil
+PTUnitFrameGroup.units = nil
 
-HMUnitFrameGroup.petGroup = false
-HMUnitFrameGroup.environment = "all" -- party, raid, or all
-HMUnitFrameGroup.sortByRole = true
+PTUnitFrameGroup.petGroup = false
+PTUnitFrameGroup.environment = "all" -- party, raid, or all
+PTUnitFrameGroup.sortByRole = true
 
-HMUnitFrameGroup.moveContainer = CreateFrame("Frame", "HMUnitFrameGroupBulkMoveContainer", UIParent)
-HMUnitFrameGroup.moveContainer:EnableMouse(true)
-HMUnitFrameGroup.moveContainer:SetMovable(true)
+PTUnitFrameGroup.moveContainer = CreateFrame("Frame", "PTUnitFrameGroupBulkMoveContainer", UIParent)
+PTUnitFrameGroup.moveContainer:EnableMouse(true)
+PTUnitFrameGroup.moveContainer:SetMovable(true)
 
 local _G = getfenv(0)
-if HMUtil.IsSuperWowPresent() then
-    setmetatable(HMUnitProxy, {__index = getfenv(1)})
-    setfenv(1, HMUnitProxy)
+if PTUtil.IsSuperWowPresent() then
+    setmetatable(PTUnitProxy, {__index = getfenv(1)})
+    setfenv(1, PTUnitProxy)
 end
 
 -- Singleton references, assigned in constructor
-local HM
+local PT
 local util
 
-function HMUnitFrameGroup:New(name, environment, units, petGroup, profile, sortByRole)
-    HM = HealersMate -- Need to do this in the constructor or else it doesn't exist yet
-    util = HMUtil
+function PTUnitFrameGroup:New(name, environment, units, petGroup, profile, sortByRole)
+    PT = Puppeteer -- Need to do this in the constructor or else it doesn't exist yet
+    util = PTUtil
     local obj = {name = name, environment = environment, uis = {}, units = units, petGroup = petGroup, profile = profile}
     if sortByRole ~= nil then
         obj.sortByRole = sortByRole
@@ -42,8 +42,8 @@ function HMUnitFrameGroup:New(name, environment, units, petGroup, profile, sortB
     return obj
 end
 
-function HMUnitFrameGroup:EvaluateShown()
-    if self:CanShowInEnvironment(HealersMate.CurrentlyInRaid and "raid" or "party") and self:ShowCondition() then
+function PTUnitFrameGroup:EvaluateShown()
+    if self:CanShowInEnvironment(Puppeteer.CurrentlyInRaid and "raid" or "party") and self:ShowCondition() then
         self:Show()
         self:UpdateUIPositions()
     else
@@ -51,8 +51,8 @@ function HMUnitFrameGroup:EvaluateShown()
     end
 end
 
-function HMUnitFrameGroup:ShowCondition()
-    if HMOptions.Hidden then
+function PTUnitFrameGroup:ShowCondition()
+    if PTOptions.Hidden then
         return false
     end
 
@@ -64,7 +64,7 @@ function HMUnitFrameGroup:ShowCondition()
     return false
  end
 
-function HMUnitFrameGroup:AddUI(ui, noUpdate)
+function PTUnitFrameGroup:AddUI(ui, noUpdate)
     self.uis[ui:GetUnit()] = ui
     ui:SetOwningGroup(self)
     if not noUpdate then
@@ -72,47 +72,47 @@ function HMUnitFrameGroup:AddUI(ui, noUpdate)
     end
 end
 
-function HMUnitFrameGroup:GetContainer()
+function PTUnitFrameGroup:GetContainer()
     return self.container
 end
 
-function HMUnitFrameGroup:ResetFrameLevel()
+function PTUnitFrameGroup:ResetFrameLevel()
     self.container:SetFrameLevel(0)
     self.borderFrame:SetFrameLevel(1)
 end
 
-function HMUnitFrameGroup:GetEnvironment()
+function PTUnitFrameGroup:GetEnvironment()
     return self.environment
 end
 
-function HMUnitFrameGroup:CanShowInEnvironment(environment)
+function PTUnitFrameGroup:CanShowInEnvironment(environment)
     return self.environment == "all" or self.environment == environment
 end
 
-function HMUnitFrameGroup:Show()
+function PTUnitFrameGroup:Show()
     self.container:Show()
     for _, ui in pairs(self.uis) do
         ui:UpdateAll()
     end
 end
 
-function HMUnitFrameGroup:Hide()
+function PTUnitFrameGroup:Hide()
     self.container:Hide()
 end
 
 -- Used while moving frames to avoid the lag while moving over other toplevel frames
-function HMUnitFrameGroup:RemoveToplevel()
+function PTUnitFrameGroup:RemoveToplevel()
     self.container:SetToplevel(false)
     self.container:SetFrameStrata("HIGH")
 end
 
-function HMUnitFrameGroup:ApplyToplevel()
+function PTUnitFrameGroup:ApplyToplevel()
     self.container:SetToplevel(true)
     self.container:SetFrameStrata("MEDIUM")
 end
 
-function HMUnitFrameGroup:Initialize()
-    local container = CreateFrame("Frame", self.name.."HMUnitFrameGroupContainer", UIParent) --type, name, parent
+function PTUnitFrameGroup:Initialize()
+    local container = CreateFrame("Frame", self.name.."PTUnitFrameGroupContainer", UIParent) --type, name, parent
     self.container = container
     self:ApplyToplevel()
     if container:GetNumPoints() == 0 then
@@ -132,7 +132,7 @@ function HMUnitFrameGroup:Initialize()
 
         container.isMoving = true
 
-        if (util.GetKeyModifier() == HMOptions.FrameDrag.AltMoveKey) == HMOptions.FrameDrag.MoveAll then
+        if (util.GetKeyModifier() == PTOptions.FrameDrag.AltMoveKey) == PTOptions.FrameDrag.MoveAll then
             container:StartMoving()
             self:RemoveToplevel()
             return
@@ -140,13 +140,13 @@ function HMUnitFrameGroup:Initialize()
 
         container.bulkMovement = true
 
-        local moveContainer = HMUnitFrameGroup.moveContainer
+        local moveContainer = PTUnitFrameGroup.moveContainer
         moveContainer:ClearAllPoints()
         moveContainer:SetPoint("TOPLEFT", 0, 0)
         -- If the container doesn't have a size, it doesn't move
         moveContainer:SetWidth(1)
         moveContainer:SetHeight(1)
-        for _, group in pairs(HealersMate.UnitFrameGroups) do
+        for _, group in pairs(Puppeteer.UnitFrameGroups) do
             group:RemoveToplevel()
             local gc = group:GetContainer()
             local xOffset = gc:GetLeft()
@@ -174,9 +174,9 @@ function HMUnitFrameGroup:Initialize()
 
         container.bulkMovement = false
 
-        local moveContainer = HMUnitFrameGroup.moveContainer
+        local moveContainer = PTUnitFrameGroup.moveContainer
         moveContainer:StopMovingOrSizing()
-        for _, group in pairs(HealersMate.UnitFrameGroups) do
+        for _, group in pairs(Puppeteer.UnitFrameGroups) do
             group:ApplyToplevel()
             local gc = group:GetContainer()
             local xOffset = gc:GetLeft()
@@ -199,13 +199,13 @@ function HMUnitFrameGroup:Initialize()
         arg1 = prevArg
     end)
 
-    local header = CreateFrame("Frame", self.name.."HMUnitFrameGroupContainerHeader", container) --type, name, parent
+    local header = CreateFrame("Frame", self.name.."PTUnitFrameGroupContainerHeader", container) --type, name, parent
     self.header = header
     header:SetPoint("TOPLEFT", container, 0, 0)
     header:SetBackdrop({bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background"})
     header:SetBackdropColor(0, 0, 0, 0.5)
 
-    local borderFrame = CreateFrame("Frame", self.name.."HMUnitFrameGroupContainerBorder", container)
+    local borderFrame = CreateFrame("Frame", self.name.."PTUnitFrameGroupContainerBorder", container)
     self.borderFrame = borderFrame
     borderFrame:SetPoint("CENTER", container, 0, 0)
 
@@ -219,7 +219,7 @@ function HMUnitFrameGroup:Initialize()
     self:UpdateUIPositions()
 end
 
-function HMUnitFrameGroup:ApplyProfile()
+function PTUnitFrameGroup:ApplyProfile()
     local profile = self:GetProfile()
     
     local borderFrame = self.borderFrame
@@ -234,7 +234,7 @@ function HMUnitFrameGroup:ApplyProfile()
     end
 end
 
-function HMUnitFrameGroup:UpdateUIPositions()
+function PTUnitFrameGroup:UpdateUIPositions()
     local profile = self:GetProfile()
     local profileWidth = profile.Width
     local profileHeight = profile:GetHeight()
@@ -308,7 +308,7 @@ function HMUnitFrameGroup:UpdateUIPositions()
 end
 
 -- Returns an array with the index being the group number, and the value being an array of units
-function HMUnitFrameGroup:GetSortedUIs()
+function PTUnitFrameGroup:GetSortedUIs()
     local profile = self:GetProfile()
     local uis = self.uis
     local groups = {}
@@ -326,7 +326,7 @@ function HMUnitFrameGroup:GetSortedUIs()
             end
         end
         -- If testing, fill empty slots with fake players
-        if HealersMate.TestUI and RAID_SUBGROUP_LISTS then
+        if Puppeteer.TestUI and RAID_SUBGROUP_LISTS then
             local unoccupied = {}
             for i = 1, 40 do
                 if not foundRaidNumbers[i] then
@@ -432,6 +432,6 @@ function HMUnitFrameGroup:GetSortedUIs()
     return sortedGroups
 end
 
-function HMUnitFrameGroup:GetProfile()
+function PTUnitFrameGroup:GetProfile()
     return self.profile
 end

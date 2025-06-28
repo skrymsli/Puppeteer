@@ -27,8 +27,8 @@ SOFTWARE.
 -- I'm too lazy to implement this myself, for now..
 
 local _G = getfenv(0)
-setmetatable(HMUtil, {__index = getfenv(1)})
-setfenv(1, HMUtil)
+setmetatable(PTUtil, {__index = getfenv(1)})
+setfenv(1, PTUtil)
 
 
 local gfind = string.gmatch or string.gfind

@@ -1,15 +1,15 @@
 -- Proxy unit functions that resolve custom units to their GUIDs before doing what they do.
 -- One might say you'd be insane to do this just to have custom units, and you'd be correct.
 
--- SuperWoW check, can't rely on HMUtil because it depends on this file
+-- SuperWoW check, can't rely on PTUtil because it depends on this file
 if SpellInfo == nil then
     return
 end
 
-HMUnitProxy = {}
+PTUnitProxy = {}
 local _G = getfenv(0)
-setmetatable(HMUnitProxy, {__index = getfenv(1)})
-setfenv(1, HMUnitProxy)
+setmetatable(PTUnitProxy, {__index = getfenv(1)})
+setfenv(1, PTUnitProxy)
 
 local compost = AceLibrary("Compost-2.0")
 
@@ -68,7 +68,7 @@ function RegisterUpdateListener(listener)
 end
 
 function UnregisterUpdateListener(listener)
-    HMUtil.RemoveElement(UpdateListeners, listener)
+    PTUtil.RemoveElement(UpdateListeners, listener)
 end
 
 ImportedEnvironments = {}
@@ -79,7 +79,7 @@ function UpdateUnitTypeFrames(unitType)
     local groups = compost:GetTable()
     for _, unit in ipairs(CustomUnitsMap[unitType]) do
         local guid = CustomUnitGUIDMap[unit]
-        for ui in HealersMate.UnitFrames(unit) do
+        for ui in Puppeteer.UnitFrames(unit) do
             if guid then
                 ui:Show()
                 ui.guidUnit = guid
@@ -102,7 +102,7 @@ end
 function UpdateUnitFrames(unit)
     local groups = compost:GetTable()
     local guid = CustomUnitGUIDMap[unit]
-    for ui in HealersMate.UnitFrames(unit) do
+    for ui in Puppeteer.UnitFrames(unit) do
         if guid then
             ui:Show()
             ui.guidUnit = guid
@@ -148,8 +148,8 @@ function SetCustomUnitGuid(unit, guid, skipUpdate)
             GUIDCustomUnitMap[guid] = unitArray
         end
         table.insert(unitArray, unit)
-        HMGuidRoster.SetUnitGuid(unit, guid)
-        HMUnit.UpdateGuidCaches()
+        PTGuidRoster.SetUnitGuid(unit, guid)
+        PTUnit.UpdateGuidCaches()
         if not skipUpdate then
             UpdateUnitFrames(unit)
         end
@@ -163,10 +163,10 @@ function SetCustomUnitGuid(unit, guid, skipUpdate)
                 compost:Reclaim(unitArray)
                 GUIDCustomUnitMap[guid] = nil
             else
-                HMUtil.RemoveElement(unitArray, unit)
+                PTUtil.RemoveElement(unitArray, unit)
             end
-            HMGuidRoster.SetUnitGuid(unit, nil)
-            HMUnit.UpdateGuidCaches()
+            PTGuidRoster.SetUnitGuid(unit, nil)
+            PTUnit.UpdateGuidCaches()
             if not skipUpdate then
                 UpdateUnitFrames(unit)
             end
@@ -214,7 +214,7 @@ function PromoteGuidUnitType(guid, unitType)
         return
     end
     local units = CustomUnitsMap[unitType]
-    local index = HMUtil.IndexOf(units, unit)
+    local index = PTUtil.IndexOf(units, unit)
 
     SetCustomUnitGuid(unit, nil)
     -- Remove all units before this unit
@@ -248,7 +248,7 @@ function IsGuidCustomUnit(guid, unit)
 end
 
 function IsUnitUnitType(unit, unitType)
-    local guid = HMGuidRoster.ResolveUnitGuid(unit)
+    local guid = PTGuidRoster.ResolveUnitGuid(unit)
     return IsGuidUnitType(guid, unitType)
 end
 
@@ -268,7 +268,7 @@ end
 -- Returns a normal unit associated with the custom unit or GUID, or nil if there is none
 function ResolveCustomUnit(customUnit)
     local guid = CustomUnitGUIDMap[customUnit] or customUnit
-    local units = HMGuidRoster.GetUnits(guid)
+    local units = PTGuidRoster.GetUnits(guid)
     if units and table.getn(units) > 1 then
         for _, rosterUnit in ipairs(units) do
             if not AllCustomUnitsSet[rosterUnit] then
@@ -279,7 +279,7 @@ function ResolveCustomUnit(customUnit)
 end
 
 function CycleUnitType(unitType, onlyAttackable)
-    local targetGuid = HMGuidRoster.GetUnitGuid("target")
+    local targetGuid = PTGuidRoster.GetUnitGuid("target")
     local typeTarget = GetCurrentUnitOfType(targetGuid, unitType)
     local typeUnits = CustomUnitsMap[unitType]
     if not typeTarget then -- Not targeting this unit type
@@ -292,7 +292,7 @@ function CycleUnitType(unitType, onlyAttackable)
         return
     end
     local maxUnits = table.getn(typeUnits)
-    local targetIndex = HMUtil.IndexOf(typeUnits, typeTarget)
+    local targetIndex = PTUtil.IndexOf(typeUnits, typeTarget)
     local i = targetIndex
     for e = 1, maxUnits - 1 do
         i = i + 1
@@ -335,7 +335,7 @@ function UnitProxy(name, func, defaultValue)
         end
         return func(unit)
     end
-    HMUnitProxy[name] = proxy
+    PTUnitProxy[name] = proxy
     UnitFunctions[name] = proxy
 end
 
@@ -355,7 +355,7 @@ function DoubleUnitProxy(name, func, defaultValue)
         end
         return func(unit1, unit2)
     end
-    HMUnitProxy[name] = proxy
+    PTUnitProxy[name] = proxy
     UnitFunctions[name] = proxy
 end
 
@@ -369,18 +369,18 @@ function AuraProxy(name, func, defaultValue)
         end
         return func(unit, index)
     end
-    HMUnitProxy[name] = proxy
+    PTUnitProxy[name] = proxy
     UnitFunctions[name] = proxy
 end
 
 function CustomProxy(name, constructor)
     local proxy = constructor()
-    HMUnitProxy[name] = proxy
+    PTUnitProxy[name] = proxy
     UnitFunctions[name] = proxy
 end
 
 function CustomFunction(name, func)
-    HMUnitProxy[name] = func
+    PTUnitProxy[name] = func
     UnitFunctions[name] = func
 end
 

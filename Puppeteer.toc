@@ -3,8 +3,8 @@
 ## Title: Puppeteer
 ## Notes: Healing Addon for WoW Client version 1.12
 ## Author: OldManAlpha, Richard Truax(i2ichardt)
-## SavedVariables: HMOnLoadInfoDisabled, HMHealCache, HMPlayerHealCache, HMRoleCache
-## SavedVariablesPerCharacter: HMSpells, HMOptions
+## SavedVariables: PTOnLoadInfoDisabled, PTHealCache, PTPlayerHealCache, PTRoleCache
+## SavedVariablesPerCharacter: PTSpells, PTOptions
 
 libs\ace\AceLibrary\AceLibrary.lua
 libs\ace\AceLocale-2.2\AceLocale-2.2.lua

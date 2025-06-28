@@ -1,76 +1,76 @@
 -- Caches important information about units and makes the data easily readable at any time.
 -- If using SuperWoW, the cache map will have GUIDs as the key instead of unit IDs.
 
-local util = HMUtil
+local util = PTUtil
 local AllUnits = util.AllUnits
 local AllUnitsSet = util.AllUnitsSet
 local superwow = util.IsSuperWowPresent()
 
 local compost = AceLibrary("Compost-2.0")
 
-HMUnit = {}
+PTUnit = {}
 
 -- Non-instance variable
--- Key: Unit ID(Unmodded) or GUID(SuperWoW) | Value: HMUnit Instance
-HMUnit.Cached = {}
+-- Key: Unit ID(Unmodded) or GUID(SuperWoW) | Value: PTUnit Instance
+PTUnit.Cached = {}
 
-HMUnit.Unit = nil
+PTUnit.Unit = nil
 
-HMUnit.AurasPopulated = false
+PTUnit.AurasPopulated = false
 -- Buff/debuff entry contents: {"name", "stacks", "texture", "index", "type", "id"(SuperWoW only)}
-HMUnit.Buffs = {} -- Array of all buffs
-HMUnit.BuffsMap = {} -- Key: Name | Value: Array of buffs with key's name
-HMUnit.BuffsIDSet = {} -- Set of currently applied buff IDs
-HMUnit.Debuffs = {} -- Array of all debuffs
-HMUnit.DebuffsMap = {} -- Key: Name | Value: Array of debuffs with key's name
-HMUnit.DebuffsIDSet = {} -- Set of currently applied debuff IDs
-HMUnit.TypedDebuffs = {} -- Key: Type | Value: Array of debuffs that are the type
-HMUnit.AfflictedDebuffTypes = {} -- Set of the afflicted debuff types
+PTUnit.Buffs = {} -- Array of all buffs
+PTUnit.BuffsMap = {} -- Key: Name | Value: Array of buffs with key's name
+PTUnit.BuffsIDSet = {} -- Set of currently applied buff IDs
+PTUnit.Debuffs = {} -- Array of all debuffs
+PTUnit.DebuffsMap = {} -- Key: Name | Value: Array of debuffs with key's name
+PTUnit.DebuffsIDSet = {} -- Set of currently applied debuff IDs
+PTUnit.TypedDebuffs = {} -- Key: Type | Value: Array of debuffs that are the type
+PTUnit.AfflictedDebuffTypes = {} -- Set of the afflicted debuff types
 
-HMUnit.HasHealingModifier = false
+PTUnit.HasHealingModifier = false
 
 -- Only used with SuperWoW, managed in AuraTracker.lua
-HMUnit.AuraTimes = {} -- Key: Aura Name | Value: {"startTime", "duration"}
+PTUnit.AuraTimes = {} -- Key: Aura Name | Value: {"startTime", "duration"}
 
-HMUnit.Distance = 0
-HMUnit.InSight = true
-HMUnit.IsNew = false
+PTUnit.Distance = 0
+PTUnit.InSight = true
+PTUnit.IsNew = false
 
 local _G = getfenv(0)
-if HMUtil.IsSuperWowPresent() then
-    setmetatable(HMUnitProxy, {__index = getfenv(1)})
-    setfenv(1, HMUnitProxy)
+if PTUtil.IsSuperWowPresent() then
+    setmetatable(PTUnitProxy, {__index = getfenv(1)})
+    setfenv(1, PTUnitProxy)
 end
 
 -- Non-GUID function
-function HMUnit.CreateCaches()
+function PTUnit.CreateCaches()
     if superwow then
-        HealersMate.hmprint("Tried to create non-SuperWoW caches while using SuperWoW!")
+        Puppeteer.print("Tried to create non-SuperWoW caches while using SuperWoW!")
         return
     end
     for _, unit in ipairs(AllUnits) do
-        HMUnit:New(unit)
+        PTUnit:New(unit)
     end
 end
 
-function HMUnit.UpdateGuidCaches()
-    local cached = HMUnit.Cached
-    local prevCached = HMUtil.CloneTableCompost(cached)
+function PTUnit.UpdateGuidCaches()
+    local cached = PTUnit.Cached
+    local prevCached = PTUtil.CloneTableCompost(cached)
     for _, unit in ipairs(AllUnits) do
         local exists, guid = UnitExists(unit)
         if exists then
             if not cached[guid] then
-                HMUnit:New(guid)
-                HealersMate.EvaluateTracking(unit, true)
+                PTUnit:New(guid)
+                Puppeteer.EvaluateTracking(unit, true)
             end
             prevCached[guid] = nil
         end
     end
-    for guid, units in pairs(HMUnitProxy.GUIDCustomUnitMap) do
+    for guid, units in pairs(PTUnitProxy.GUIDCustomUnitMap) do
         if not cached[guid] then
-            HMUnit:New(guid)
+            PTUnit:New(guid)
             for _, unit in ipairs(units) do
-                HealersMate.EvaluateTracking(unit, true)
+                Puppeteer.EvaluateTracking(unit, true)
             end
         end
         prevCached[guid] = nil
@@ -84,29 +84,29 @@ function HMUnit.UpdateGuidCaches()
 end
 
 -- Likely never needed to be called when using GUIDs
-function HMUnit.UpdateAllUnits()
-    for _, cache in pairs(HMUnit.Cached) do
+function PTUnit.UpdateAllUnits()
+    for _, cache in pairs(PTUnit.Cached) do
         cache:UpdateAll()
     end
 end
 
--- Get the HMUnit by unit ID. If using SuperWoW, GUID or unit ID is accepted.
-function HMUnit.Get(unit)
+-- Get the PTUnit by unit ID. If using SuperWoW, GUID or unit ID is accepted.
+function PTUnit.Get(unit)
     if superwow and AllUnitsSet[unit] then
-        return HMUnit.Cached[HMGuidRoster.GetUnitGuid(unit)] or HMUnit
+        return PTUnit.Cached[PTGuidRoster.GetUnitGuid(unit)] or PTUnit
     end
-    return HMUnit.Cached[unit]
+    return PTUnit.Cached[unit]
 end
 
-function HMUnit.GetAllUnits()
-    return HMUnit.Cached
+function PTUnit.GetAllUnits()
+    return PTUnit.Cached
 end
 
-function HMUnit:New(unit)
+function PTUnit:New(unit)
     local obj = compost:AcquireHash("Unit", unit)
     setmetatable(obj, self)
     self.__index = self
-    HMUnit.Cached[unit] = obj
+    PTUnit.Cached[unit] = obj
     obj:AllocateAuras()
     obj.AurasPopulated = true -- To force aura fields to generate
     obj.IsNew = true
@@ -117,7 +117,7 @@ function HMUnit:New(unit)
     return obj
 end
 
-function HMUnit:Dispose()
+function PTUnit:Dispose()
     compost:Reclaim(self.Buffs, 1)
     compost:Reclaim(self.BuffsMap, 1)
     compost:Reclaim(self.BuffsIDSet)
@@ -129,14 +129,14 @@ function HMUnit:Dispose()
     compost:Reclaim(self.AuraTimes)
 end
 
-function HMUnit:UpdateAll()
+function PTUnit:UpdateAll()
     self:UpdateAuras()
     self:UpdateDistance()
     self:UpdateSight()
 end
 
 -- Returns true if this unit is new, clearing its new status.
-function HMUnit:CheckNew()
+function PTUnit:CheckNew()
     if self.IsNew then
         self.IsNew = false
         return true
@@ -144,19 +144,19 @@ function HMUnit:CheckNew()
 end
 
 -- Returns true if the distance changed
-function HMUnit:UpdateDistance()
+function PTUnit:UpdateDistance()
     local prevDist = self.Distance
     self.Distance = util.GetDistanceTo(self.Unit)
 
     return self.Distance ~= prevDist
 end
 
-function HMUnit:GetDistance()
+function PTUnit:GetDistance()
     return self.Distance
 end
 
 -- Returns true if the sight state has changed
-function HMUnit:UpdateSight()
+function PTUnit:UpdateSight()
     if not self.Unit then
         return
     end
@@ -166,25 +166,25 @@ function HMUnit:UpdateSight()
     return self.InSight ~= wasInSight
 end
 
-function HMUnit:IsInSight()
+function PTUnit:IsInSight()
     return self.InSight
 end
 
-function HMUnit:IsBeingResurrected()
-    if HMHealPredict then
-        return HMHealPredict.IsBeingResurrected(self.Unit)
+function PTUnit:IsBeingResurrected()
+    if PTHealPredict then
+        return PTHealPredict.IsBeingResurrected(self.Unit)
     end
-    return HealersMate.HealComm:UnitisResurrecting(UnitName(self.Unit))
+    return Puppeteer.HealComm:UnitisResurrecting(UnitName(self.Unit))
 end
 
-function HMUnit:GetResurrectionCasts()
-    if HMHealPredict then
-        return HMHealPredict.GetResurrectionCount(self.Unit)
+function PTUnit:GetResurrectionCasts()
+    if PTHealPredict then
+        return PTHealPredict.GetResurrectionCount(self.Unit)
     end
-    return HealersMate.HealComm:UnitisResurrecting(UnitName(self.Unit)) and 1 or 0
+    return Puppeteer.HealComm:UnitisResurrecting(UnitName(self.Unit)) and 1 or 0
 end
 
-function HMUnit:AllocateAuras()
+function PTUnit:AllocateAuras()
     self.Buffs = compost:GetTable()
     self.BuffsMap = compost:GetTable()
     self.BuffsIDSet = compost:GetTable()
@@ -195,8 +195,8 @@ function HMUnit:AllocateAuras()
     self.AfflictedDebuffTypes = compost:GetTable()
 end
 
-function HMUnit:ClearAuras()
-    if not self.AurasPopulated or self.Buffs == HMUnit.Buffs then
+function PTUnit:ClearAuras()
+    if not self.AurasPopulated or self.Buffs == PTUnit.Buffs then
         return
     end
     compost:Reclaim(self.Buffs, 1)
@@ -219,7 +219,7 @@ function HMUnit:ClearAuras()
     self.AurasPopulated = false
 end
 
-function HMUnit:UpdateAuras()
+function PTUnit:UpdateAuras()
     local unit = self.Unit
 
     self:ClearAuras()
@@ -228,7 +228,7 @@ function HMUnit:UpdateAuras()
         return
     end
 
-    local HM = HealersMate
+    local PT = Puppeteer
 
     -- Track player buffs
     local buffs = self.Buffs
@@ -239,8 +239,8 @@ function HMUnit:UpdateAuras()
         if not texture then
             break
         end
-        local name, type = HM.GetAuraInfo(unit, "Buff", index)
-        if HealersMateSettings.TrackedHealingBuffs[name] then
+        local name, type = PT.GetAuraInfo(unit, "Buff", index)
+        if PuppeteerSettings.TrackedHealingBuffs[name] then
             self.HasHealingModifier = true
         end
         local buff = compost:AcquireHash("name", name, "index", index, "texture", texture, "stacks", stacks, "type", type, "id", id)
@@ -266,8 +266,8 @@ function HMUnit:UpdateAuras()
             break
         end
         type = type or ""
-        local name = HM.GetAuraInfo(unit, "Debuff", index)
-        if HealersMateSettings.TrackedHealingDebuffs[name] then
+        local name = PT.GetAuraInfo(unit, "Debuff", index)
+        if PuppeteerSettings.TrackedHealingDebuffs[name] then
             self.HasHealingModifier = true
         end
         local debuff = compost:AcquireHash("name", name, "index", index, "texture", texture, "stacks", stacks, "type", type, "id", id)
@@ -290,46 +290,46 @@ function HMUnit:UpdateAuras()
     self.AurasPopulated = true
 end
 
-function HMUnit:HasBuff(name)
+function PTUnit:HasBuff(name)
     return self.BuffsMap[name] ~= nil
 end
 
 -- SuperWoW only
-function HMUnit:HasBuffID(id)
+function PTUnit:HasBuffID(id)
     return self.BuffsIDSet[id] ~= nil
 end
 
 -- Looks for ID if SuperWoW is present, otherwise searches by name
-function HMUnit:HasBuffIDOrName(id, name)
+function PTUnit:HasBuffIDOrName(id, name)
     if superwow then
         return self:HasBuffID(id)
     end
     return self:HasBuff(name)
 end
 
-function HMUnit:HasDebuff(name)
+function PTUnit:HasDebuff(name)
     return self.DebuffsMap[name] ~= nil
 end
 
 -- SuperWoW only
-function HMUnit:HasDebuffID(id)
+function PTUnit:HasDebuffID(id)
     return self.DebuffsIDSet[id] ~= nil
 end
 
 -- Looks for ID if SuperWoW is present, otherwise searches by name
-function HMUnit:HasDebuffIDOrName(id, name)
+function PTUnit:HasDebuffIDOrName(id, name)
     if superwow then
         return self:HasDebuffID(id)
     end
     return self:HasDebuff(name)
 end
 
-function HMUnit:HasDebuffType(type)
+function PTUnit:HasDebuffType(type)
     return self.AfflictedDebuffTypes[type]
 end
 
 -- Returns the first buff with the provided name
-function HMUnit:GetBuff(name)
+function PTUnit:GetBuff(name)
     if not self:HasBuff(name) then
         return
     end
@@ -337,17 +337,17 @@ function HMUnit:GetBuff(name)
 end
 
 -- Returns the table of all buffs with the provided name
-function HMUnit:GetBuffs(name)
+function PTUnit:GetBuffs(name)
     return self.BuffsMap[name]
 end
 
-function HMUnit:GetDebuff(name)
+function PTUnit:GetDebuff(name)
     if not self:HasDebuff(name) then
         return
     end
     return self.DebuffsMap[name][1]
 end
 
-function HMUnit:GetDebuffs(name)
+function PTUnit:GetDebuffs(name)
     return self.DebuffsMap[name]
 end

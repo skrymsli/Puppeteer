@@ -3,72 +3,72 @@ SLASH_PUPPETEER2 = "/pt"
 SLASH_PUPPETEER3 = "/hm"
 SlashCmdList["PUPPETEER"] = function(args)
     if args == "reset" then
-        for _, group in pairs(HealersMate.UnitFrameGroups) do
+        for _, group in pairs(Puppeteer.UnitFrameGroups) do
             local gc = group:GetContainer()
             gc:ClearAllPoints()
-            gc:SetPoint(HMUtil.GetCenterScreenPoint(gc:GetWidth(), gc:GetHeight()))
+            gc:SetPoint(PTUtil.GetCenterScreenPoint(gc:GetWidth(), gc:GetHeight()))
         end
-        HealersMateSettings.HM_SettingsContainer:ClearAllPoints()
-        HealersMateSettings.HM_SettingsContainer:SetPoint("CENTER", 0, 0)
+        PuppeteerSettings.HM_SettingsContainer:ClearAllPoints()
+        PuppeteerSettings.HM_SettingsContainer:SetPoint("CENTER", 0, 0)
         DEFAULT_CHAT_FRAME:AddMessage("Reset all frame positions.")
     elseif args == "check" then
-        HealersMate.CheckGroup()
+        Puppeteer.CheckGroup()
     elseif args == "update" then
-        for _, ui in pairs(HealersMate.AllUnitFrames) do
+        for _, ui in pairs(Puppeteer.AllUnitFrames) do
             ui:SizeElements()
             ui:UpdateAll()
         end
-        for _, group in pairs(HealersMate.UnitFrameGroups) do
+        for _, group in pairs(Puppeteer.UnitFrameGroups) do
             group:ApplyProfile()
             group:UpdateUIPositions()
         end
     elseif args == "testui" then
-        HMOptions.TestUI = not HMOptions.TestUI
-        HealersMate.TestUI = HMOptions.TestUI
-        if HMOptions.TestUI then
-            for _, ui in pairs(HealersMate.AllUnitFrames) do
+        PTOptions.TestUI = not PTOptions.TestUI
+        Puppeteer.TestUI = PTOptions.TestUI
+        if PTOptions.TestUI then
+            for _, ui in pairs(Puppeteer.AllUnitFrames) do
                 ui.fakeStats = ui.GenerateFakeStats()
                 ui:Show()
             end
         end
-        HealersMate.CheckGroup()
-        if not HMOptions.TestUI and HMUnitProxy then
-            for _, type in ipairs(HMUnitProxy.CustomUnitTypes) do
-                HMUnitProxy.UpdateUnitTypeFrames(type)
+        Puppeteer.CheckGroup()
+        if not PTOptions.TestUI and PTUnitProxy then
+            for _, type in ipairs(PTUnitProxy.CustomUnitTypes) do
+                PTUnitProxy.UpdateUnitTypeFrames(type)
             end
         end
-        DEFAULT_CHAT_FRAME:AddMessage("UI Testing is now "..(not HMOptions.TestUI and 
-            HMUtil.Colorize("off", 1, 0.6, 0.6) or HMUtil.Colorize("on", 0.6, 1, 0.6))..".")
+        DEFAULT_CHAT_FRAME:AddMessage("UI Testing is now "..(not PTOptions.TestUI and 
+            PTUtil.Colorize("off", 1, 0.6, 0.6) or PTUtil.Colorize("on", 0.6, 1, 0.6))..".")
     elseif args == "toggle" then
-        HMOptions.Hidden = not HMOptions.Hidden
-        HealersMate.CheckGroup()
-        DEFAULT_CHAT_FRAME:AddMessage("The HealersMate UI is now "..(HMOptions.Hidden and 
-            HMUtil.Colorize("hidden", 1, 0.6, 0.6) or HMUtil.Colorize("shown", 0.6, 1, 0.6))..".")
+        PTOptions.Hidden = not PTOptions.Hidden
+        Puppeteer.CheckGroup()
+        DEFAULT_CHAT_FRAME:AddMessage("The Puppeteer UI is now "..(PTOptions.Hidden and 
+            PTUtil.Colorize("hidden", 1, 0.6, 0.6) or PTUtil.Colorize("shown", 0.6, 1, 0.6))..".")
     elseif args == "show" then
-        HMOptions.Hidden = false
-        HealersMate.CheckGroup()
-        DEFAULT_CHAT_FRAME:AddMessage("The HealersMate UI is now "..(HMOptions.Hidden and 
-            HMUtil.Colorize("hidden", 1, 0.6, 0.6) or HMUtil.Colorize("shown", 0.6, 1, 0.6))..".")
+        PTOptions.Hidden = false
+        Puppeteer.CheckGroup()
+        DEFAULT_CHAT_FRAME:AddMessage("The Puppeteer UI is now "..(PTOptions.Hidden and 
+            PTUtil.Colorize("hidden", 1, 0.6, 0.6) or PTUtil.Colorize("shown", 0.6, 1, 0.6))..".")
     elseif args == "hide" then
-        HMOptions.Hidden = true
-        HealersMate.CheckGroup()
-        DEFAULT_CHAT_FRAME:AddMessage("The HealersMate UI is now "..(HMOptions.Hidden and 
-            HMUtil.Colorize("hidden", 1, 0.6, 0.6) or HMUtil.Colorize("shown", 0.6, 1, 0.6))..".")
+        PTOptions.Hidden = true
+        Puppeteer.CheckGroup()
+        DEFAULT_CHAT_FRAME:AddMessage("The Puppeteer UI is now "..(PTOptions.Hidden and 
+            PTUtil.Colorize("hidden", 1, 0.6, 0.6) or PTUtil.Colorize("shown", 0.6, 1, 0.6))..".")
     elseif args == "silent" then
-        HMOnLoadInfoDisabled = not HMOnLoadInfoDisabled
-        DEFAULT_CHAT_FRAME:AddMessage("Load message is now "..(HMOnLoadInfoDisabled and 
-            HMUtil.Colorize("off", 1, 0.6, 0.6) or HMUtil.Colorize("on", 0.6, 1, 0.6))..".")
+        PTOnLoadInfoDisabled = not PTOnLoadInfoDisabled
+        DEFAULT_CHAT_FRAME:AddMessage("Load message is now "..(PTOnLoadInfoDisabled and 
+            PTUtil.Colorize("off", 1, 0.6, 0.6) or PTUtil.Colorize("on", 0.6, 1, 0.6))..".")
     elseif args == "help" or args == "?" then
-        DEFAULT_CHAT_FRAME:AddMessage(HMUtil.Colorize("/hm", 0, 0.8, 0).." -- Opens the addon configuration")
-        DEFAULT_CHAT_FRAME:AddMessage(HMUtil.Colorize("/hm reset", 0, 0.8, 0).." -- Resets all heal frame positions")
-        DEFAULT_CHAT_FRAME:AddMessage(HMUtil.Colorize("/hm testui", 0, 0.8, 0)..
+        DEFAULT_CHAT_FRAME:AddMessage(PTUtil.Colorize("/pt", 0, 0.8, 0).." -- Opens the addon configuration")
+        DEFAULT_CHAT_FRAME:AddMessage(PTUtil.Colorize("/pt reset", 0, 0.8, 0).." -- Resets all heal frame positions")
+        DEFAULT_CHAT_FRAME:AddMessage(PTUtil.Colorize("/pt testui", 0, 0.8, 0)..
             " -- Toggles fake players to see how the UI would look")
-        DEFAULT_CHAT_FRAME:AddMessage(HMUtil.Colorize("/hm toggle", 0, 0.8, 0).." -- Shows/hides the UI")
-        DEFAULT_CHAT_FRAME:AddMessage(HMUtil.Colorize("/hm show", 0, 0.8, 0).." -- Shows the UI")
-        DEFAULT_CHAT_FRAME:AddMessage(HMUtil.Colorize("/hm hide", 0, 0.8, 0).." -- Hides the UI")
-        DEFAULT_CHAT_FRAME:AddMessage(HMUtil.Colorize("/hm silent", 0, 0.8, 0).." -- Turns off/on message when addon loads")
+        DEFAULT_CHAT_FRAME:AddMessage(PTUtil.Colorize("/pt toggle", 0, 0.8, 0).." -- Shows/hides the UI")
+        DEFAULT_CHAT_FRAME:AddMessage(PTUtil.Colorize("/pt show", 0, 0.8, 0).." -- Shows the UI")
+        DEFAULT_CHAT_FRAME:AddMessage(PTUtil.Colorize("/pt hide", 0, 0.8, 0).." -- Hides the UI")
+        DEFAULT_CHAT_FRAME:AddMessage(PTUtil.Colorize("/pt silent", 0, 0.8, 0).." -- Turns off/on message when addon loads")
     elseif args == "" then
-        local container = HealersMateSettings.HM_SettingsContainer
+        local container = PuppeteerSettings.HM_SettingsContainer
         if container then
             if container:IsVisible() then
                 container:Hide()
@@ -79,25 +79,25 @@ SlashCmdList["PUPPETEER"] = function(args)
             DEFAULT_CHAT_FRAME:AddMessage("HM_SettingsContainer frame not found.")
         end
     else
-        DEFAULT_CHAT_FRAME:AddMessage("Unknown subcommand. See usage with /hm help")
+        DEFAULT_CHAT_FRAME:AddMessage("Unknown subcommand. See usage with /pt help")
     end
 end
 
-HealersMateLib = AceLibrary("AceAddon-2.0"):new("AceEvent-2.0")
-HealersMate = {}
+PuppeteerLib = AceLibrary("AceAddon-2.0"):new("AceEvent-2.0")
+Puppeteer = {}
 local _G = getfenv(0)
-setmetatable(HealersMate, {__index = getfenv(1)})
-setfenv(1, HealersMate)
+setmetatable(Puppeteer, {__index = getfenv(1)})
+setfenv(1, Puppeteer)
 
-VERSION = "2.0.0-alpha5.1-postdev"
+VERSION = "0.5-Prerelease"
 
 TestUI = false
 
 Banzai = AceLibrary("Banzai-1.0")
 HealComm = AceLibrary("HealComm-1.0")
-GuidRoster = HMGuidRoster -- Will be nil if SuperWoW isn't present
+GuidRoster = PTGuidRoster -- Will be nil if SuperWoW isn't present
 
-local util = HMUtil
+local util = PTUtil
 local colorize = util.Colorize
 local GetKeyModifier = util.GetKeyModifier
 local GetClass = util.GetClass
@@ -116,8 +116,8 @@ AllUnitsSet = util.AllUnitsSet
 AllCustomUnits = util.CustomUnits
 AllCustomUnitsSet = util.CustomUnitsSet
 
-if HMUnitProxy then
-    HMUnitProxy.ImportFunctions(HealersMate)
+if PTUnitProxy then
+    PTUnitProxy.ImportFunctions(Puppeteer)
 end
 
 -- TODO: Actually use this
@@ -190,14 +190,14 @@ BarStyles = {
     ["HealersMate Shineless Borderless"] = ptBarsPath.."HealersMate-Shineless-Borderless"
 }
 
-GameTooltip = CreateFrame("GameTooltip", "HMGameTooltip", UIParent, "GameTooltipTemplate")
+GameTooltip = CreateFrame("GameTooltip", "PTGameTooltip", UIParent, "GameTooltipTemplate")
 
 CurrentlyHeldButton = nil
-SpellsTooltip = CreateFrame("GameTooltip", "HMSpellsTooltip", UIParent, "GameTooltipTemplate")
+SpellsTooltip = CreateFrame("GameTooltip", "PTSpellsTooltip", UIParent, "GameTooltipTemplate")
 SpellsTooltipOwner = nil
 SpellsTooltipPowerBar = nil
 do
-    local manaBar = CreateFrame("StatusBar", "HMSpellsTooltipManaBar", SpellsTooltip)
+    local manaBar = CreateFrame("StatusBar", "PTSpellsTooltipManaBar", SpellsTooltip)
     SpellsTooltipPowerBar = manaBar
     manaBar:SetStatusBarTexture(BarStyles["HealersMate"])
     manaBar:SetMinMaxValues(0, 1)
@@ -224,13 +224,13 @@ end
 -- An unmapped array of all unit frames
 AllUnitFrames = {}
 -- A map of units to an array of unit frames associated with the unit
-HMUnitFrames = {}
+PTUnitFrames = {}
 
 -- Key: Unit frame group name | Value: The group
 UnitFrameGroups = {}
 
-CustomUnitGUIDMap = HMUnitProxy and HMUnitProxy.CustomUnitGUIDMap or {}
-GUIDCustomUnitMap = HMUnitProxy and HMUnitProxy.GUIDCustomUnitMap or {}
+CustomUnitGUIDMap = PTUnitProxy and PTUnitProxy.CustomUnitGUIDMap or {}
+GUIDCustomUnitMap = PTUnitProxy and PTUnitProxy.GUIDCustomUnitMap or {}
 
 
 CurrentlyInRaid = false
@@ -239,7 +239,7 @@ AssignedRoles = nil
 
 -- Returns the array of unit frames of the unit
 function GetUnitFrames(unit)
-    return HMUnitFrames[unit]
+    return PTUnitFrames[unit]
 end
 
 -- A temporary dummy function while the addon initializes. See below for the real iterator.
@@ -253,8 +253,8 @@ local function OpenUnitFramesIterator()
     -- These iterators have a serious problem in that they do not support concurrent iteration.
     if util.IsSuperWowPresent() then
         local EMPTY_UIS = {}
-        local HMUnitFrames = HMUnitFrames
-        local GuidUnitMap = HMGuidRoster.GuidUnitMap
+        local PTUnitFrames = PTUnitFrames
+        local GuidUnitMap = PTGuidRoster.GuidUnitMap
         local iterTable = {} -- The table reused for iteration over GUID units
         local uis
         local i = 0
@@ -267,7 +267,7 @@ local function OpenUnitFramesIterator()
         end
         function UnitFrames(unit)
             if i < len then
-                hmprint("Collision: "..i.."/"..len)
+                print("Collision: "..i.."/"..len)
             end
             if GuidUnitMap[unit] then -- If a GUID is provided, ALL UIs associated with that GUID will be iterated
                 uis = iterTable
@@ -276,19 +276,19 @@ local function OpenUnitFramesIterator()
                 end
                 table.setn(uis, 0)
                 for _, unit in pairs(GuidUnitMap[unit]) do
-                    for _, frame in ipairs(HMUnitFrames[unit]) do
+                    for _, frame in ipairs(PTUnitFrames[unit]) do
                         table.insert(uis, frame)
                     end
                 end
             else
-                uis = HMUnitFrames[unit] or EMPTY_UIS
+                uis = PTUnitFrames[unit] or EMPTY_UIS
             end
             len = table.getn(uis)
             i = 0
             return iterFunc
         end
     else -- Optimized version for vanilla
-        local HMUnitFrames = HMUnitFrames
+        local PTUnitFrames = PTUnitFrames
         local uis
         local i = 0
         local len = 0
@@ -300,7 +300,7 @@ local function OpenUnitFramesIterator()
         end
         function UnitFrames(unit)
             i = 0
-            uis = HMUnitFrames[unit]
+            uis = PTUnitFrames[unit]
             len = table.getn(uis)
             return iterFunc
         end
@@ -309,7 +309,7 @@ end
 
 
 --This is just to respond to events "EventHandlerFrame" never appears on the screen
-local EventHandlerFrame = CreateFrame("Frame", "HMEventHandlerFrame", UIParent)
+local EventHandlerFrame = CreateFrame("Frame", "PTEventHandlerFrame", UIParent)
 EventHandlerFrame:RegisterEvent("ADDON_LOADED"); -- This triggers once for every addon that was loaded after this addon
 EventHandlerFrame:RegisterEvent("PLAYER_LOGOUT"); -- Fired when about to log out
 EventHandlerFrame:RegisterEvent("PLAYER_QUITING"); -- Fired when a player has the quit option on screen
@@ -348,11 +348,11 @@ function Debug(msg)
 end
 
 function GetSpells()
-    return HMSpells["Friendly"]
+    return PTSpells["Friendly"]
 end
 
 function GetHostileSpells()
-    return HMSpells["Hostile"]
+    return PTSpells["Hostile"]
 end
 
 function UpdateUnitFrameGroups()
@@ -361,7 +361,7 @@ function UpdateUnitFrameGroups()
     end
 end
 
-local ScanningTooltip = CreateFrame("GameTooltip", "HMScanningTooltip", nil, "GameTooltipTemplate");
+local ScanningTooltip = CreateFrame("GameTooltip", "PTScanningTooltip", nil, "GameTooltipTemplate");
 ScanningTooltip:SetOwner(WorldFrame, "ANCHOR_NONE");
 -- Allow tooltip SetX() methods to dynamically add new lines based on these
 ScanningTooltip:AddFontStrings(
@@ -477,7 +477,7 @@ function GetResourceCost(spellName)
 
     ScanningTooltip:SetSpell(spellID, "spell")
 
-    local leftText = getglobal("HMScanningTooltipTextLeft"..2)
+    local leftText = getglobal("PTScanningTooltipTextLeft"..2)
 
     if leftText:GetText() then
         return ExtractResourceCost(leftText:GetText())
@@ -488,9 +488,9 @@ end
 -- Returns the aura's name and its school type
 function GetAuraInfo(unit, type, index)
     -- Make these texts blank since they don't clear otherwise
-    local leftText = getglobal("HMScanningTooltipTextLeft1")
+    local leftText = getglobal("PTScanningTooltipTextLeft1")
     leftText:SetText("")
-    local rightText = getglobal("HMScanningTooltipTextRight1")
+    local rightText = getglobal("PTScanningTooltipTextRight1")
     rightText:SetText("")
     if type == "Buff" then
         ScanningTooltip:SetUnitBuff(unit, index)
@@ -501,21 +501,21 @@ function GetAuraInfo(unit, type, index)
 end
 
 function ApplySpellsTooltip(attachTo, unit, owner)
-    if not HMOptions.SpellsTooltip.Enabled then
+    if not PTOptions.SpellsTooltip.Enabled then
         return
     end
 
     local spellList = {}
     local modifier = GetKeyModifier()
-    local settings = HealersMateSettings
+    local settings = PuppeteerSettings
     local spells = UnitCanAttack("player", unit) and GetHostileSpells() or GetSpells()
 
     local deadFriend = util.IsDeadFriend(unit)
     local selfClass = GetClass("player")
-    local canResurrect = HMOptions.AutoResurrect and deadFriend and ResurrectionSpells[selfClass]
+    local canResurrect = PTOptions.AutoResurrect and deadFriend and ResurrectionSpells[selfClass]
     -- Holy Champion Texture: Interface\\Icons\\Spell_Holy_ProclaimChampion_02
     local canReviveChampion = canResurrect and GetSpellID("Revive Champion") and 
-        HMUnit.Get(unit):HasBuffIDOrName(45568, "Holy Champion") and UnitAffectingCombat("player")
+        PTUnit.Get(unit):HasBuffIDOrName(45568, "Holy Champion") and UnitAffectingCombat("player")
 
     for _, btn in ipairs(settings.CustomButtonOrder) do
         if canResurrect then -- Show all spells (except special binds) as the resurrection spell
@@ -547,7 +547,7 @@ function RunMacro(name, target)
         return
     end
     if target then
-        _G.HM_MacroTarget = target
+        _G.PT_MacroTarget = target
     end
     local _, _, body = GetMacroInfo(GetMacroIndexByName(name))
     local commands = util.SplitString(body, "\n")
@@ -556,7 +556,7 @@ function RunMacro(name, target)
         ChatEdit_SendText(ChatFrameEditBox)
     end
     if target then
-        _G.HM_MacroTarget = nil
+        _G.PT_MacroTarget = nil
     end
 end
 
@@ -576,9 +576,9 @@ local tooltipAnchorMap = {["Top Left"] = "ANCHOR_LEFT", ["Top Right"] = "ANCHOR_
     ["Bottom Left"] = "ANCHOR_BOTTOMLEFT", ["Bottom Right"] = "ANCHOR_BOTTOMRIGHT"}
 function ShowSpellsTooltip(attachTo, spells, owner)
     SpellsTooltipOwner = owner
-    SpellsTooltip:SetOwner(attachTo, tooltipAnchorMap[HMOptions.SpellsTooltip.Anchor], 
-        HMOptions.SpellsTooltip.OffsetX, HMOptions.SpellsTooltip.OffsetY)
-    local options = HMOptions.SpellsTooltip
+    SpellsTooltip:SetOwner(attachTo, tooltipAnchorMap[PTOptions.SpellsTooltip.Anchor], 
+        PTOptions.SpellsTooltip.OffsetX, PTOptions.SpellsTooltip.OffsetY)
+    local options = PTOptions.SpellsTooltip
     local currentPower = UnitMana("player")
     local maxPower = UnitManaMax("player")
     local powerType = GetPowerType("player")
@@ -708,18 +708,18 @@ function ReapplySpellsTooltip()
 end
 
 function UpdateAllIncomingHealing()
-    if HMHealPredict then
+    if PTHealPredict then
         for _, ui in ipairs(AllUnitFrames) do
-            if HMOptions.UseHealPredictions then
+            if PTOptions.UseHealPredictions then
                 local _, guid = UnitExists(ui:GetUnit())
-                ui:SetIncomingHealing(HMHealPredict.GetIncomingHealing(guid))
+                ui:SetIncomingHealing(PTHealPredict.GetIncomingHealing(guid))
             else
                 ui:SetIncomingHealing(0)
             end
         end
     else
         for _, ui in ipairs(AllUnitFrames) do
-            if HMOptions.UseHealPredictions then
+            if PTOptions.UseHealPredictions then
                 ui:UpdateIncomingHealing()
             else
                 ui:SetIncomingHealing(0)
@@ -736,16 +736,16 @@ end
 
 function CreateUnitFrameGroup(groupName, environment, units, petGroup, profile, sortByRole)
     if UnitFrameGroups[groupName] then
-        error("[HealersMate] Tried to create a unit frame group using existing name! \""..groupName.."\"")
+        error("[Puppeteer] Tried to create a unit frame group using existing name! \""..groupName.."\"")
         return
     end
-    local uiGroup = HMUnitFrameGroup:New(groupName, environment, units, petGroup, profile, sortByRole)
+    local uiGroup = PTUnitFrameGroup:New(groupName, environment, units, petGroup, profile, sortByRole)
     for _, unit in ipairs(units) do
-        local ui = HMUnitFrame:New(unit, AllCustomUnitsSet[unit] ~= nil)
-        if not HMUnitFrames[unit] then
-            HMUnitFrames[unit] = {}
+        local ui = PTUnitFrame:New(unit, AllCustomUnitsSet[unit] ~= nil)
+        if not PTUnitFrames[unit] then
+            PTUnitFrames[unit] = {}
         end
-        table.insert(HMUnitFrames[unit], ui)
+        table.insert(PTUnitFrames[unit], ui)
         table.insert(AllUnitFrames, ui)
         uiGroup:AddUI(ui)
         if unit ~= "target" then
@@ -757,21 +757,21 @@ function CreateUnitFrameGroup(groupName, environment, units, petGroup, profile, 
 end
 
 local function initUnitFrames()
-    local getSelectedProfile = HealersMateSettings.GetSelectedProfile
+    local getSelectedProfile = PuppeteerSettings.GetSelectedProfile
     CreateUnitFrameGroup("Party", "party", PartyUnits, false, getSelectedProfile("Party"))
     CreateUnitFrameGroup("Pets", "party", PetUnits, true, getSelectedProfile("Pets"))
     CreateUnitFrameGroup("Raid", "raid", RaidUnits, false, getSelectedProfile("Raid"))
     CreateUnitFrameGroup("Raid Pets", "raid", RaidPetUnits, true, getSelectedProfile("Raid Pets"))
     CreateUnitFrameGroup("Target", "all", TargetUnits, false, getSelectedProfile("Target"), false)
     if util.IsSuperWowPresent() then
-        CreateUnitFrameGroup("Focus", "all", HMUnitProxy.CustomUnitsMap["focus"], false, getSelectedProfile("Focus"), false)
+        CreateUnitFrameGroup("Focus", "all", PTUnitProxy.CustomUnitsMap["focus"], false, getSelectedProfile("Focus"), false)
     end
 
     UnitFrameGroups["Target"].ShowCondition = function(self)
         local friendly = not UnitCanAttack("player", "target")
-        return (HMOptions.AlwaysShowTargetFrame or (UnitExists("target") and 
-            (friendly and HMOptions.ShowTargets.Friendly) or (not friendly and HMOptions.ShowTargets.Hostile))) 
-            and not HMOptions.Hidden
+        return (PTOptions.AlwaysShowTargetFrame or (UnitExists("target") and 
+            (friendly and PTOptions.ShowTargets.Friendly) or (not friendly and PTOptions.ShowTargets.Hostile))) 
+            and not PTOptions.Hidden
     end
 
     OpenUnitFramesIterator()
@@ -779,15 +779,15 @@ end
 
 function EventAddonLoaded()
     local freshInstall = false
-    if HMSpells == nil then
+    if PTSpells == nil then
         freshInstall = true
-        local HMSpells = {}
-        HMSpells["Friendly"] = {}
-        HMSpells["Hostile"] = {}
-        setglobal("HMSpells", HMSpells)
+        local PTSpells = {}
+        PTSpells["Friendly"] = {}
+        PTSpells["Hostile"] = {}
+        setglobal("PTSpells", PTSpells)
     end
 
-    for _, spells in pairs(HMSpells) do
+    for _, spells in pairs(PTSpells) do
         for _, modifier in ipairs(util.GetKeyModifiers()) do
             if not spells[modifier] then
                 spells[modifier] = {}
@@ -797,32 +797,32 @@ function EventAddonLoaded()
 
     if util.IsSuperWowPresent() then
         -- In case other addons override unit functions, we want to make sure we're using their functions
-        HMUnitProxy.CreateUnitProxies()
+        PTUnitProxy.CreateUnitProxies()
 
         -- Do it again after all addons have loaded
         local frame = CreateFrame("Frame")
         local reapply = GetTime() + 0.1
         frame:SetScript("OnUpdate", function()
             if GetTime() > reapply then
-                HMUnitProxy.CreateUnitProxies()
+                PTUnitProxy.CreateUnitProxies()
                 frame:SetScript("OnUpdate", nil)
             end
         end)
     end
 
-    if not _G.HMRoleCache then
-        _G.HMRoleCache = {}
+    if not _G.PTRoleCache then
+        _G.PTRoleCache = {}
     end
-    if not _G.HMRoleCache[GetRealmName()] then
-        _G.HMRoleCache[GetRealmName()] = {}
+    if not _G.PTRoleCache[GetRealmName()] then
+        _G.PTRoleCache[GetRealmName()] = {}
     end
-    AssignedRoles = _G.HMRoleCache[GetRealmName()]
+    AssignedRoles = _G.PTRoleCache[GetRealmName()]
     PruneAssignedRoles()
 
     if util.IsSuperWowPresent() then
-        HMUnit.UpdateGuidCaches()
+        PTUnit.UpdateGuidCaches()
 
-        local customUnitUpdater = CreateFrame("Frame", "HMCustomUnitUpdater")
+        local customUnitUpdater = CreateFrame("Frame", "PTCustomUnitUpdater")
         local nextUpdate = GetTime() + 0.25
         -- Older versions of SuperWoW had an issue where units that aren't part of normal units wouldn't receive events,
         -- so updates are done manually
@@ -833,7 +833,7 @@ function EventAddonLoaded()
 
                 for unit, guid in pairs(CustomUnitGUIDMap) do
                     if needsManualUpdates or not UnitExists(guid) then
-                        HMUnit.Get(unit):UpdateAuras()
+                        PTUnit.Get(unit):UpdateAuras()
                         for ui in UnitFrames(unit) do
                             ui:UpdateHealth()
                             ui:UpdatePower()
@@ -845,32 +845,32 @@ function EventAddonLoaded()
             end
         end)
     else
-        HMUnit.CreateCaches()
+        PTUnit.CreateCaches()
     end
-    HealersMateSettings.UpdateTrackedDebuffTypes()
-    HMProfileManager.InitializeDefaultProfiles()
-    HealersMateSettings.SetDefaults()
+    PuppeteerSettings.UpdateTrackedDebuffTypes()
+    PTProfileManager.InitializeDefaultProfiles()
+    PuppeteerSettings.SetDefaults()
 
     do
-        if HMOptions.Scripts.OnLoad then
-            local scriptString = "local GetProfile = HMProfileManager.GetProfile "..
-                "local CreateProfile = HMProfileManager.CreateProfile "..HMOptions.Scripts.OnLoad
+        if PTOptions.Scripts.OnLoad then
+            local scriptString = "local GetProfile = PTProfileManager.GetProfile "..
+                "local CreateProfile = PTProfileManager.CreateProfile "..PTOptions.Scripts.OnLoad
             local script = loadstring(scriptString)
             local ok, result = pcall(script)
             if not ok then
-                DEFAULT_CHAT_FRAME:AddMessage(colorize("[HealersMate] ", 1, 0.4, 0.4)..colorize("ERROR: ", 1, 0.2, 0.2)
-                    ..colorize("The Load Script produced an error! If this causes HealersMate to fail to load, "..
+                DEFAULT_CHAT_FRAME:AddMessage(colorize("[Puppeteer] ", 1, 0.4, 0.4)..colorize("ERROR: ", 1, 0.2, 0.2)
+                    ..colorize("The Load Script produced an error! If this causes Puppeteer to fail to load, "..
                         "you will need to manually edit the script in your game files.", 1, 0.4, 0.4))
                 DEFAULT_CHAT_FRAME:AddMessage(colorize("OnLoad Script Error: "..tostring(result), 1, 0, 0))
             end
         end
     end
-    HealersMateSettings.InitSettings()
-    if HMHealPredict then
-        HMHealPredict.OnLoad()
+    PuppeteerSettings.InitSettings()
+    if PTHealPredict then
+        PTHealPredict.OnLoad()
 
-        HMHealPredict.HookUpdates(function(guid, incomingHealing, incomingDirectHealing)
-            if not HMOptions.UseHealPredictions then
+        PTHealPredict.HookUpdates(function(guid, incomingHealing, incomingDirectHealing)
+            if not PTOptions.UseHealPredictions then
                 return
             end
             local units = GuidRoster.GetUnits(guid)
@@ -885,8 +885,8 @@ function EventAddonLoaded()
         end)
     else
         local roster = AceLibrary("RosterLib-2.0")
-        HealersMateLib:RegisterEvent("HealComm_Healupdate", function(name)
-            if not HMOptions.UseHealPredictions then
+        PuppeteerLib:RegisterEvent("HealComm_Healupdate", function(name)
+            if not PTOptions.UseHealPredictions then
                 return
             end
             local unit = roster:GetUnitIDFromName(name)
@@ -901,7 +901,7 @@ function EventAddonLoaded()
                 end
             end
         end)
-        HealersMateLib:RegisterEvent("HealComm_Ressupdate", function(name)
+        PuppeteerLib:RegisterEvent("HealComm_Ressupdate", function(name)
             local unit = roster:GetUnitIDFromName(name)
             if unit then
                 for ui in UnitFrames(unit) do
@@ -916,36 +916,36 @@ function EventAddonLoaded()
         end)
     end
     
-    SetLFTAutoRoleEnabled(HMOptions.LFTAutoRole)
+    SetLFTAutoRoleEnabled(PTOptions.LFTAutoRole)
 
-    TestUI = HMOptions.TestUI
+    TestUI = PTOptions.TestUI
 
     if TestUI then
-        DEFAULT_CHAT_FRAME:AddMessage(colorize("[HealersMate] UI Testing is enabled. Use /hm testui to disable.", 1, 0.6, 0.6))
+        DEFAULT_CHAT_FRAME:AddMessage(colorize("[Puppeteer] UI Testing is enabled. Use /pt testui to disable.", 1, 0.6, 0.6))
     end
 
     initUnitFrames()
     StartDistanceScanner()
 
-    HealersMateLib:RegisterEvent("Banzai_UnitGainedAggro", function(unit)
-        if HMGuidRoster then
-            unit = HMGuidRoster.GetUnitGuid(unit)
+    PuppeteerLib:RegisterEvent("Banzai_UnitGainedAggro", function(unit)
+        if PTGuidRoster then
+            unit = PTGuidRoster.GetUnitGuid(unit)
         end
         for ui in UnitFrames(unit) do
             ui:UpdateOutline()
         end
     end)
-	HealersMateLib:RegisterEvent("Banzai_UnitLostAggro", function(unit)
-        if HMGuidRoster then
-            unit = HMGuidRoster.GetUnitGuid(unit)
+	PuppeteerLib:RegisterEvent("Banzai_UnitLostAggro", function(unit)
+        if PTGuidRoster then
+            unit = PTGuidRoster.GetUnitGuid(unit)
         end
         for ui in UnitFrames(unit) do
             ui:UpdateOutline()
         end
     end)
 
-    if HMOnLoadInfoDisabled == nil then
-        HMOnLoadInfoDisabled = false
+    if PTOnLoadInfoDisabled == nil then
+        PTOnLoadInfoDisabled = false
     end
 
     do
@@ -956,22 +956,22 @@ function EventAddonLoaded()
                 return
             end
             infoFrame:SetScript("OnUpdate", nil)
-            if not HMOnLoadInfoDisabled then
-                DEFAULT_CHAT_FRAME:AddMessage(colorize("[HealersMate] Use ", 0.5, 1, 0.5)..colorize("/hm help", 0, 1, 0)
+            if not PTOnLoadInfoDisabled then
+                DEFAULT_CHAT_FRAME:AddMessage(colorize("[Puppeteer] Use ", 0.5, 1, 0.5)..colorize("/pt help", 0, 1, 0)
                     ..colorize(" to see commands.", 0.5, 1, 0.5))
             end
     
             if not util.IsSuperWowPresent() and util.IsNampowerPresent() then
-                DEFAULT_CHAT_FRAME:AddMessage(colorize("[HealersMate] ", 1, 0.4, 0.4)..colorize("WARNING: ", 1, 0.2, 0.2)
+                DEFAULT_CHAT_FRAME:AddMessage(colorize("[Puppeteer] ", 1, 0.4, 0.4)..colorize("WARNING: ", 1, 0.2, 0.2)
                     ..colorize("You are using Nampower without SuperWoW, which will cause heal predictions to be wildly inaccurate "..
                     "for you and your raid members! It is highly recommended to install SuperWoW.", 1, 0.4, 0.4))
             end
 
             if util.IsSuperWowPresent() and not HealComm:IsEventRegistered("UNIT_CASTEVENT") then
-                DEFAULT_CHAT_FRAME:AddMessage(colorize("[HealersMate] ", 1, 0.4, 0.4)..colorize("WARNING: ", 1, 0.2, 0.2)
+                DEFAULT_CHAT_FRAME:AddMessage(colorize("[Puppeteer] ", 1, 0.4, 0.4)..colorize("WARNING: ", 1, 0.2, 0.2)
                     ..colorize("You have another addon that uses a HealComm version that is incompatible with SuperWoW! "..
                     "This will cause wildly inaccurate heal predictions to be shown to your raid members. It is "..
-                    "recommended to either unload the offending addon or copy HealersMate's HealComm "..
+                    "recommended to either unload the offending addon or copy Puppeteer's HealComm "..
                     "into the other addon.", 1, 0.4, 0.4))
             end
         end)
@@ -1022,13 +1022,13 @@ function EventAddonLoaded()
     end
 
     do
-        if HMOptions.Scripts.OnPostLoad then
-            local scriptString = HMOptions.Scripts.OnPostLoad
+        if PTOptions.Scripts.OnPostLoad then
+            local scriptString = PTOptions.Scripts.OnPostLoad
             local script = loadstring(scriptString)
             local ok, result = pcall(script)
             if not ok then
-                DEFAULT_CHAT_FRAME:AddMessage(colorize("[HealersMate] ", 1, 0.4, 0.4)..colorize("ERROR: ", 1, 0.2, 0.2)
-                    ..colorize("The Postload Script produced an error! If this causes HealersMate to fail to operate, "..
+                DEFAULT_CHAT_FRAME:AddMessage(colorize("[Puppeteer] ", 1, 0.4, 0.4)..colorize("ERROR: ", 1, 0.2, 0.2)
+                    ..colorize("The Postload Script produced an error! If this causes Puppeteer to fail to operate, "..
                         "you may need to manually edit the script in your game files.", 1, 0.4, 0.4))
                 DEFAULT_CHAT_FRAME:AddMessage(colorize("OnPostLoad Script Error: "..tostring(result), 1, 0, 0))
             end
@@ -1037,8 +1037,8 @@ function EventAddonLoaded()
 end
 
 function CheckPartyFramesEnabled()
-    local shouldBeDisabled = (CurrentlyInRaid and HMOptions.DisablePartyFrames.InRaid) or 
-        (not CurrentlyInRaid and HMOptions.DisablePartyFrames.InParty)
+    local shouldBeDisabled = (CurrentlyInRaid and PTOptions.DisablePartyFrames.InRaid) or 
+        (not CurrentlyInRaid and PTOptions.DisablePartyFrames.InParty)
     SetPartyFramesEnabled(not shouldBeDisabled)
 end
 
@@ -1046,9 +1046,9 @@ function SetPartyFramesEnabled(enabled)
     if enabled then
         for i = 1, MAX_PARTY_MEMBERS do
             local frame = getglobal("PartyMemberFrame"..i)
-            if frame and frame.HMRealShow then
-                frame.Show = frame.HMRealShow
-                frame.HMRealShow = nil
+            if frame and frame.PTRealShow then
+                frame.Show = frame.PTRealShow
+                frame.PTRealShow = nil
 
                 if UnitExists("party"..i) then
                     frame:Show()
@@ -1062,9 +1062,9 @@ function SetPartyFramesEnabled(enabled)
     else
         for i = 1, MAX_PARTY_MEMBERS do
             local frame = getglobal("PartyMemberFrame"..i)
-            if frame and not frame.HMRealShow then
+            if frame and not frame.PTRealShow then
                 frame:UnregisterAllEvents()
-                frame.HMRealShow = frame.Show
+                frame.PTRealShow = frame.Show
                 frame.Show = function() end
                 frame:Hide()
             end
@@ -1072,7 +1072,7 @@ function SetPartyFramesEnabled(enabled)
     end
 end
 
-LFTAutoRoleFrame = CreateFrame("Frame", "HM_LFTAutoRoleFrame")
+LFTAutoRoleFrame = CreateFrame("Frame", "PT_LFTAutoRoleFrame")
 function SetLFTAutoRoleEnabled(enabled)
     if not LFT_ADDON_PREFIX then -- Must not be Turtle WoW, or LFT has changed
         return
@@ -1105,7 +1105,7 @@ function SetLFTAutoRoleEnabled(enabled)
         for _, unit in ipairs(PartyUnits) do
             local name = UnitName(unit)
             if name ~= "Unknown" and not util.ArrayContains(alreadyAssigned, name) then
-                hmprint("Assuming "..name.." is Damage")
+                print("Assuming "..name.." is Damage")
                 SetAssignedRole(name, "Damage")
             end
         end
@@ -1125,7 +1125,7 @@ function SetLFTAutoRoleEnabled(enabled)
                         local role = roleMap[params[1]]
                         table.insert(alreadyAssigned, member)
                         SetAssignedRole(member, role) -- Tank & Healer is sent after the offer is complete
-                        hmprint("Assigning "..member.." to "..role)
+                        print("Assigning "..member.." to "..role)
                         if table.getn(alreadyAssigned) == 2 then -- Set rest as Damage after Tank & Healer is sent
                             -- Delay scanning party members because their names might not be loaded yet
                             scanDPSTime = GetTime() + 1.5
@@ -1181,7 +1181,7 @@ function PruneAssignedRoles()
     for name, data in pairs(AssignedRoles) do
         if not data["lastSeen"] or data["lastSeen"] < currentTime - (24 * 60 * 60) then
             AssignedRoles[name] = nil
-            --hmprint("Pruned "..name.."'s role")
+            --print("Pruned "..name.."'s role")
         end
     end
 end
@@ -1200,7 +1200,7 @@ local function setUnassignedRoles(role)
         end
     end
     UpdateUnitFrameGroups()
-    ToggleDropDownMenu(1, nil, _G["HMRoleDropdown"])
+    ToggleDropDownMenu(1, nil, _G["PTRoleDropdown"])
 end
 
 local function applyTargetRole(role)
@@ -1209,7 +1209,7 @@ local function applyTargetRole(role)
 end
 
 do
-    local roleDropdown = CreateFrame("Frame", "HMRoleDropdown", UIParent, "UIDropDownMenuTemplate")
+    local roleDropdown = CreateFrame("Frame", "PTRoleDropdown", UIParent, "UIDropDownMenuTemplate")
 
     local options = {
         {
@@ -1277,7 +1277,7 @@ do
                     end
                 end
                 UpdateUnitFrameGroups()
-                ToggleDropDownMenu(1, nil, _G["HMRoleDropdown"])
+                ToggleDropDownMenu(1, nil, _G["PTRoleDropdown"])
             end
         }
     }
@@ -1326,7 +1326,7 @@ SpecialBinds = {
     ["context"] = function(unit, ui)
         -- Resolve focus to a proper unit if possible
         if AllCustomUnitsSet[unit] then
-            unit = HMUnitProxy.ResolveCustomUnit(unit)
+            unit = PTUnitProxy.ResolveCustomUnit(unit)
             if not unit then
                 return
             end
@@ -1377,7 +1377,7 @@ SpecialBinds = {
         roleTargetClassColor = util.GetClassColor(util.GetClass(unit), true)
         roleTargetGroup = ui.owningGroup
         local frame = ui:GetRootContainer()
-        local dropdown = _G["HMRoleDropdown"]
+        local dropdown = _G["PTRoleDropdown"]
         if dropdown:IsShown() then
             ToggleDropDownMenu(1, nil, dropdown)
         end
@@ -1390,7 +1390,7 @@ SpecialBinds = {
             return
         end
 
-        HM_ToggleFocusUnit(unit)
+        PT_ToggleFocusUnit(unit)
     end,
     ["Promote Focus"] = function(unit)
         if not util.IsSuperWowPresent() then
@@ -1398,7 +1398,7 @@ SpecialBinds = {
             return
         end
 
-        HM_PromoteFocus(unit)
+        PT_PromoteFocus(unit)
     end,
     ["Demote Focus"] = function(unit)
         if not util.IsSuperWowPresent() then
@@ -1406,8 +1406,8 @@ SpecialBinds = {
             return
         end
 
-        HM_UnfocusUnit(unit)
-        HM_FocusUnit(unit)
+        PT_UnfocusUnit(unit)
+        PT_FocusUnit(unit)
     end
 }
 
@@ -1423,50 +1423,50 @@ do
     SpecialBinds = upperSpecialBinds
 end
 
-function _G.HM_ToggleFocusUnit(unit)
-    if HMUnitProxy.IsUnitUnitType(unit, "focus") then
-        if not HMUnitProxy.CustomUnitsSetMap["focus"][unit] then
+function _G.PT_ToggleFocusUnit(unit)
+    if PTUnitProxy.IsUnitUnitType(unit, "focus") then
+        if not PTUnitProxy.CustomUnitsSetMap["focus"][unit] then
             return -- Do not toggle focus if user is clicking on a UI that isn't the focus UI
         end
-        HM_UnfocusUnit(unit)
+        PT_UnfocusUnit(unit)
     else
-        HM_FocusUnit(unit)
+        PT_FocusUnit(unit)
     end
 end
 
-function _G.HM_FocusUnit(unit)
-    local guid = HMGuidRoster.ResolveUnitGuid(unit)
-    if not guid or HMUnitProxy.IsGuidUnitType(guid, "focus") then
+function _G.PT_FocusUnit(unit)
+    local guid = PTGuidRoster.ResolveUnitGuid(unit)
+    if not guid or PTUnitProxy.IsGuidUnitType(guid, "focus") then
         return
     end
 
-    HMUnitProxy.SetGuidUnitType(guid, "focus")
+    PTUnitProxy.SetGuidUnitType(guid, "focus")
     PlaySound("GAMETARGETHOSTILEUNIT")
 end
 
-function _G.HM_UnfocusUnit(unit)
-    local guid = HMGuidRoster.ResolveUnitGuid(unit)
+function _G.PT_UnfocusUnit(unit)
+    local guid = PTGuidRoster.ResolveUnitGuid(unit)
     if not guid then
         return
     end
-    local focusUnit = HMUnitProxy.GetCurrentUnitOfType(guid, "focus")
+    local focusUnit = PTUnitProxy.GetCurrentUnitOfType(guid, "focus")
     if not focusUnit then
         return
     end
-    HMUnitProxy.SetCustomUnitGuid(focusUnit, nil)
+    PTUnitProxy.SetCustomUnitGuid(focusUnit, nil)
     PlaySound("INTERFACESOUND_LOSTTARGETUNIT")
 end
 
-function _G.HM_PromoteFocus(unit)
-    local guid = HMGuidRoster.ResolveUnitGuid(unit)
+function _G.PT_PromoteFocus(unit)
+    local guid = PTGuidRoster.ResolveUnitGuid(unit)
     if not guid then
         return
     end
-    HMUnitProxy.PromoteGuidUnitType(guid, "focus")
+    PTUnitProxy.PromoteGuidUnitType(guid, "focus")
 end
 
 function CycleFocus(onlyAttackable)
-    HMUnitProxy.CycleUnitType("focus", onlyAttackable)
+    PTUnitProxy.CycleUnitType("focus", onlyAttackable)
 end
 
 local Sound_Disabled = function() end
@@ -1481,12 +1481,12 @@ function ClickHandler(buttonType, unit, ui)
         end
         return
     end
-    if HMOptions.AutoResurrect and util.IsDeadFriend(unit) then
+    if PTOptions.AutoResurrect and util.IsDeadFriend(unit) then
         if spell and SpecialBinds[string.upper(spell)] then
             SpecialBinds[string.upper(spell)](unit, ui)
             return
         end
-        if HMUnit.Get(unit):HasBuffIDOrName(45568, "Holy Champion") and GetSpellID("Revive Champion") 
+        if PTUnit.Get(unit):HasBuffIDOrName(45568, "Holy Champion") and GetSpellID("Revive Champion") 
             and UnitAffectingCombat("player") then
                 spell = "Revive Champion"
         else
@@ -1509,7 +1509,7 @@ function ClickHandler(buttonType, unit, ui)
 
     -- Not a special bind
     if util.IsSuperWowPresent() and not isNonSpell then -- No target changing shenanigans required with SuperWoW
-        if HMOptions.AutoTarget and not UnitIsUnit("target", unit) then
+        if PTOptions.AutoTarget and not UnitIsUnit("target", unit) then
             TargetUnit(unit)
         end
         CastSpellByName(spell, unit)
@@ -1535,7 +1535,7 @@ function ClickHandler(buttonType, unit, ui)
         end
 
         --Put Target of player back to whatever it was before casting spell
-        if targetChanged and not HMOptions.AutoTarget then
+        if targetChanged and not PTOptions.AutoTarget then
             if currentTarget == nil then
                 --Player wasn't targeting anything before casting spell
                 local Sound_Enabled = PlaySound
@@ -1560,19 +1560,19 @@ function CheckGroup()
     if GetNumRaidMembers() > 0 then
         if not CurrentlyInRaid then
             CurrentlyInRaid = true
-            SetPartyFramesEnabled(not HMOptions.DisablePartyFrames.InRaid)
+            SetPartyFramesEnabled(not PTOptions.DisablePartyFrames.InRaid)
         end
     else
         if CurrentlyInRaid then
             CurrentlyInRaid = false
-            SetPartyFramesEnabled(not HMOptions.DisablePartyFrames.InParty)
+            SetPartyFramesEnabled(not PTOptions.DisablePartyFrames.InParty)
         end
     end
     local superwow = util.IsSuperWowPresent()
     if superwow then
         GuidRoster.ResetRoster()
         GuidRoster.PopulateRoster()
-        HMUnit.UpdateGuidCaches()
+        PTUnit.UpdateGuidCaches()
     end
     for _, unit in ipairs(util.AllRealUnits) do
         local exists, guid = UnitExists(unit)
@@ -1592,7 +1592,7 @@ function CheckGroup()
         group:EvaluateShown()
     end
     if not superwow then -- If SuperWoW isn't present, the units may have shifted and thus require a full scan
-        HMUnit.UpdateAllUnits()
+        PTUnit.UpdateAllUnits()
     end
     for _, ui in pairs(AllUnitFrames) do
         if ui:IsShown() then
@@ -1603,7 +1603,7 @@ function CheckGroup()
         end
     end
     if superwow then
-        HMHealPredict.SetRelevantGUIDs(GuidRoster.GetTrackedGuids())
+        PTHealPredict.SetRelevantGUIDs(GuidRoster.GetTrackedGuids())
     end
     RunTrackingScan()
 end
@@ -1612,7 +1612,7 @@ function CheckTarget()
     local exists, guid = UnitExists("target")
     if exists then
         local friendly = not UnitCanAttack("player", "target")
-        if (friendly and HMOptions.ShowTargets.Friendly) or (not friendly and HMOptions.ShowTargets.Hostile) then
+        if (friendly and PTOptions.ShowTargets.Friendly) or (not friendly and PTOptions.ShowTargets.Hostile) then
             for ui in UnitFrames("target") do
                 ui.lastHealthPercent = (ui:GetCurrentHealth() / ui:GetMaxHealth()) * 100
                 ui:UpdateRange()
@@ -1652,7 +1652,7 @@ function EventHandler()
         
         CheckGroup()
 
-        if HMOptions.DisablePartyFrames.InParty then
+        if PTOptions.DisablePartyFrames.InParty then
             SetPartyFramesEnabled(false)
         end
         
@@ -1687,7 +1687,7 @@ function EventHandler()
         if not IsRelevantUnit(unit) then
             return
         end
-        HMUnit.Get(unit):UpdateAuras()
+        PTUnit.Get(unit):UpdateAuras()
         for ui in UnitFrames(unit) do
             ui:UpdateAuras()
             ui:UpdateHealth() -- Update health because there may be an aura that changes health bar color
@@ -1706,26 +1706,26 @@ function EventHandler()
         end
         local exists, guid = UnitExists("target")
         if guid then
-            HMUnit.UpdateGuidCaches()
+            PTUnit.UpdateGuidCaches()
         end
         
-        HMUnit.Get("target"):UpdateAll()
+        PTUnit.Get("target"):UpdateAll()
         if util.IsSuperWowPresent() then
             GuidRoster.SetUnitGuid("target", guid)
-            HMHealPredict.SetRelevantGUIDs(GuidRoster.GetTrackedGuids())
+            PTHealPredict.SetRelevantGUIDs(GuidRoster.GetTrackedGuids())
         end
 
         if exists then
             EvaluateTracking("target", true)
         end
 
-        if HMOptions.Hidden then
+        if PTOptions.Hidden then
             return
         end
 
         CheckTarget()
     elseif event == "SPELLS_CHANGED" then
-        HealersMateSettings.UpdateTrackedDebuffTypes()
+        PuppeteerSettings.UpdateTrackedDebuffTypes()
     elseif event == "RAID_TARGET_UPDATE" then
         for _, ui in ipairs(AllUnitFrames) do
             ui:UpdateRaidMark()
@@ -1736,8 +1736,8 @@ end
 EventHandlerFrame:SetScript("OnEvent", EventHandler)
 
 
-function hmprint(msg)
-    if not HMOptions or not HMOptions["Debug"] then
+function print(msg)
+    if not PTOptions or not PTOptions["Debug"] then
         return
     end
     local window

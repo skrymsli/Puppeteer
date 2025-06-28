@@ -1,21 +1,21 @@
-HMUIProfile = {}
+PTUIProfile = {}
 
 -- The base template for profile creation
 local DEFAULT_PROFILE_VALUES = {}
 
-local HM
+local PT
 local util
 
-function HMUIProfile:New(base)
-    HM = HealersMate -- Need to do this in the constructor or else it doesn't exist yet
-    util = HMUtil
+function PTUIProfile:New(base)
+    PT = Puppeteer -- Need to do this in the constructor or else it doesn't exist yet
+    util = PTUtil
     local obj = util.CloneTable(base or DEFAULT_PROFILE_VALUES, true)
     setmetatable(obj, self)
     self.__index = self
     return obj
 end
 
-function HMUIProfile.CreatePositionedObject()
+function PTUIProfile.CreatePositionedObject()
     local obj = {}
     obj.AlignmentH = "CENTER" -- LEFT, CENTER, RIGHT
     obj.AlignmentV = "CENTER" -- TOP, CENTER, BOTTOM
@@ -72,30 +72,30 @@ function HMUIProfile.CreatePositionedObject()
     return obj
 end
 
-function HMUIProfile.CreateSizedObject(predefined)
-    local obj = HMUIProfile.CreatePositionedObject()
+function PTUIProfile.CreateSizedObject(predefined)
+    local obj = PTUIProfile.CreatePositionedObject()
     obj.Width = 24
     obj.Height = 24
     obj:ApplyPredefined(predefined)
     return obj
 end
 
-function HMUIProfile.CreateTextObject(predefined)
-    local obj = HMUIProfile.CreatePositionedObject()
+function PTUIProfile.CreateTextObject(predefined)
+    local obj = PTUIProfile.CreatePositionedObject()
     obj.FontSize = 12
     obj.MaxWidth = 1000
     obj:ApplyPredefined(predefined)
     return obj
 end
 
-function HMUIProfile:GetHeight()
+function PTUIProfile:GetHeight()
     local totalHeight = self.HealthBarHeight + self.PowerBarHeight + self.PaddingTop + self.PaddingBottom
     return totalHeight
 end
 
-function HMUIProfile.SetDefaults()
-    local createTextObject = HMUIProfile.CreateTextObject
-    local createSizedObject = HMUIProfile.CreateSizedObject
+function PTUIProfile.SetDefaults()
+    local createTextObject = PTUIProfile.CreateTextObject
+    local createSizedObject = PTUIProfile.CreateSizedObject
 
     local profile = DEFAULT_PROFILE_VALUES
 

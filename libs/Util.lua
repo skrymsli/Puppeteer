@@ -1,10 +1,10 @@
 -- Contains standalone utility functions that cause no side effects and don't require data from other files, other than the unit proxy
 
-HMUtil = {}
+PTUtil = {}
 
 local _G = getfenv(0)
-setmetatable(HMUtil, {__index = getfenv(1)})
-setfenv(1, HMUtil)
+setmetatable(PTUtil, {__index = getfenv(1)})
+setfenv(1, PTUtil)
 
 Classes = {"WARRIOR", "PALADIN", "HUNTER", "ROGUE", "PRIEST", "SHAMAN", "MAGE", "WARLOCK", "DRUID"}
 HealerClasses = {"PRIEST", "DRUID", "SHAMAN", "PALADIN"}
@@ -73,11 +73,11 @@ RaidPetUnits = {}
 for i = 1, MAX_RAID_MEMBERS do
     RaidPetUnits[i] = "raidpet"..i
 end
-CustomUnits = HMUnitProxy and HMUnitProxy.AllCustomUnits or {}
-CustomUnitsSet = HMUnitProxy and HMUnitProxy.AllCustomUnitsSet or {}
-FocusUnits = HMUnitProxy and HMUnitProxy.CustomUnitsMap["focus"] or {}
-if HMUnitProxy then
-    HMUnitProxy.ImportFunctions(HMUtil)
+CustomUnits = PTUnitProxy and PTUnitProxy.AllCustomUnits or {}
+CustomUnitsSet = PTUnitProxy and PTUnitProxy.AllCustomUnitsSet or {}
+FocusUnits = PTUnitProxy and PTUnitProxy.CustomUnitsMap["focus"] or {}
+if PTUnitProxy then
+    PTUnitProxy.ImportFunctions(PTUtil)
 end
 
 local unitArrays = {PartyUnits, PetUnits, RaidUnits, RaidPetUnits, TargetUnits}
@@ -91,11 +91,11 @@ AllRealUnits = {}
 for i, unit in ipairs(AllUnits) do
     AllRealUnits[i] = unit
 end
-if HMUnitProxy then
+if PTUnitProxy then
     for _, unit in ipairs(CustomUnits) do
         table.insert(AllUnits, unit)
     end
-    HMUnitProxy.RegisterUpdateListener(function()
+    PTUnitProxy.RegisterUpdateListener(function()
         local i = 1
         for _, unit in ipairs(AllRealUnits) do
             AllUnits[i] = unit
@@ -741,7 +741,7 @@ do -- This is done to prevent crashes from checking sight too early
     local sightEnableFrame = CreateFrame("Frame")
     sightEnableFrame:RegisterEvent("ADDON_LOADED")
     sightEnableFrame:SetScript("OnEvent", function()
-        if arg1 == "HealersMate" and UnitXPSP3 then
+        if arg1 == "Puppeteer" and UnitXPSP3 then
             IsInSight = function(unit)
                 return UnitXP("inSight", "player", unit) -- UnitXP SP3 modded function
             end
