@@ -1,7 +1,7 @@
 ## Interface: 11200
-## Version: 0.5-Prerelease
+## Version: 1.0-Prerelease
 ## Title: Puppeteer
-## Notes: Healing Addon for WoW Client version 1.12
+## Notes: Unit frames addon tailored for healers
 ## Author: OldManAlpha, Richard Truax(i2ichardt)
 ## SavedVariables: PTOnLoadInfoDisabled, PTHealCache, PTPlayerHealCache, PTRoleCache
 ## SavedVariablesPerCharacter: PTSpells, PTOptions

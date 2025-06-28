@@ -89,7 +89,7 @@ local _G = getfenv(0)
 setmetatable(Puppeteer, {__index = getfenv(1)})
 setfenv(1, Puppeteer)
 
-VERSION = "0.5-Prerelease"
+VERSION = GetAddOnMetadata("Puppeteer", "version")
 
 TestUI = false
 
