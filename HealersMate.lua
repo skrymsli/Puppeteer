@@ -1,6 +1,7 @@
-SLASH_HEALERSMATE1 = "/healersmate"
-SLASH_HEALERSMATE2 = "/hm"
-SlashCmdList["HEALERSMATE"] = function(args)
+SLASH_PUPPETEER1 = "/puppeteer"
+SLASH_PUPPETEER2 = "/pt"
+SLASH_PUPPETEER3 = "/hm"
+SlashCmdList["PUPPETEER"] = function(args)
     if args == "reset" then
         for _, group in pairs(HealersMate.UnitFrameGroups) do
             local gc = group:GetContainer()
@@ -177,16 +178,16 @@ ResurrectionSpells = {
     ["DRUID"] = "Rebirth"
 }
 
-local hmBarsPath = util.GetAssetsPath().."textures\\bars\\"
+local ptBarsPath = util.GetAssetsPath().."textures\\bars\\"
 BarStyles = {
     ["Blizzard"] = "Interface\\TargetingFrame\\UI-StatusBar",
-    ["Blizzard Smooth"] = hmBarsPath.."Blizzard-Smooth",
-    ["Blizzard Raid"] = hmBarsPath.."Blizzard-Raid",
-    ["Blizzard Raid Sideless"] = hmBarsPath.."Blizzard-Raid-Sideless",
-    ["HealersMate"] = hmBarsPath.."HealersMate",
-    ["HealersMate Borderless"] = hmBarsPath.."HealersMate-Borderless",
-    ["HealersMate Shineless"] = hmBarsPath.."HealersMate-Shineless",
-    ["HealersMate Shineless Borderless"] = hmBarsPath.."HealersMate-Shineless-Borderless"
+    ["Blizzard Smooth"] = ptBarsPath.."Blizzard-Smooth",
+    ["Blizzard Raid"] = ptBarsPath.."Blizzard-Raid",
+    ["Blizzard Raid Sideless"] = ptBarsPath.."Blizzard-Raid-Sideless",
+    ["HealersMate"] = ptBarsPath.."HealersMate",
+    ["HealersMate Borderless"] = ptBarsPath.."HealersMate-Borderless",
+    ["HealersMate Shineless"] = ptBarsPath.."HealersMate-Shineless",
+    ["HealersMate Shineless Borderless"] = ptBarsPath.."HealersMate-Shineless-Borderless"
 }
 
 GameTooltip = CreateFrame("GameTooltip", "HMGameTooltip", UIParent, "GameTooltipTemplate")
@@ -1640,7 +1641,7 @@ end
 function EventHandler()
     if event == "ADDON_LOADED" then
         
-        if arg1 ~= "HealersMate" then
+        if arg1 ~= "Puppeteer" then
             return
         end
 

@@ -114,7 +114,7 @@ end
 
 
 
-local assetsPath = "Interface\\AddOns\\HealersMate\\assets\\"
+local assetsPath = "Interface\\AddOns\\Puppeteer\\assets\\"
 function GetAssetsPath()
     return assetsPath
 end

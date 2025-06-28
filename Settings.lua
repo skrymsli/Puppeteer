@@ -356,7 +356,7 @@ function InitSettings()
     container:Hide()
 
     if Aero then
-        Aero:RegisterAddon("HealersMate", "HM_SettingsContainer")
+        Aero:RegisterAddon("Puppeteer", "HM_SettingsContainer")
     end
 
     container:SetScript("OnMouseDown", function()

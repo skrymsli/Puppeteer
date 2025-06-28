@@ -1,8 +1,8 @@
 ## Interface: 11200
-## Version: 2.0.0-alpha5.1-postdev
-## Title: HealersMate
+## Version: 0.5-Prerelease
+## Title: Puppeteer
 ## Notes: Healing Addon for WoW Client version 1.12
-## Author: Richard Truax(i2ichardt), OldManAlpha
+## Author: OldManAlpha, Richard Truax(i2ichardt)
 ## SavedVariables: HMOnLoadInfoDisabled, HMHealCache, HMPlayerHealCache, HMRoleCache
 ## SavedVariablesPerCharacter: HMSpells, HMOptions
 
