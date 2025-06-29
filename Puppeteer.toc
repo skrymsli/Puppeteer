@@ -27,6 +27,7 @@ libs\UnitProxy.lua
 libs\Util.lua
 
 Puppeteer.lua
+core\EventHandler.lua
 core\DistanceScanner.lua
 core\Command.lua
 

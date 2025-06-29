@@ -174,42 +174,6 @@ local function OpenUnitFramesIterator()
     end
 end
 
-
---This is just to respond to events "EventHandlerFrame" never appears on the screen
-local EventHandlerFrame = CreateFrame("Frame", "PTEventHandlerFrame", UIParent)
-EventHandlerFrame:RegisterEvent("ADDON_LOADED"); -- This triggers once for every addon that was loaded after this addon
-EventHandlerFrame:RegisterEvent("PLAYER_LOGOUT"); -- Fired when about to log out
-EventHandlerFrame:RegisterEvent("PLAYER_QUITING"); -- Fired when a player has the quit option on screen
-EventHandlerFrame:RegisterEvent("UNIT_HEALTH") --“UNIT_HEALTH” fires when a unit’s health changes
-EventHandlerFrame:RegisterEvent("UNIT_MAXHEALTH")
-EventHandlerFrame:RegisterEvent("UNIT_AURA") -- Register for the "UNIT_AURA" event to update buffs and debuffs
-EventHandlerFrame:RegisterEvent("PLAYER_ENTERING_WORLD") -- Fired when the player enters the world, reloads the UI, or zones between map instances. Basically, it triggers whenever a loading screen appears2. This includes logging in, respawning at a graveyard, entering/leaving an instance, and other situations where a loading screen is presented.
-EventHandlerFrame:RegisterEvent("PARTY_MEMBERS_CHANGED") -- Fired when someone joins or leaves the group
-EventHandlerFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
-EventHandlerFrame:RegisterEvent("RAID_ROSTER_UPDATE")
-EventHandlerFrame:RegisterEvent("UNIT_PET")
-EventHandlerFrame:RegisterEvent("PLAYER_PET_CHANGED")
-EventHandlerFrame:RegisterEvent("SPELLS_CHANGED")
-EventHandlerFrame:RegisterEvent("RAID_TARGET_UPDATE")
-
-EventHandlerFrame:RegisterEvent("UNIT_MANA")
-EventHandlerFrame:RegisterEvent("UNIT_DISPLAYPOWER")
-EventHandlerFrame:RegisterEvent("UNIT_RAGE")
-EventHandlerFrame:RegisterEvent("UNIT_ENERGY")
-EventHandlerFrame:RegisterEvent("UNIT_FOCUS")
-EventHandlerFrame:RegisterEvent("UNIT_MAXMANA")
-
-local lastModifier = "None"
-EventHandlerFrame:SetScript("OnUpdate", function()
-    local modifier = GetKeyModifier()
-    if lastModifier ~= modifier then
-        lastModifier = modifier
-        if SpellsTooltip:IsVisible() then
-            ReapplySpellsTooltip()
-        end
-    end
-end)
-
 function Debug(msg)
     DEFAULT_CHAT_FRAME:AddMessage(msg)
 end
@@ -644,7 +608,7 @@ local function initUnitFrames()
     OpenUnitFramesIterator()
 end
 
-function EventAddonLoaded()
+function OnAddonLoaded()
     local freshInstall = false
     if PTSpells == nil then
         freshInstall = true
@@ -1499,111 +1463,10 @@ function CheckTarget()
     UnitFrameGroups["Target"]:EvaluateShown()
 end
 
-
 function IsRelevantUnit(unit)
     --return not string.find(unit, "0x")
     return AllUnitsSet[unit] ~= nil or GUIDCustomUnitMap[unit]
 end
-
-function EventHandler()
-    if event == "ADDON_LOADED" then
-        
-        GuidRoster = PTGuidRoster
-
-        if arg1 ~= "Puppeteer" then
-            return
-        end
-
-        EventAddonLoaded()
-        EventHandlerFrame:UnregisterEvent("ADDON_LOADED")
-    
-    elseif event == "PLAYER_ENTERING_WORLD" then
-        
-        CheckGroup()
-
-        if PTOptions.DisablePartyFrames.InParty then
-            SetPartyFramesEnabled(false)
-        end
-        
-    elseif event == "PLAYER_LOGOUT" or event == "PLAYER_QUITING" then
-        
-        
-    elseif event == "UNIT_HEALTH" or event == "UNIT_MAXHEALTH" then
-        local unit = arg1
-        if not IsRelevantUnit(unit) then
-            return
-        end
-        for ui in UnitFrames(unit) do
-            ui:UpdateHealth()
-        end
-    elseif event == "UNIT_MANA" or event == "UNIT_RAGE" or event == "UNIT_ENERGY" or 
-            event == "UNIT_FOCUS" or event == "UNIT_MAXMANA" or event == "UNIT_DISPLAYPOWER" then
-        local unit = arg1
-        if not IsRelevantUnit(unit) then
-            return
-        end
-
-        for ui in UnitFrames(unit) do
-            ui:UpdatePower()
-        end
-        
-        if unit == "player" then
-            ReapplySpellsTooltip()
-        end
-        
-    elseif event == "UNIT_AURA" then
-        local unit = arg1
-        if not IsRelevantUnit(unit) then
-            return
-        end
-        PTUnit.Get(unit):UpdateAuras()
-        for ui in UnitFrames(unit) do
-            ui:UpdateAuras()
-            ui:UpdateHealth() -- Update health because there may be an aura that changes health bar color
-        end
-
-    elseif event == "PARTY_MEMBERS_CHANGED" or event == "RAID_ROSTER_UPDATE" then
-        CheckGroup()
-    elseif event == "UNIT_PET" or event == "PLAYER_PET_CHANGED" then
-        local unit = arg1
-        if IsRelevantUnit(unit) then
-            CheckGroup()
-        end
-    elseif event == "PLAYER_TARGET_CHANGED" then
-        for _, ui in ipairs(AllUnitFrames) do
-            ui:EvaluateTarget()
-        end
-        local exists, guid = UnitExists("target")
-        if guid then
-            PTUnit.UpdateGuidCaches()
-        end
-        
-        PTUnit.Get("target"):UpdateAll()
-        if util.IsSuperWowPresent() then
-            GuidRoster.SetUnitGuid("target", guid)
-            PTHealPredict.SetRelevantGUIDs(GuidRoster.GetTrackedGuids())
-        end
-
-        if exists then
-            EvaluateTracking("target", true)
-        end
-
-        if PTOptions.Hidden then
-            return
-        end
-
-        CheckTarget()
-    elseif event == "SPELLS_CHANGED" then
-        PuppeteerSettings.UpdateTrackedDebuffTypes()
-    elseif event == "RAID_TARGET_UPDATE" then
-        for _, ui in ipairs(AllUnitFrames) do
-            ui:UpdateRaidMark()
-        end
-    end
-end
-
-EventHandlerFrame:SetScript("OnEvent", EventHandler)
-
 
 function print(msg)
     if not PTOptions or not PTOptions["Debug"] then
