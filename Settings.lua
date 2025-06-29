@@ -1,10 +1,11 @@
 PuppeteerSettings = {}
+PTUtil.SetEnvironment(PuppeteerSettings)
 
-local util = getglobal("PTUtil")
+local util = PTUtil
 
 local _, playerClass = UnitClass("player")
 
-function PuppeteerSettings.UpdateTrackedDebuffTypes()
+function UpdateTrackedDebuffTypes()
     local debuffTypeCureSpells = {
         ["PALADIN"] = {
             ["Purify"] = {"Poison", "Disease"},
@@ -52,15 +53,15 @@ function PuppeteerSettings.UpdateTrackedDebuffTypes()
             end
         end
     end
-    PuppeteerSettings.TrackedDebuffTypesSet = trackedDebuffTypes
+    TrackedDebuffTypesSet = trackedDebuffTypes
     trackedDebuffTypes = util.ToArray(trackedDebuffTypes)
 
-    PuppeteerSettings.TrackedDebuffTypes = trackedDebuffTypes
+    TrackedDebuffTypes = trackedDebuffTypes
 end
 
-function PuppeteerSettings.SetDefaults()
+function SetDefaults()
     if not PTOptions then
-        PTOptions = {}
+        _G.PTOptions = {}
     end
     
     local OPTIONS_VERSION = 2
@@ -163,7 +164,7 @@ function PuppeteerSettings.SetDefaults()
             for _, upgrade in ipairs(optionsUpgrades) do
                 if upgrade:shouldUpgrade(PTOptions) then
                     local prevVersion = PTOptions.OptionsVersion
-                    PTOptions = upgrade:upgrade(PTOptions)
+                    _G.PTOptions = upgrade:upgrade(PTOptions)
                     DEFAULT_CHAT_FRAME:AddMessage("[Puppeteer] Upgraded options from version "..
                         prevVersion.." to "..upgrade.version)
                 end
@@ -191,11 +192,6 @@ function PuppeteerSettings.SetDefaults()
         end
     end
 end
-
--- This file needs serious cleaning and refactoring
-
-setmetatable(PuppeteerSettings, {__index = getfenv(1)})
-setfenv(1, PuppeteerSettings)
 
 TrackedBuffs = nil -- Default tracked is variable based on class
 TrackedDebuffs = nil -- Default tracked is variable based on class

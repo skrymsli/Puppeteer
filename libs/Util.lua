@@ -2,9 +2,13 @@
 
 PTUtil = {}
 
+function PTUtil.SetEnvironment(t, index)
+    setmetatable(t, {__index = index or PTUnitProxy or getfenv(1)})
+    setfenv(2, t)
+end
+
 local _G = getfenv(0)
-setmetatable(PTUtil, {__index = getfenv(1)})
-setfenv(1, PTUtil)
+PTUtil.SetEnvironment(PTUtil)
 
 Classes = {"WARRIOR", "PALADIN", "HUNTER", "ROGUE", "PRIEST", "SHAMAN", "MAGE", "WARLOCK", "DRUID"}
 HealerClasses = {"PRIEST", "DRUID", "SHAMAN", "PALADIN"}
@@ -76,9 +80,6 @@ end
 CustomUnits = PTUnitProxy and PTUnitProxy.AllCustomUnits or {}
 CustomUnitsSet = PTUnitProxy and PTUnitProxy.AllCustomUnitsSet or {}
 FocusUnits = PTUnitProxy and PTUnitProxy.CustomUnitsMap["focus"] or {}
-if PTUnitProxy then
-    PTUnitProxy.ImportFunctions(PTUtil)
-end
 
 local unitArrays = {PartyUnits, PetUnits, RaidUnits, RaidPetUnits, TargetUnits}
 AllUnits = {}
@@ -111,8 +112,6 @@ if PTUnitProxy then
         end
     end)
 end
-
-
 
 local assetsPath = "Interface\\AddOns\\Puppeteer\\assets\\"
 function GetAssetsPath()

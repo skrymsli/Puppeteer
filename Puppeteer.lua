@@ -85,9 +85,8 @@ end
 
 PuppeteerLib = AceLibrary("AceAddon-2.0"):new("AceEvent-2.0")
 Puppeteer = {}
+PTUtil.SetEnvironment(Puppeteer)
 local _G = getfenv(0)
-setmetatable(Puppeteer, {__index = getfenv(1)})
-setfenv(1, Puppeteer)
 
 VERSION = GetAddOnMetadata("Puppeteer", "version")
 
@@ -115,53 +114,6 @@ AllUnits = util.AllUnits
 AllUnitsSet = util.AllUnitsSet
 AllCustomUnits = util.CustomUnits
 AllCustomUnitsSet = util.CustomUnitsSet
-
-if PTUnitProxy then
-    PTUnitProxy.ImportFunctions(Puppeteer)
-end
-
--- TODO: Actually use this
-UIGroupInfo = {}
-UIGroupInfo["Party"] = {
-    units = PartyUnits,
-    environment = "party",
-    enableCondition = function()
-        return true
-end}
-UIGroupInfo["Pets"] = {
-    units = PetUnits,
-    environment = "party",
-    enableCondition = function()
-        return true
-    end
-}
-UIGroupInfo["Raid"] = {
-    units = RaidUnits,
-    environment = "raid",
-    enableCondition = function()
-        return true
-    end
-}
-UIGroupInfo["Raid Pets"] = {
-    units = RaidPetUnits,
-    environment = "raid",
-    enableCondition = function()
-        return true
-    end
-}
-UIGroupInfo["Target"] = {
-    units = TargetUnits,
-    environment = "all",
-    enableCondition = function()
-        return true
-    end
-}
-
--- Relic of previous versions, may be removed
-PreviousHealth = {} --This is used to determine if the player gained or lost health, used in the scrolling combat text functions
-for _, unit in ipairs(AllUnits) do
-    PreviousHealth[unit] = -1
-end
 
 ReadableButtonMap = {
     ["LeftButton"] = "Left",

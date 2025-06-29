@@ -1,14 +1,16 @@
 -- Caches important information about units and makes the data easily readable at any time.
 -- If using SuperWoW, the cache map will have GUIDs as the key instead of unit IDs.
 
+PTUnit = {}
+PTUtil.SetEnvironment(PTUnit)
+local _G = getfenv(0)
+
 local util = PTUtil
 local AllUnits = util.AllUnits
 local AllUnitsSet = util.AllUnitsSet
 local superwow = util.IsSuperWowPresent()
 
 local compost = AceLibrary("Compost-2.0")
-
-PTUnit = {}
 
 -- Non-instance variable
 -- Key: Unit ID(Unmodded) or GUID(SuperWoW) | Value: PTUnit Instance
@@ -36,14 +38,8 @@ PTUnit.Distance = 0
 PTUnit.InSight = true
 PTUnit.IsNew = false
 
-local _G = getfenv(0)
-if PTUtil.IsSuperWowPresent() then
-    setmetatable(PTUnitProxy, {__index = getfenv(1)})
-    setfenv(1, PTUnitProxy)
-end
-
 -- Non-GUID function
-function PTUnit.CreateCaches()
+function CreateCaches()
     if superwow then
         Puppeteer.print("Tried to create non-SuperWoW caches while using SuperWoW!")
         return
@@ -53,7 +49,7 @@ function PTUnit.CreateCaches()
     end
 end
 
-function PTUnit.UpdateGuidCaches()
+function UpdateGuidCaches()
     local cached = PTUnit.Cached
     local prevCached = PTUtil.CloneTableCompost(cached)
     for _, unit in ipairs(AllUnits) do
@@ -84,21 +80,21 @@ function PTUnit.UpdateGuidCaches()
 end
 
 -- Likely never needed to be called when using GUIDs
-function PTUnit.UpdateAllUnits()
+function UpdateAllUnits()
     for _, cache in pairs(PTUnit.Cached) do
         cache:UpdateAll()
     end
 end
 
 -- Get the PTUnit by unit ID. If using SuperWoW, GUID or unit ID is accepted.
-function PTUnit.Get(unit)
+function Get(unit)
     if superwow and AllUnitsSet[unit] then
         return PTUnit.Cached[PTGuidRoster.GetUnitGuid(unit)] or PTUnit
     end
     return PTUnit.Cached[unit]
 end
 
-function PTUnit.GetAllUnits()
+function GetAllUnits()
     return PTUnit.Cached
 end
 

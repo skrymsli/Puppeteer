@@ -26,9 +26,8 @@ SOFTWARE.
 
 -- I'm too lazy to implement this myself, for now..
 
+PTUtil.SetEnvironment(PTUtil)
 local _G = getfenv(0)
-setmetatable(PTUtil, {__index = getfenv(1)})
-setfenv(1, PTUtil)
 
 
 local gfind = string.gmatch or string.gfind

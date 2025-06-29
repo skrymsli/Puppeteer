@@ -1,4 +1,7 @@
-Puppeteer.DistanceScannerFrame = CreateFrame("Frame", "PTDistanceScannerFrame", UIParent)
+PTUtil.SetEnvironment(Puppeteer)
+local _G = getfenv(0)
+
+DistanceScannerFrame = CreateFrame("Frame", "PTDistanceScannerFrame", UIParent)
 
 local util = PTUtil
 local compost = AceLibrary("Compost-2.0")
@@ -27,14 +30,8 @@ end
 
 local TRACKING_UPDATE_INTERVAL = 1.25
 
-local _G = getfenv(0)
-if PTUtil.IsSuperWowPresent() then
-    setmetatable(PTUnitProxy, {__index = getfenv(1)})
-    setfenv(1, PTUnitProxy)
-end
-
-function Puppeteer.RunTrackingScan()
-    local UnitFrames = Puppeteer.UnitFrames
+function RunTrackingScan()
+    local UnitFrames = UnitFrames
     local time = GetTime()
     if time > nextTrackingUpdate then
         nextTrackingUpdate = time + TRACKING_UPDATE_INTERVAL
@@ -45,11 +42,11 @@ function Puppeteer.RunTrackingScan()
         sightTrackedUnits = compost:GetTable()
         if PTGuidRoster then
             for guid, cache in pairs(PTUnit.GetAllUnits()) do
-                Puppeteer.EvaluateTracking(guid)
+                EvaluateTracking(guid)
             end
         else
             for _, unit in ipairs(almostAllUnits) do
-                Puppeteer.EvaluateTracking(unit)
+                EvaluateTracking(unit)
             end
         end
 
@@ -82,8 +79,8 @@ function Puppeteer.RunTrackingScan()
     end
 end
 
-function Puppeteer.EvaluateTracking(unit, update)
-    local UnitFrames = Puppeteer.UnitFrames
+function EvaluateTracking(unit, update)
+    local UnitFrames = UnitFrames
     local cache = PTUnit.Get(unit)
     local distanceChanged = cache:UpdateDistance()
     local sightChanged = cache:UpdateSight()
@@ -115,6 +112,6 @@ function Puppeteer.EvaluateTracking(unit, update)
     end
 end
 
-function Puppeteer.StartDistanceScanner()
-    Puppeteer.DistanceScannerFrame:SetScript("OnUpdate", Puppeteer.RunTrackingScan)
+function StartDistanceScanner()
+    DistanceScannerFrame:SetScript("OnUpdate", RunTrackingScan)
 end

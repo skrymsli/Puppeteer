@@ -1,4 +1,6 @@
 PTUnitFrameGroup = {}
+PTUtil.SetEnvironment(PTUnitFrameGroup)
+local _G = getfenv(0)
 
 PTUnitFrameGroup.name = "???"
 
@@ -18,12 +20,6 @@ PTUnitFrameGroup.sortByRole = true
 PTUnitFrameGroup.moveContainer = CreateFrame("Frame", "PTUnitFrameGroupBulkMoveContainer", UIParent)
 PTUnitFrameGroup.moveContainer:EnableMouse(true)
 PTUnitFrameGroup.moveContainer:SetMovable(true)
-
-local _G = getfenv(0)
-if PTUtil.IsSuperWowPresent() then
-    setmetatable(PTUnitProxy, {__index = getfenv(1)})
-    setfenv(1, PTUnitProxy)
-end
 
 -- Singleton references, assigned in constructor
 local PT

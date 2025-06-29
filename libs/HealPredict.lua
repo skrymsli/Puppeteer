@@ -6,10 +6,8 @@ if not PTUtil.IsSuperWowPresent() then
 end
 
 PTHealPredict = {}
-
+PTUtil.SetEnvironment(PTHealPredict)
 local _G = getfenv(0)
-setmetatable(PTHealPredict, {__index = getfenv(1)})
-setfenv(1, PTHealPredict)
 
 local compost = AceLibrary("Compost-2.0")
 

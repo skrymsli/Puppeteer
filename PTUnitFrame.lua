@@ -1,4 +1,6 @@
 PTUnitFrame = {}
+PTUtil.SetEnvironment(PTUnitFrame)
+local _G = getfenv(0)
 
 PTUnitFrame.owningGroup = nil
 
@@ -48,12 +50,6 @@ PTUnitFrame.distance = 0
 PTUnitFrame.inSight = true
 
 PTUnitFrame.fakeStats = {} -- Used for displaying a fake party/raid
-
-local _G = getfenv(0)
-if PTUtil.IsSuperWowPresent() then
-    setmetatable(PTUnitProxy, {__index = getfenv(1)})
-    setfenv(1, PTUnitProxy)
-end
 
 -- Singleton references, assigned in constructor
 local PT

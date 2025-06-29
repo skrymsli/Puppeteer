@@ -4,11 +4,10 @@ PTDefaultProfiles = {}
 
 PTUserProfiles = {}
 
+PTUtil.SetEnvironment(PTProfileManager)
 local _G = getfenv(0)
-setmetatable(PTProfileManager, {__index = getfenv(1)})
-setfenv(1, PTProfileManager)
 
-local util = _G.PTUtil
+local util = PTUtil
 
 DefaultProfileOrder = {
     "Default", "Default (Short Bar)", "Small", "Very Small", "Very Small (Horizontal)", "Long", "Long (Small)", 

@@ -5,14 +5,10 @@ if not PTUtil.IsSuperWowPresent() then
 end
 
 PTGuidRoster = {}
-
+PTUtil.SetEnvironment(PTGuidRoster)
 local _G = getfenv(0)
-setmetatable(PTGuidRoster, {__index = getfenv(1)})
-setfenv(1, PTGuidRoster)
 
 local compost = AceLibrary("Compost-2.0")
-
-PTUnitProxy.ImportFunctions(PTGuidRoster)
 
 local util = PTUtil
 
