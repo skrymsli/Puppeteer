@@ -25,6 +25,11 @@ libs\ace\HealComm-1.0\HealComm-1.0.lua
 
 libs\UnitProxy.lua
 libs\Util.lua
+
+Puppeteer.lua
+core\DistanceScanner.lua
+core\Command.lua
+
 Settings.lua
 PTUnitFrame.lua
 PTUnitFrameGroup.lua
@@ -36,6 +41,3 @@ libs\AuraTracker.lua
 libs\PTUnit.lua
 libs\ShaguUtil.lua
 libs\HealPredict.lua
-
-Puppeteer.lua
-DistanceScanner.lua

@@ -21,13 +21,10 @@ PTUnitFrameGroup.moveContainer = CreateFrame("Frame", "PTUnitFrameGroupBulkMoveC
 PTUnitFrameGroup.moveContainer:EnableMouse(true)
 PTUnitFrameGroup.moveContainer:SetMovable(true)
 
--- Singleton references, assigned in constructor
-local PT
-local util
+local PT = Puppeteer
+local util = PTUtil
 
 function PTUnitFrameGroup:New(name, environment, units, petGroup, profile, sortByRole)
-    PT = Puppeteer -- Need to do this in the constructor or else it doesn't exist yet
-    util = PTUtil
     local obj = {name = name, environment = environment, uis = {}, units = units, petGroup = petGroup, profile = profile}
     if sortByRole ~= nil then
         obj.sortByRole = sortByRole

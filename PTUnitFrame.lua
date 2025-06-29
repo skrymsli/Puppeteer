@@ -51,14 +51,12 @@ PTUnitFrame.inSight = true
 
 PTUnitFrame.fakeStats = {} -- Used for displaying a fake party/raid
 
--- Singleton references, assigned in constructor
-local PT
+local PT = Puppeteer
 local util = PTUtil
 
 local compost = AceLibrary("Compost-2.0")
 
 function PTUnitFrame:New(unit, isCustomUnit)
-    PT = Puppeteer -- Need to do this in the constructor or else it doesn't exist yet
     local obj = {unit = unit, isCustomUnit = isCustomUnit, auraIconPool = {}, 
         auraIcons = {}, fakeStats = PTUnitFrame.GenerateFakeStats()}
     setmetatable(obj, self)

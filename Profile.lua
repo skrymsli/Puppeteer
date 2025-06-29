@@ -3,12 +3,10 @@ PTUIProfile = {}
 -- The base template for profile creation
 local DEFAULT_PROFILE_VALUES = {}
 
-local PT
-local util
+local PT = Puppeteer
+local util = PTUtil
 
 function PTUIProfile:New(base)
-    PT = Puppeteer -- Need to do this in the constructor or else it doesn't exist yet
-    util = PTUtil
     local obj = util.CloneTable(base or DEFAULT_PROFILE_VALUES, true)
     setmetatable(obj, self)
     self.__index = self
