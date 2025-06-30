@@ -336,6 +336,8 @@ function ApplySpellsTooltip(attachTo, unit, owner)
         return
     end
 
+    SetTooltipKeyListenerEnabled(true)
+
     local spellList = {}
     local modifier = GetKeyModifier()
     local settings = PuppeteerSettings
@@ -525,15 +527,18 @@ function ShowSpellsTooltip(attachTo, spells, owner)
     SpellsTooltip:Show()
 end
 
-function HideSpellsTooltip()
+function HideSpellsTooltip(willReapply)
     SpellsTooltip:Hide()
     SpellsTooltipOwner = nil
+    if not willReapply then
+        SetTooltipKeyListenerEnabled(false)
+    end
 end
 
 function ReapplySpellsTooltip()
     if SpellsTooltipOwner ~= nil then
         local prevOwner = SpellsTooltipOwner
-        HideSpellsTooltip()
+        HideSpellsTooltip(true)
         prevOwner:GetScript("OnEnter")()
     end
 end

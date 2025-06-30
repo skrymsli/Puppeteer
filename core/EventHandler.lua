@@ -105,9 +105,9 @@ RegisterEventHandler("RAID_TARGET_UPDATE", function()
 end)
 
 local GetKeyModifier = util.GetKeyModifier
-local keyListener = CreateFrame("Frame", "PTKeyListener")
+local keyListener = CreateFrame("Frame", "PTTooltipKeyListener")
 local lastModifier = "None"
-keyListener:SetScript("OnUpdate", function()
+local keyListenerScript = function()
     local modifier = GetKeyModifier()
     if lastModifier ~= modifier then
         lastModifier = modifier
@@ -115,4 +115,11 @@ keyListener:SetScript("OnUpdate", function()
             ReapplySpellsTooltip()
         end
     end
-end)
+end
+
+function SetTooltipKeyListenerEnabled(enabled)
+    if keyListener:GetScript("OnUpdate") ~= nil == enabled then -- Don't set the script if the state is unchanged
+        return
+    end
+    keyListener:SetScript("OnUpdate", enabled and keyListenerScript or nil)
+end
