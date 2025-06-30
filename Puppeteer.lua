@@ -701,7 +701,7 @@ function OnAddonLoaded()
             end
         end
     end
-    PuppeteerSettings.InitSettings()
+    PTSettingsGUI.InitSettings()
     if PTHealPredict then
         PTHealPredict.OnLoad()
 

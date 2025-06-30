@@ -31,11 +31,13 @@ core\EventHandler.lua
 core\DistanceScanner.lua
 core\Command.lua
 
-Settings.lua
+PuppeteerSettings.lua
 PTUnitFrame.lua
 PTUnitFrameGroup.lua
 Profile.lua
 ProfileManager.lua
+
+gui\Settings.lua
 
 libs\GuidRoster.lua
 libs\AuraTracker.lua
