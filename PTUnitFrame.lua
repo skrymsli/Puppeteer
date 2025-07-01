@@ -1,6 +1,10 @@
 PTUnitFrame = {}
 PTUtil.SetEnvironment(PTUnitFrame)
+PTUnitFrame.__index = PTUnitFrame
 local _G = getfenv(0)
+local PT = Puppeteer
+local util = PTUtil
+local compost = AceLibrary("Compost-2.0")
 
 PTUnitFrame.owningGroup = nil
 
@@ -51,16 +55,9 @@ PTUnitFrame.inSight = true
 
 PTUnitFrame.fakeStats = {} -- Used for displaying a fake party/raid
 
-local PT = Puppeteer
-local util = PTUtil
-
-local compost = AceLibrary("Compost-2.0")
-
 function PTUnitFrame:New(unit, isCustomUnit)
-    local obj = {unit = unit, isCustomUnit = isCustomUnit, auraIconPool = {}, 
-        auraIcons = {}, fakeStats = PTUnitFrame.GenerateFakeStats()}
-    setmetatable(obj, self)
-    self.__index = self
+    local obj = setmetatable({unit = unit, isCustomUnit = isCustomUnit, auraIconPool = {}, 
+        auraIcons = {}, fakeStats = PTUnitFrame.GenerateFakeStats()}, self)
     return obj
 end
 

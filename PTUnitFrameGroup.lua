@@ -1,6 +1,9 @@
 PTUnitFrameGroup = {}
 PTUtil.SetEnvironment(PTUnitFrameGroup)
+PTUnitFrameGroup.__index = PTUnitFrameGroup
 local _G = getfenv(0)
+local PT = Puppeteer
+local util = PTUtil
 
 PTUnitFrameGroup.name = "???"
 
@@ -21,16 +24,9 @@ PTUnitFrameGroup.moveContainer = CreateFrame("Frame", "PTUnitFrameGroupBulkMoveC
 PTUnitFrameGroup.moveContainer:EnableMouse(true)
 PTUnitFrameGroup.moveContainer:SetMovable(true)
 
-local PT = Puppeteer
-local util = PTUtil
-
 function PTUnitFrameGroup:New(name, environment, units, petGroup, profile, sortByRole)
-    local obj = {name = name, environment = environment, uis = {}, units = units, petGroup = petGroup, profile = profile}
-    if sortByRole ~= nil then
-        obj.sortByRole = sortByRole
-    end
-    setmetatable(obj, self)
-    self.__index = self
+    local obj = setmetatable({name = name, environment = environment, uis = {}, units = units, petGroup = petGroup, 
+        profile = profile, sortByRole = sortByRole}, self)
     obj:Initialize()
     return obj
 end
