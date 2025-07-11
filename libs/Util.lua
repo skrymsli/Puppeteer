@@ -489,6 +489,24 @@ function CallWithThis(object, func)
     _G.this = prevThis
 end
 
+local function _FixFrameLevels(parent, ...)
+	local level = parent:GetFrameLevel() + 1
+	for i = 1, table.getn(arg) do
+		local child = arg[i]
+        -- Children of scroll frames can block components outside if they're layered above the scroll pane
+        if parent.GetScrollChild and parent:GetScrollChild() == child then
+            child:SetFrameLevel(level - 1)
+        else
+		    child:SetFrameLevel(level)
+        end
+		_FixFrameLevels(child, child:GetChildren())
+	end
+end
+
+function FixFrameLevels(frame)
+	return _FixFrameLevels(frame, frame:GetChildren())
+end
+
 -- Returns the class without the first return variable fluff
 function GetClass(unit)
     local _, class = UnitClass(unit)

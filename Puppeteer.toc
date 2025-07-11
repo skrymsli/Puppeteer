@@ -26,6 +26,25 @@ libs\ace\HealComm-1.0\HealComm-1.0.lua
 libs\UnitProxy.lua
 libs\Util.lua
 
+libs\gui\PTGuiLib.lua
+libs\gui\Component.lua
+
+libs\gui\abstract\TabComponent.lua
+
+libs\gui\component\Container.lua
+libs\gui\component\ScrollFrame.lua
+libs\gui\component\Button.lua
+libs\gui\component\Checkbox.lua
+libs\gui\component\Text.lua
+libs\gui\component\Slider.lua
+libs\gui\component\Dropdown.lua
+libs\gui\component\EditBox.lua
+libs\gui\component\MultiLineEditBox.lua
+libs\gui\component\TabPanel.lua
+libs\gui\component\EditBoxSlider.lua
+
+libs\gui\frame\TabFrame.lua
+
 Puppeteer.lua
 core\EventHandler.lua
 core\DistanceScanner.lua
