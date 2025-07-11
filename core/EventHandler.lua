@@ -107,7 +107,7 @@ end)
 local GetKeyModifier = util.GetKeyModifier
 local keyListener = CreateFrame("Frame", "PTTooltipKeyListener")
 local lastModifier = "None"
-local keyListenerScript = function()
+local function PTTooltipKeyListener_OnUpdate()
     local modifier = GetKeyModifier()
     if lastModifier ~= modifier then
         lastModifier = modifier
@@ -121,5 +121,10 @@ function SetTooltipKeyListenerEnabled(enabled)
     if keyListener:GetScript("OnUpdate") ~= nil == enabled then -- Don't set the script if the state is unchanged
         return
     end
-    keyListener:SetScript("OnUpdate", enabled and keyListenerScript or nil)
+    if enabled then
+        lastModifier = GetKeyModifier()
+        keyListener:SetScript("OnUpdate", PTTooltipKeyListener_OnUpdate)
+    else
+        keyListener:SetScript("OnUpdate", nil)
+    end
 end
