@@ -277,7 +277,7 @@ function PTGuiComponent:SetSimpleBackground(type, diff)
             background[k] = v
         end
     end
-    self:SetBackground(background)
+    return self:SetBackground(background)
 end
 
 function PTGuiComponent:SetBackground(params)

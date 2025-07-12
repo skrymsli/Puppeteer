@@ -48,13 +48,11 @@ function PTGuiMultiLineEditBox:SetParent(obj)
 end
 
 function PTGuiMultiLineEditBox:SetWidth(width)
-    self.super.SetWidth(self, math.max(width - 30, 0))
     self:GetComponent("scroll_frame"):GetHandle():SetWidth(width)
     return self
 end
 
 function PTGuiMultiLineEditBox:SetHeight(height)
-    --self.super.SetHeight(self, height)
     self:GetComponent("scroll_frame"):GetHandle():SetHeight(height)
     return self
 end

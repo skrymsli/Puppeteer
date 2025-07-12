@@ -19,12 +19,21 @@ function PTGuiTabComponent:RegisterSizeListener()
     end, true)
 end
 
-function PTGuiTabComponent:CreateTab(name)
+function PTGuiTabComponent:CreateTab(name, useScrollFrame)
     local tabIndex = self:GetTabCount() + 1
     local tabLabel = "Tab"..tabIndex
-    local container = PTGuiContainer:New("$parent"..tabLabel.."Container", self:GetHandle())
-    container:SetAllPoints(self:GetHandle())
-    container:Hide()
+    local container
+    local scrollFrame
+    if not useScrollFrame then
+        container = PTGuiContainer:New("$parent"..tabLabel.."Container", self:GetHandle())
+        container:SetAllPoints(self:GetHandle())
+        container:Hide()
+    else
+        scrollFrame = PTGuiLib.Get("scroll_frame", self:GetHandle())
+        scrollFrame:SetAllPoints(self:GetHandle())
+        scrollFrame:Hide()
+        container = scrollFrame:GetComponent("content")
+    end
     self:AddComponent(tabLabel, container)
     self:SetPrimary()
     local tab = CreateFrame("Button", "$parent"..tabLabel, self:GetHandle(), self.TabPosition == "TOP" and "TabButtonTemplate" or "CharacterFrameTabButtonTemplate")
@@ -38,12 +47,12 @@ function PTGuiTabComponent:CreateTab(name)
         self:SetSelectedTab(tabIndex)
         self:PlayTabSound()
     end)
-    local tabInfo = {tab = tab, container = container, name = name}
+    local tabInfo = {tab = tab, container = container, scrollFrame = scrollFrame, root = scrollFrame or container, name = name}
     table.insert(self.Tabs, tabInfo)
     self:UpdateTabCount()
     PanelTemplates_TabResize(0, tab)
     self:PositionTabs()
-    return container
+    return container, scrollFrame
 end
 
 function PTGuiTabComponent:GetTabCount()
@@ -84,9 +93,9 @@ function PTGuiTabComponent:SetSelectedTab(index)
     PanelTemplates_SetTab(self:GetHandle(), index)
     for i, tab in ipairs(self.Tabs) do
         if i == index then
-            tab.container:Show()
+            tab.root:Show()
         else
-            tab.container:Hide()
+            tab.root:Hide()
         end
     end
 end

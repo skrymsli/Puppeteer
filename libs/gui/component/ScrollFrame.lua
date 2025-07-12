@@ -2,6 +2,8 @@ PTGuiScrollFrame = PTGuiComponent:Extend("scroll_frame")
 local _G = getfenv(0)
 local util = PTUtil
 
+PTGuiScrollFrame.ApplyScrollbarPadding = true
+
 function PTGuiScrollFrame:New(content)
     local obj = setmetatable({}, self)
     local scrollFrame = CreateFrame("ScrollFrame", self:GenerateName(), nil, "UIPanelScrollFrameTemplate")
@@ -17,13 +19,24 @@ function PTGuiScrollFrame:New(content)
     obj:SetPrimary()
     obj:SetupScrollbar()
     obj:SetSimpleBackground()
-    obj:UpdateScrollRange()
+    -- It seems that scroll frames require their child to have a manually set width to function properly,
+    -- and I can't think of a better way to ensure the width is always up-to-date other than using OnSizeChanged
+    scrollFrame:SetScript("OnSizeChanged", function()
+        obj:GetContainer():SetWidth(math.max(this:GetWidth() - (obj.ApplyScrollbarPadding and 30 or 0), 0))
+        obj:GetContainer():SetHeight(this:GetHeight())
+    end)
     return obj
 end
 
 -- You better be disposing everything contained in this scroll frame before disposing the frame
 function PTGuiScrollFrame:OnDispose()
     self.super.OnDispose(self)
+end
+
+function PTGuiScrollFrame:SetParent(parent)
+    self.super.SetParent(self, parent)
+    -- If this isn't done after setting a new parent, the contents go off the scroll frame
+    self:GetHandle():SetScrollChild(self:GetContainer())
 end
 
 function PTGuiScrollFrame:GetContainer()
@@ -36,14 +49,16 @@ end
 
 function PTGuiScrollFrame:SetWidth(width)
     self.super.SetWidth(self, width)
-    self:GetComponent("content"):SetWidth(width)
     return self
 end
 
 function PTGuiScrollFrame:SetHeight(height)
     self.super.SetHeight(self, height)
-    self:GetComponent("content"):SetHeight(height)
     return self
+end
+
+function PTGuiScrollFrame:SetApplyScrollbarPadding(applyPadding)
+    self.ApplyScrollbarPadding = applyPadding
 end
 
 function PTGuiScrollFrame:UpdateScrollRange()
