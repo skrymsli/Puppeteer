@@ -363,8 +363,19 @@ function PTGuiComponent:ApplyTooltipTo(component, texts)
     end)
 end
 
+local function flattenTexts(element, t)
+    if type(element) == "table" then
+        for _, e in ipairs(element) do
+            flattenTexts(e, t)
+        end
+    end
+    table.insert(t, element)
+    return t
+end
+
 function PTGuiComponent:ApplyTooltipToAll(texts)
     local primary = self:GetPrimary():GetHandle()
+    local texts = flattenTexts(texts, {})
     local onEnter = function()
         ShowTooltip(primary, texts)
     end

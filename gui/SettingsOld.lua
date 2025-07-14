@@ -1,5 +1,5 @@
-PTSettingsGUI = {}
-PTUtil.SetEnvironment(PTSettingsGUI, PuppeteerSettings)
+PTSettingsGUIOld = {}
+PTUtil.SetEnvironment(PTSettingsGUIOld, PuppeteerSettings)
 
 local util = PTUtil
 

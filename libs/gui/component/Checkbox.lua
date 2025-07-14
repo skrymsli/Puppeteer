@@ -1,5 +1,5 @@
 PTGuiCheckbox = PTGuiComponent:Extend("checkbox")
-PTGuiCheckbox:Import(true, "SetChecked")
+PTGuiCheckbox:Import(true, "SetChecked", "Enable", "Disable")
 PTGuiCheckbox:Import(false, "GetChecked")
 
 -- Texture coords that makes the checkbox larger and more centered

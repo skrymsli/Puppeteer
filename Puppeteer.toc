@@ -36,6 +36,7 @@ libs\gui\component\ScrollFrame.lua
 libs\gui\component\Button.lua
 libs\gui\component\Checkbox.lua
 libs\gui\component\Text.lua
+libs\gui\component\Title.lua
 libs\gui\component\Slider.lua
 libs\gui\component\Dropdown.lua
 libs\gui\component\EditBox.lua
@@ -57,6 +58,7 @@ Profile.lua
 ProfileManager.lua
 
 gui\SettingsOld.lua
+gui\Settings.lua
 
 libs\GuidRoster.lua
 libs\AuraTracker.lua

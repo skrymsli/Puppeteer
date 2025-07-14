@@ -206,7 +206,7 @@ function SplitString(str, delimiter)
     local start_pos = 1
     
     while true do
-        local end_pos = string.find(str, delimiter, start_pos)
+        local end_pos = string.find(str, delimiter, start_pos, true)
         
         if not end_pos then
             table.insert(result, string.sub(str, start_pos))

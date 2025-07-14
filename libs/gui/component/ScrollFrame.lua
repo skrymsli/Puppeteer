@@ -18,7 +18,6 @@ function PTGuiScrollFrame:New(content)
     obj:AddComponent("content", content)
     obj:SetPrimary()
     obj:SetupScrollbar()
-    obj:SetSimpleBackground()
     -- It seems that scroll frames require their child to have a manually set width to function properly,
     -- and I can't think of a better way to ensure the width is always up-to-date other than using OnSizeChanged
     scrollFrame:SetScript("OnSizeChanged", function()

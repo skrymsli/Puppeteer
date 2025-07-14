@@ -701,7 +701,8 @@ function OnAddonLoaded()
             end
         end
     end
-    PTSettingsGUI.InitSettings()
+    PTSettingsGUIOld.InitSettings()
+    PTSettingsGui.Init()
     if PTHealPredict then
         PTHealPredict.OnLoad()
 

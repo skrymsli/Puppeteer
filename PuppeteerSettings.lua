@@ -194,6 +194,25 @@ function SetDefaults()
     end
 end
 
+function TraverseOptions(location)
+    local path = util.SplitString(location, ".")
+    local currentTable = PTOptions
+    for i = 1, table.getn(path) - 1 do
+        currentTable = currentTable[path[i]]
+    end
+    return currentTable, path[table.getn(path)]
+end
+
+function GetOption(location)
+    local optionTable, location = TraverseOptions(location)
+    return optionTable[location]
+end
+
+function SetOption(location, value)
+    local optionTable, location = TraverseOptions(location)
+    optionTable[location] = value
+end
+
 TrackedBuffs = nil -- Default tracked is variable based on class
 TrackedDebuffs = nil -- Default tracked is variable based on class
 TrackedDebuffTypes = {} -- Default tracked is variable based on class
