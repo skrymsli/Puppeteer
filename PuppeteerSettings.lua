@@ -1,6 +1,7 @@
 PuppeteerSettings = {}
 PTUtil.SetEnvironment(PuppeteerSettings)
 
+local _G = getfenv(0)
 local util = PTUtil
 
 local _, playerClass = UnitClass("player")
