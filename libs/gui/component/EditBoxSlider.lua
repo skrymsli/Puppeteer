@@ -1,6 +1,10 @@
 -- Recommended width: 100+ px / Recommended height: 36-40 px
 
 PTGuiEditBoxSlider = PTGuiComponent:Extend("editbox_slider")
+PTGuiEditBoxSlider:ImportComponent("slider", true, "SetMinMaxValues", "SetValue", "SetValueStep")
+PTGuiEditBoxSlider:ImportComponent("slider", false, "GetMinMaxValues", "GetValue", "GetValueStep")
+PTGuiEditBoxSlider:ImportComponent("editbox", true, "SetText")
+PTGuiEditBoxSlider:ImportComponent("editbox", false, "GetText")
 
 function PTGuiEditBoxSlider:New()
     local obj = setmetatable({}, self)
