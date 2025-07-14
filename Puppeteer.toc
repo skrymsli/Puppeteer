@@ -56,7 +56,7 @@ PTUnitFrameGroup.lua
 Profile.lua
 ProfileManager.lua
 
-gui\Settings.lua
+gui\SettingsOld.lua
 
 libs\GuidRoster.lua
 libs\AuraTracker.lua
