@@ -25,11 +25,7 @@ PTGuiDropdown.Options = nil
 function PTGuiDropdown:New()
     local obj = setmetatable({}, self)
     local dropdown = CreateFrame("Frame", self:GenerateName(), nil, "UIDropDownMenuTemplate")
-    -- Make positioning behave like you'd think
-    local left = _G[dropdown:GetName().."Left"]
-    local a,b,c,d,e = left:GetPoint(1)
-    left:ClearAllPoints()
-    left:SetPoint(a,b,c, -18, e + 1)
+    obj:SetHandle(dropdown)
     -- Make SetWidth actually set the width, like one would hope
     local dropdownSetWidth = dropdown.SetWidth
     dropdown.SetWidth = function(self, width)
@@ -43,6 +39,7 @@ function PTGuiDropdown:New()
     dropdown.SetHeight = function(self, height)
         dropdownSetHeight(self, 25)
     end
+    obj:SetShowShadow(true) -- Need to do this on creation to fix the visual position
     -- Make clicking anywhere on the dropdown open the menu
     dropdown:EnableMouse(true)
     dropdown:SetScript("OnMouseUp", function()
@@ -50,47 +47,97 @@ function PTGuiDropdown:New()
             PTUtil.CallWithThis(_G[this:GetName().."Button"], _G[this:GetName().."Button"]:GetScript("OnClick"))
         end
     end)
-    obj:SetHandle(dropdown)
     return obj
 end
 
-local recordedTextures = {"ButtonNormalTexture", "ButtonDisabledTexture", "ButtonPushedTexture", "ButtonHighlightTexture"}
+local partProps = {
+    Default = {
+        Left = {
+            Width = 25, Height = 64,
+            Coords = {0, 0.1953125, 0, 1},
+            Point = {"TOPLEFT", "$parent", "TOPLEFT", -18, 18}
+        },
+        Middle = {
+            Width = 115, Height = 64,
+            Coords = {0.1953125, 0.8046875, 0, 1},
+            Point = {"LEFT", "$parentLeft", "RIGHT"}
+        },
+        Right = {
+            Width = 25, Height = 64,
+            Coords = {0.8046875, 1, 0, 1},
+            Point = {"LEFT", "$parentMiddle", "RIGHT"}
+        },
+        Text = {
+            Point = {"RIGHT", "$parentRight", -43, 2}
+        },
+        Button = {
+            Point = {"TOPRIGHT", "$parentRight", -16, -18}
+        }
+    },
+    Shadowless = {
+        Left = {
+            Width = 6, Height = 24,
+            Coords = {18 / 128, (18 + 6) / 128, 19 / 64, (19 + 24) / 64},
+            Point = {"TOPLEFT", 0, -1}
+        },
+        Middle = {
+            Width = 115, Height = 24,
+            Coords = {0.1953125, 0.8046875, 19 / 64, (19 + 24) / 64},
+            Point = {"LEFT", "$parentLeft", "RIGHT", 0, 0}
+        },
+        Right = {
+            Width = 9, Height = 24,
+            Coords = {102 / 128, (102 + 9) / 128, 19 / 64, (19 + 24) / 64},
+            Point = {"LEFT", "$parentMiddle", "RIGHT", 0, 0}
+        },
+        Text = {
+            Point = {"RIGHT", "$parentRight", -26, 1}
+        },
+        Button = {
+            Point = {"TOPRIGHT", "$parentRight", 1, 1}
+        }
+    }
+}
+function PTGuiDropdown:SetShowShadow(showShadow)
+    local frameName = self:GetHandle():GetName()
+    for partName, props in pairs(showShadow and partProps.Default or partProps.Shadowless) do
+        local part = _G[frameName..partName]
+        if props.Coords then
+            part:SetTexCoord(unpack(props.Coords))
+        end
+        if props.Width then
+            part:SetWidth(props.Width)
+            part:SetHeight(props.Height)
+        end
+        part:ClearAllPoints()
+        part:SetPoint(unpack(props.Point))
+    end
+    self:SetWidth(self:GetWidth())
+    UIDropDownMenu_SetAnchor(showShadow and 18 or 0, showShadow and 17 or 0, self:GetHandle(), "TOPLEFT", 
+        _G[frameName.."Left"], "BOTTOMLEFT")
+    return self
+end
+
+local defaultTextures = {
+    ButtonNormalTexture = "Interface\\ChatFrame\\UI-ChatIcon-ScrollDown-Up",
+    ButtonDisabledTexture = "Interface\\ChatFrame\\UI-ChatIcon-ScrollDown-Disabled",
+    ButtonPushedTexture = "Interface\\ChatFrame\\UI-ChatIcon-ScrollDown-Down",
+    ButtonHighlightTexture = "Interface\\Buttons\\UI-Common-MouseHilight"
+}
 function PTGuiDropdown:SetParent(obj)
     local menuType = obj == UIParent and "MENU" or nil
-    if menuType == "MENU" and not self.guiSavedProps then
-        -- If this is becoming a context menu, we need to save the current button properties so that we can 
-        -- restore them if this becomes a dropdown menu again
+    if menuType ~= "MENU" and self:GetHandle().displayMode == "MENU" then
+        -- Show the dropdown if we're switching from a context menu to a dropdown
+        -- BROKEN: When put back as a context menu, the button shows forever???
         local frameName = self:GetHandle():GetName()
-        local savedProps = {}
-        for _, tex in ipairs(recordedTextures) do
-            savedProps[tex] = _G[frameName..tex]:GetTexture()
-        end
-        local button = _G[frameName.."Button"]
-        local buttonPoints = {}
-        for i = 1, button:GetNumPoints() do
-            local a,b,c,d,e = button:GetPoint(i)
-            buttonPoints[i] = {a,b,c,d,e}
-        end
-        savedProps["ButtonPoints"] = buttonPoints
-        self.guiSavedProps = savedProps
-    elseif menuType ~= "MENU" and self.guiSavedProps then
-        -- Restore the properties if we're switching from a context menu to a dropdown
-        local frameName = self:GetHandle():GetName()
-        local savedProps = self.guiSavedProps
         _G[frameName.."Left"]:Show()
 		_G[frameName.."Middle"]:Show()
 		_G[frameName.."Right"]:Show()
-        for _, tex in ipairs(recordedTextures) do
-            _G[frameName..tex]:SetTexture(savedProps[tex])
+        for texName, texPath in pairs(defaultTextures) do
+            _G[frameName..texName]:SetTexture(texPath)
         end
-        local button = _G[frameName.."Button"]
-		button:ClearAllPoints();
-        for _, pt in ipairs(savedProps.ButtonPoints) do
-            _G[frameName.."Button"]:SetPoint(unpack(pt))
-        end
+        self:SetShowShadow(true)
         self:GetHandle().displayMode = nil
-
-        self.guiSavedProps = nil
     end
     UIDropDownMenu_Initialize(self:GetHandle(), function(level)
         self:Initialize(level)
@@ -100,6 +147,7 @@ end
 
 function PTGuiDropdown:OnDispose()
     self:SetToggleState(false)
+    self:SetShowShadow(true)
     self.super.OnDispose(self)
 
     self.Options = nil
@@ -174,6 +222,7 @@ function PTGuiDropdown:SetToggleState(shown, anchor, xOffset, yOffset)
     if self:IsToggledOn() ~= shown then
         ToggleDropDownMenu(1, nil, self:GetHandle(), anchor and anchor:GetName() or nil, xOffset, yOffset)
     end
+    return self
 end
 
 PTGuiLib.RegisterComponent(PTGuiDropdown)
