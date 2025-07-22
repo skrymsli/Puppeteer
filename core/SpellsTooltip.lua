@@ -88,8 +88,8 @@ function InitBindingDisplayCache()
     ButtonDisplayCache = {}
     for _, button in ipairs(PTOptions.Buttons) do
         ButtonDisplayCache[button] = {}
-        ButtonDisplayCache[button]["Normal"] = PTOptions.ButtonNames[button]
-        ButtonDisplayCache[button]["Unfocused"] = colorize(PTOptions.ButtonNames[button], 0.3, 0.3, 0.3)
+        ButtonDisplayCache[button]["Normal"] = PTOptions.ButtonNames[button] or button
+        ButtonDisplayCache[button]["Unfocused"] = colorize(PTOptions.ButtonNames[button] or button, 0.3, 0.3, 0.3)
     end
 
     BindingDisplayCache = {}

@@ -51,6 +51,7 @@ core\SpellsTooltip.lua
 core\EventHandler.lua
 core\DistanceScanner.lua
 core\Command.lua
+core\SpecialButtons.lua
 
 PuppeteerSettings.lua
 PTUnitFrame.lua

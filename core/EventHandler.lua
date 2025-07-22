@@ -103,6 +103,9 @@ RegisterEventHandler("RAID_TARGET_UPDATE", function()
         ui:UpdateRaidMark()
     end
 end)
+RegisterEventHandler("PLAYER_LOGOUT", function()
+    RemoveOverrideBindings()
+end)
 
 local GetKeyModifier = util.GetKeyModifier
 local keyListener = CreateFrame("Frame", "PTTooltipKeyListener")

@@ -78,6 +78,8 @@ CurrentlyInRaid = false
 
 AssignedRoles = nil
 
+Mouseover = nil
+
 -- Returns the array of unit frames of the unit
 function GetUnitFrames(unit)
     return PTUnitFrames[unit]
@@ -476,6 +478,7 @@ function OnAddonLoaded()
         }
         loadouts["Default"] = default
     end
+    SetupSpecialButtons()
     InitBindingDisplayCache()
 
     if util.IsSuperWowPresent() then

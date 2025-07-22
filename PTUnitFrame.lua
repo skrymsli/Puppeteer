@@ -1271,6 +1271,8 @@ function PTUnitFrame:Initialize()
             SetMouseoverUnit(self:GetResolvedUnit())
         end
         PT.Mouseover = self:GetResolvedUnit()
+        PT.MouseoverFrame = self
+        PT.ApplyOverrideBindings()
     end)
     button:SetScript("OnLeave", function()
         PT.HideSpellsTooltip()
@@ -1280,6 +1282,8 @@ function PTUnitFrame:Initialize()
             SetMouseoverUnit(nil)
         end
         PT.Mouseover = nil
+        PT.MouseoverFrame = nil
+        PT.RemoveOverrideBindings()
     end)
     button:EnableMouse(true)
 
