@@ -11,6 +11,7 @@ Banzai = AceLibrary("Banzai-1.0")
 HealComm = AceLibrary("HealComm-1.0")
 GuidRoster = nil -- Will be nil if SuperWoW isn't present
 
+local compost = AceLibrary("Compost-2.0")
 local util = PTUtil
 local colorize = util.Colorize
 local GetKeyModifier = util.GetKeyModifier
@@ -60,33 +61,6 @@ BarStyles = {
 GameTooltip = CreateFrame("GameTooltip", "PTGameTooltip", UIParent, "GameTooltipTemplate")
 
 CurrentlyHeldButton = nil
-SpellsTooltip = CreateFrame("GameTooltip", "PTSpellsTooltip", UIParent, "GameTooltipTemplate")
-SpellsTooltipOwner = nil
-SpellsTooltipPowerBar = nil
-do
-    local manaBar = CreateFrame("StatusBar", "PTSpellsTooltipManaBar", SpellsTooltip)
-    SpellsTooltipPowerBar = manaBar
-    manaBar:SetStatusBarTexture(BarStyles["HealersMate"])
-    manaBar:SetMinMaxValues(0, 1)
-    manaBar:SetWidth(100)
-    manaBar:SetHeight(12)
-    manaBar:SetPoint("TOPRIGHT", SpellsTooltip, "TOPRIGHT", -10, -12)
-
-    local bg = manaBar:CreateTexture(nil, "BACKGROUND")
-    manaBar.background = bg
-    bg:SetAllPoints(true)
-    bg:SetTexture(0.3, 0.3, 0.3, 0.8)
-
-    local text = manaBar:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-    manaBar.text = text
-    text:SetWidth(manaBar:GetWidth())
-    text:SetHeight(manaBar:GetHeight())
-    text:SetPoint("CENTER", manaBar, "CENTER")
-    text:SetFont("Fonts\\FRIZQT__.TTF", 9, "OUTLINE")
-    text:SetShadowOffset(0, 0)
-    text:SetJustifyH("CENTER")
-    text:SetJustifyV("CENTER")
-end
 
 -- An unmapped array of all unit frames
 AllUnitFrames = {}
@@ -184,6 +158,42 @@ end
 
 function GetHostileSpells()
     return PTSpells["Hostile"]
+end
+
+function GetBindings()
+    return PTBindings.Loadouts[PTBindings.SelectedLoadout]
+end
+
+function GetBindingsFor(unit)
+    local bindings = GetBindings().Bindings
+    if not UnitCanAttack("player", unit) or bindings.UseFriendlyForEnemy then
+        return bindings.Friendly
+    end
+    return bindings.Hostile
+end
+
+function GetBinding(friendlyOrEnemy, modifier, button)
+    local bindings = GetBindings()
+    if bindings.UseFriendlyForEnemy and friendlyOrEnemy == "Enemy" then
+        friendlyOrEnemy = "Friendly"
+    end
+    local l1 = bindings.Bindings[friendlyOrEnemy]
+    if not l1 then
+        return
+    end
+    local l2 = l1[modifier]
+    if not l2 then
+        return
+    end
+    return l2[button]
+end
+
+function GetBindingFor(unit, modifier, button)
+    return GetBinding(not UnitCanAttack("player", unit) and "Friendly" or "Enemy", modifier, button)
+end
+
+function SetSelectedBindingsLoadout(name)
+    PTBindings.SelectedLoadout = name
 end
 
 function UpdateUnitFrameGroups()
@@ -331,46 +341,6 @@ function GetAuraInfo(unit, type, index)
     return leftText:GetText() or "", rightText:GetText() or ""
 end
 
-function ApplySpellsTooltip(attachTo, unit, owner)
-    if not PTOptions.SpellsTooltip.Enabled then
-        return
-    end
-
-    SetTooltipKeyListenerEnabled(true)
-
-    local spellList = {}
-    local modifier = GetKeyModifier()
-    local settings = PuppeteerSettings
-    local spells = UnitCanAttack("player", unit) and GetHostileSpells() or GetSpells()
-
-    local deadFriend = util.IsDeadFriend(unit)
-    local selfClass = GetClass("player")
-    local canResurrect = PTOptions.AutoResurrect and deadFriend and ResurrectionSpells[selfClass]
-    -- Holy Champion Texture: Interface\\Icons\\Spell_Holy_ProclaimChampion_02
-    local canReviveChampion = canResurrect and GetSpellID("Revive Champion") and 
-        PTUnit.Get(unit):HasBuffIDOrName(45568, "Holy Champion") and UnitAffectingCombat("player")
-
-    for _, btn in ipairs(settings.CustomButtonOrder) do
-        if canResurrect then -- Show all spells (except special binds) as the resurrection spell
-            local kv = {}
-            local readableButton = settings.CustomButtonNames[btn] or ReadableButtonMap[btn]
-            kv[readableButton] = canReviveChampion and "Revive Champion" or ResurrectionSpells[selfClass]
-            if SpecialBinds[string.upper(spells[modifier][btn] or "")] then
-                kv[readableButton] = spells[modifier][btn]
-            end
-            table.insert(spellList, kv)
-        else
-            if spells[modifier][btn] or (settings.ShowEmptySpells and not settings.IgnoredEmptySpells[btn]) then
-                local kv = {}
-                local readableButton = settings.CustomButtonNames[btn] or ReadableButtonMap[btn]
-                kv[readableButton] = spells[modifier][btn] or "Unbound"
-                table.insert(spellList, kv)
-            end
-        end
-    end
-    ShowSpellsTooltip(attachTo, spellList, owner)
-end
-
 function IsValidMacro(name)
     return GetMacroIndexByName(name) ~= 0
 end
@@ -390,156 +360,6 @@ function RunMacro(name, target)
     end
     if target then
         _G.PT_MacroTarget = nil
-    end
-end
-
-local ITEM_PREFIX = "Item: "
-local MACRO_PREFIX = "Macro: "
-local lowToHighColors = {
-    {1, 0, 0}, 
-    {1, 0.9, 0}, 
-    {0.35, 1, 0.35}
-}
-local tooltipPowerColors = {
-    ["mana"] = {0.5, 0.7, 1}, -- Not the accurate color, but more readable
-    ["rage"] = {1, 0, 0},
-    ["energy"] = {1, 1, 0}
-}
-local tooltipAnchorMap = {["Top Left"] = "ANCHOR_LEFT", ["Top Right"] = "ANCHOR_RIGHT", 
-    ["Bottom Left"] = "ANCHOR_BOTTOMLEFT", ["Bottom Right"] = "ANCHOR_BOTTOMRIGHT"}
-function ShowSpellsTooltip(attachTo, spells, owner)
-    SpellsTooltipOwner = owner
-    SpellsTooltip:SetOwner(attachTo, tooltipAnchorMap[PTOptions.SpellsTooltip.Anchor], 
-        PTOptions.SpellsTooltip.OffsetX, PTOptions.SpellsTooltip.OffsetY)
-    local options = PTOptions.SpellsTooltip
-    local currentPower = UnitMana("player")
-    local maxPower = UnitManaMax("player")
-    local powerType = GetPowerType("player")
-    local powerColor = tooltipPowerColors[powerType]
-    local powerText = ""
-    local showPowerBar = options.ShowPowerBar
-    if options.ShowPowerAs == "Power" then
-        powerText = tostring(currentPower)
-    elseif options.ShowPowerAs == "Power/Max Power" then
-        powerText = currentPower.."/"..maxPower
-    elseif options.ShowPowerAs == "Power %" then
-        powerText = util.RoundNumber((currentPower / maxPower) * 100).."%"
-    end
-
-    if showPowerBar then
-        local color = util.InterpolateColors(lowToHighColors, (currentPower / maxPower))
-        powerText = colorize(powerText, color)
-        SpellsTooltipPowerBar:SetStatusBarColor(powerColor[1], powerColor[2], powerColor[3])
-        SpellsTooltipPowerBar:SetValue(currentPower / maxPower)
-        SpellsTooltipPowerBar.text:SetText(powerText)
-    else
-        powerText = colorize(powerText, powerColor)
-    end
-
-    local modifier = util.GetKeyModifierTypeByID(1 + (options.AbbreviatedKeys and 2 or 0) + (options.ColoredKeys and 1 or 0))
-    SpellsTooltip:AddDoubleLine(modifier, showPowerBar and "                 " or powerText, 1, 1, 1)
-
-    for _, kv in ipairs(spells) do
-        for button, spell in pairs(kv) do
-            local leftText = colorize(button, 1, 1, 0.5)
-            local rightText
-            if spell == "Unbound" then
-                leftText = colorize(button, 0.6, 0.6, 0.6)
-                rightText = colorize("Unbound", 0.6, 0.6, 0.6)
-            elseif util.StartsWith(spell, ITEM_PREFIX) then
-                local item = string.sub(spell, string.len(ITEM_PREFIX) + 1)
-                local itemCount = GetItemCount(item)
-                local castsColor = {0.6, 1, 0.6}
-                if itemCount == 0 then
-                    castsColor = {1, 0.5, 0.5}
-                elseif itemCount == 1 then
-                    castsColor = {1, 1, 0}
-                end
-                rightText = colorize(item, 1, 1, 1)..colorize(" ("..itemCount..")", castsColor)
-            elseif util.StartsWith(spell, MACRO_PREFIX) then
-                local macro = string.sub(spell, string.len(MACRO_PREFIX) + 1)
-                if IsValidMacro(macro) then
-                    rightText = colorize(macro, 1, 0.6, 1)
-                else
-                    rightText = colorize(macro.." (Invalid Macro)", 1, 0.4, 0.4)
-                end
-            elseif SpecialBinds[string.upper(spell)] then
-                rightText = spell
-            else -- There is a bound spell
-                local cost, resource = GetResourceCost(spell)
-                if cost == "unknown" then
-                    leftText = colorize(button, 1, 0.4, 0.4)
-                    rightText = colorize(spell.." (Unknown)", 1, 0.4, 0.4)
-                elseif cost == 0 then -- The spell is free, so no fancy text
-                    rightText = spell
-                else
-                    local resourceColor = tooltipPowerColors[resource]
-                    local casts = math.floor(currentPower / cost)
-                    if resource ~= powerType then -- A druid can't cast a spell that requires a different power type
-                        casts = 0
-                    end
-                    local r, g, b = 0.6, 1, 0.6
-                    if casts == 0 then
-                        r, g, b = 1, 0.5, 0.5
-                    elseif casts <= options.CriticalCastsLevel then
-                        r, g, b = 1, 1, 0
-                    end
-                    local costText
-                    if powerType == "mana" and resource == powerType then
-                        if options.ShowManaCost then
-                            costText = cost
-                        end
-                        if options.ShowManaPercentCost then
-                            costText = (costText and (costText.." ") or "")..util.RoundNumber((cost / maxPower) * 100, 1).."%"
-                        end
-                    else
-                        costText = cost
-                    end
-                    rightText = spell
-                    if casts == 0 then
-                        rightText = colorize(util.StripColors(rightText), 0.5, 0.5, 0.5)
-                    end
-                    if costText then
-                        rightText = rightText.." "..colorize(costText, resourceColor)
-                    end
-                    if casts <= options.HideCastsAbove then
-                        rightText = rightText..colorize(" ("..casts..")", r, g, b)
-                    end
-                end
-            end
-            -- Gray out spells that are not held down
-            if CurrentlyHeldButton and button ~= CurrentlyHeldButton then
-                leftText = colorize(util.StripColors(leftText), 0.3, 0.3, 0.3)
-                rightText = colorize(util.StripColors(rightText), 0.3, 0.3, 0.3)
-            end
-            SpellsTooltip:AddDoubleLine(leftText, rightText)
-        end
-        
-    end
-
-    --local leftTexts = {spellsTooltipTextLeft1, spellsTooltipTextLeft2, spellsTooltipTextLeft3, 
-    --	spellsTooltipTextLeft4, spellsTooltipTextLeft5, spellsTooltipTextLeft6}
-
-    
-
-    --spellsTooltipTextLeft1:SetFont("Fonts\\FRIZQT__.TTF", 12, "GameFontNormal")
-    --spellsTooltipTextRight1:SetFont("Fonts\\FRIZQT__.TTF", 12, "GameFontNormal")
-    SpellsTooltip:Show()
-end
-
-function HideSpellsTooltip(willReapply)
-    SpellsTooltip:Hide()
-    SpellsTooltipOwner = nil
-    if not willReapply then
-        SetTooltipKeyListenerEnabled(false)
-    end
-end
-
-function ReapplySpellsTooltip()
-    if SpellsTooltipOwner ~= nil then
-        local prevOwner = SpellsTooltipOwner
-        HideSpellsTooltip(true)
-        prevOwner:GetScript("OnEnter")()
     end
 end
 
@@ -630,6 +450,33 @@ function OnAddonLoaded()
             end
         end
     end
+
+    if PTBindings == nil then
+        _G.PTBindings = {}
+        PTBindings["SelectedLoadout"] = "Default"
+        local loadouts = {}
+        PTBindings["Loadouts"] = loadouts
+        local default = {
+            ["UseFriendlyForEnemy"] = false,
+            ["Bindings"] = {
+                ["Friendly"] = {
+                    ["None"] = {
+                        ["LeftButton"] = {
+                            ["Type"] = "SPELL",
+                            ["Data"] = "Power Word: Shield"
+                        },
+                        ["RightButton"] = {
+                            ["Type"] = "ACTION",
+                            ["Data"] = "Target"
+                        }
+                    }
+                },
+                ["Enemy"] = {}
+            }
+        }
+        loadouts["Default"] = default
+    end
+    InitBindingDisplayCache()
 
     if util.IsSuperWowPresent() then
         -- In case other addons override unit functions, we want to make sure we're using their functions
@@ -1308,21 +1155,35 @@ end
 
 local Sound_Disabled = function() end
 
-function ClickHandler(buttonType, unit, ui)
-    local currentTargetEnemy = UnitCanAttack("player", "target")
-    local spells = UnitCanAttack("player", unit) and GetHostileSpells() or GetSpells()
-    local spell = spells[GetKeyModifier()][buttonType]
-    if not UnitIsConnected(unit) or not UnitIsVisible(unit) then
-        if spell and SpecialBinds[string.upper(spell)] then
-            SpecialBinds[string.upper(spell)](unit, ui)
-        end
-        return
+function RunTargetedAction(unit, actionFunc)
+    local hasTarget = UnitExists("target")
+    local changeTarget = not UnitIsUnit("target", unit)
+
+    if changeTarget then
+        local Sound_Enabled = PlaySound
+        _G.PlaySound = Sound_Disabled
+        TargetUnit(unit)
+        _G.PlaySound = Sound_Enabled
     end
-    if PTOptions.AutoResurrect and util.IsDeadFriend(unit) then
-        if spell and SpecialBinds[string.upper(spell)] then
-            SpecialBinds[string.upper(spell)](unit, ui)
-            return
+
+    actionFunc()
+
+    if changeTarget and not PTOptions.AutoTarget then
+        if hasTarget then
+            TargetLastTarget()
+        else
+            local Sound_Enabled = PlaySound
+            _G.PlaySound = Sound_Disabled
+            ClearTarget()
+            _G.PlaySound = Sound_Enabled
         end
+    end
+end
+
+function RunBinding_Spell(binding, unit)
+    local spell = binding.Data
+
+    if PTOptions.AutoResurrect and util.IsDeadFriend(unit) then
         if PTUnit.Get(unit):HasBuffIDOrName(45568, "Holy Champion") and GetSpellID("Revive Champion") 
             and UnitAffectingCombat("player") then
                 spell = "Revive Champion"
@@ -1330,66 +1191,121 @@ function ClickHandler(buttonType, unit, ui)
             spell = ResurrectionSpells[GetClass("player")] or spell
         end
     end
-    
-    if spell == nil then
-        return
-    end
 
-    if SpecialBinds[string.upper(spell)] then
-        SpecialBinds[string.upper(spell)](unit, ui)
-        return
-    end
-
-    local isItem = util.StartsWith(spell, ITEM_PREFIX)
-    local isMacro = util.StartsWith(spell, MACRO_PREFIX)
-    local isNonSpell = isItem or isMacro
-
-    -- Not a special bind
-    if util.IsSuperWowPresent() and not isNonSpell then -- No target changing shenanigans required with SuperWoW
+    if util.IsSuperWowPresent() then
         if PTOptions.AutoTarget and not UnitIsUnit("target", unit) then
             TargetUnit(unit)
         end
         CastSpellByName(spell, unit)
     else
-        local currentTarget = UnitName("target")
-        local targetChanged = false
-        -- Check if target is not already targeted
-        if not UnitIsUnit("target", unit) then
-            -- Set target as target
-            local Sound_Enabled = PlaySound
-            _G.PlaySound = Sound_Disabled
-            TargetUnit(unit)
-            _G.PlaySound = Sound_Enabled
-            targetChanged = true
-        end
-
-        if isItem then
-            UseItem(string.sub(spell, string.len(ITEM_PREFIX) + 1))
-        elseif isMacro then
-            RunMacro(string.sub(spell, string.len(MACRO_PREFIX) + 1), unit)
-        else
+        RunTargetedAction(unit, function()
             CastSpellByName(spell)
-        end
-
-        --Put Target of player back to whatever it was before casting spell
-        if targetChanged and not PTOptions.AutoTarget then
-            if currentTarget == nil then
-                --Player wasn't targeting anything before casting spell
-                local Sound_Enabled = PlaySound
-                _G.PlaySound = Sound_Disabled
-                ClearTarget()
-                _G.PlaySound = Sound_Enabled
-            else
-                --Set Target back to whatever it was before casting the spell
-                if currentTargetEnemy then
-                    TargetLastEnemy() -- to make sure if there was more than one mob with that name near you the same one get retargeted
-                else
-                    TargetLastTarget()
-                    --TargetByName(currentTarget)
-                end
-            end
-        end
+        end)
     end
+end
+
+function RunBinding_Action(binding, unit, unitFrame)
+    SpecialBinds[string.upper(binding.Data)](unit, unitFrame)
+end
+
+function RunBinding_Item(binding, unit)
+    RunTargetedAction(unit, function()
+        UseItem(binding.Data)
+    end)
+end
+
+function RunBinding_Macro(binding, unit)
+    RunTargetedAction(unit, function()
+        RunMacro(binding.Data, unit)
+    end)
+end
+
+BindingScriptCache = {}
+function RunBinding_Script(binding, unit, unitFrame)
+    local scriptString = binding.Data
+    if not BindingScriptCache[scriptString] then
+        BindingScriptCache[scriptString] = loadstring("local unit = PTScriptUnit\n"..scriptString)
+    end
+    _G.PTScriptUnit = unit
+    local ok, result = pcall(BindingScriptCache[scriptString])
+    if not ok then
+        DEFAULT_CHAT_FRAME:AddMessage("[Puppeteer] Error occurred while running custom script binding: "..result)
+    end
+end
+
+MultiMenu = PTGuiLib.Get("dropdown", UIParent)
+
+function RunBinding_Multi(binding, unit, unitFrame)
+    if MultiMenu.Options ~= nil then
+        compost:Reclaim(MultiMenu.Options, 1)
+    end
+    MultiMenu:SetToggleState(false)
+    local options = compost:GetTable()
+    if binding.Data.Title and binding.Data.Title ~= "" then
+        table.insert(options, compost:AcquireHash(
+            "text", binding.Data.Title,
+            "isTitle", true,
+            "notCheckable", true,
+            "textHeight", 12
+        ))
+    end
+    local list = binding.Data.Bindings
+    for _, subBinding in ipairs(list) do
+        local subBinding = subBinding
+        local display = compost:GetTable()
+        _UpdateBindingDisplay(subBinding, display)
+        table.insert(options, compost:AcquireHash(
+            "text", display.Normal,
+            "notCheckable", true,
+            "keepShownOnClick", true, -- This is used so that dropdowns shown during the func call don't get immediately hidden
+            "func", function()
+                MultiMenu:SetToggleState(false)
+                RunBinding(subBinding, unit, unitFrame)
+            end
+        ))
+        compost:Reclaim(display)
+    end
+    MultiMenu:SetOptions(options)
+    local container = unitFrame:GetRootContainer()
+    MultiMenu:SetToggleState(true, container, container:GetWidth(), container:GetHeight())
+    PlaySound("GAMESPELLBUTTONMOUSEDOWN")
+end
+
+function RunBinding(binding, unit, unitFrame)
+    local targetCastable = UnitIsConnected(unit) and UnitIsVisible(unit)
+    local bindingType = binding.Type
+    if bindingType == "SPELL" then
+        if targetCastable then
+            RunBinding_Spell(binding, unit)
+        end
+    elseif bindingType == "ACTION" then
+        RunBinding_Action(binding, unit, unitFrame)
+    elseif bindingType == "ITEM" then
+        if targetCastable then
+            RunBinding_Item(binding, unit)
+        end
+    elseif bindingType == "MACRO" then
+        RunBinding_Macro(binding, unit)
+    elseif bindingType == "SCRIPT" then
+        RunBinding_Script(binding, unit, unitFrame)
+    elseif bindingType == "MULTI" then
+        RunBinding_Multi(binding, unit, unitFrame)
+    end
+end
+
+local emptySpell = {}
+function UnitFrame_OnClick(button, unit, unitFrame)
+    local binding = GetBindingFor(unit, GetKeyModifier(), button)
+    local targetCastable = UnitIsConnected(unit) and UnitIsVisible(unit)
+    local wantToRes = PTOptions.AutoResurrect and util.IsDeadFriend(unit) and ResurrectionSpells[GetClass("player")]
+    if not binding then
+        if targetCastable and wantToRes then
+            RunBinding_Spell(emptySpell, unit)
+        end
+        return
+    end
+
+    RunBinding(binding, unit, unitFrame)
 end
 
 -- Reevaluates what UI frames should be shown

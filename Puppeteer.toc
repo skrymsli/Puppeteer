@@ -4,7 +4,7 @@
 ## Notes: Unit frames addon tailored for healers
 ## Author: OldManAlpha, Richard Truax(i2ichardt)
 ## SavedVariables: PTOnLoadInfoDisabled, PTHealCache, PTPlayerHealCache, PTRoleCache
-## SavedVariablesPerCharacter: PTSpells, PTOptions
+## SavedVariablesPerCharacter: PTBindings, PTSpells, PTOptions
 
 libs\ace\AceLibrary\AceLibrary.lua
 libs\ace\AceLocale-2.2\AceLocale-2.2.lua
@@ -47,6 +47,7 @@ libs\gui\component\EditBoxSlider.lua
 libs\gui\frame\TabFrame.lua
 
 Puppeteer.lua
+core\SpellsTooltip.lua
 core\EventHandler.lua
 core\DistanceScanner.lua
 core\Command.lua

@@ -119,6 +119,24 @@ function SetDefaults()
                 ["Target"] = "Long",
                 ["Focus"] = "Default"
             },
+            ["Buttons"] = {
+                "LeftButton",
+                "MiddleButton",
+                "RightButton",
+                "Button5",
+                "Button4",
+                "MOUSEWHEELUP",
+                "MOUSEWHEELDOWN"
+            },
+            ["ButtonNames"] = {
+                ["LeftButton"] = "Left",
+                ["MiddleButton"] = "Middle",
+                ["RightButton"] = "Right",
+                ["Button5"] = "Forward",
+                ["Button4"] = "Back",
+                ["MOUSEWHEELUP"] = "Wheel Up",
+                ["MOUSEWHEELDOWN"] = "Wheel Down"
+            },
             ["Scripts"] = {
                 ["OnLoad"] = "",
                 ["OnPostLoad"] = ""

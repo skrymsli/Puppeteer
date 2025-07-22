@@ -1238,11 +1238,11 @@ function PTUnitFrame:Initialize()
             return
         end
         local buttonType = arg1
-        PT.ClickHandler(buttonType, unit, self)
+        PT.UnitFrame_OnClick(buttonType, unit, self)
     end)
     button:SetScript("OnMouseDown", function()
         local buttonType = arg1
-        PT.CurrentlyHeldButton = PuppeteerSettings.CustomButtonNames[buttonType] or PT.ReadableButtonMap[buttonType]
+        PT.CurrentlyHeldButton = buttonType--PuppeteerSettings.CustomButtonNames[buttonType] or PT.ReadableButtonMap[buttonType]
         PT.ReapplySpellsTooltip()
         self.pressed = true
         self:AdjustHealthPosition()
@@ -1270,6 +1270,7 @@ function PTUnitFrame:Initialize()
         if PTOptions.SetMouseover and util.IsSuperWowPresent() then
             SetMouseoverUnit(self:GetResolvedUnit())
         end
+        PT.Mouseover = self:GetResolvedUnit()
     end)
     button:SetScript("OnLeave", function()
         PT.HideSpellsTooltip()
@@ -1278,6 +1279,7 @@ function PTUnitFrame:Initialize()
         if PTOptions.SetMouseover and util.IsSuperWowPresent() then
             SetMouseoverUnit(nil)
         end
+        PT.Mouseover = nil
     end)
     button:EnableMouse(true)
 

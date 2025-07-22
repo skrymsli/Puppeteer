@@ -194,10 +194,11 @@ function CloneTableCompost(t, deep)
     return clone
 end
 
-function ClearTable(table)
-    for k, v in pairs(table) do
-        table[k] = nil
+function ClearTable(t)
+    for k, v in pairs(t) do
+        t[k] = nil
     end
+    table.setn(t, 0)
 end
 
 -- Courtesy of ChatGPT
