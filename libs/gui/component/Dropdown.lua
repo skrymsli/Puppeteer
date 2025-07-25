@@ -28,6 +28,7 @@ function PTGuiDropdown:New()
     obj:SetHandle(dropdown)
     -- Make SetWidth actually set the width, like one would hope
     local dropdownSetWidth = dropdown.SetWidth
+    dropdownSetWidth(dropdown, 0) -- Allows points to size the dropdown
     dropdown.SetWidth = function(self, width)
         _G[dropdown:GetName().."Middle"]:SetWidth(width - 15)
         dropdownSetWidth(self, width)
@@ -46,6 +47,12 @@ function PTGuiDropdown:New()
         if MouseIsOver(this) then
             PTUtil.CallWithThis(_G[this:GetName().."Button"], _G[this:GetName().."Button"]:GetScript("OnClick"))
         end
+    end)
+    dropdown:SetScript("OnSizeChanged", function()
+        local width = this:GetWidth()
+        _G[this:GetName().."Middle"]:SetWidth(width - 15)
+        dropdownSetWidth(this, width)
+        _G[this:GetName().."Text"]:SetWidth(width - 25)
     end)
     return obj
 end
@@ -166,6 +173,17 @@ function PTGuiDropdown:Initialize(level)
             option:initFunc(self)
         end
         UIDropDownMenu_AddButton(option, level)
+    end
+end
+
+function PTGuiDropdown:SetSimpleOptions(options, createFunc, dropdownText)
+    local optTable = {}
+    for _, option in ipairs(options) do
+        table.insert(optTable, createFunc(option))
+    end
+    self:SetOptions(optTable)
+    if dropdownText then
+        self:SetText(dropdownText)
     end
 end
 

@@ -508,6 +508,51 @@ function FixFrameLevels(frame)
 	return _FixFrameLevels(frame, frame:GetChildren())
 end
 
+-- Modified ChatGPT function
+function RotateTexture(texture, degrees, extent)
+    local angleRadians = math.rad(degrees)
+    local cos = math.cos(angleRadians)
+    local sin = math.sin(angleRadians)
+
+    extent = (extent or 1) / 2
+
+    local x1, y1 = -extent,  extent -- UL
+    local x2, y2 = -extent, -extent -- LL
+    local x3, y3 =  extent,  extent -- UR
+    local x4, y4 =  extent, -extent -- LR
+
+    local ULx, ULy = x1 * cos - y1 * sin + 0.5, x1 * sin + y1 * cos + 0.5
+    local LLx, LLy = x2 * cos - y2 * sin + 0.5, x2 * sin + y2 * cos + 0.5
+    local URx, URy = x3 * cos - y3 * sin + 0.5, x3 * sin + y3 * cos + 0.5
+    local LRx, LRy = x4 * cos - y4 * sin + 0.5, x4 * sin + y4 * cos + 0.5
+
+    texture:SetTexCoord(ULx, ULy, LLx, LLy, URx, URy, LRx, LRy)
+end
+
+local PTTaskExecutor = CreateFrame("Frame", "PTTaskExecutor")
+local taskQueue = {}
+local offTaskQueue = {}
+local PTTaskExecutor_OnUpdate = function()
+    local runningQueue = taskQueue
+    taskQueue = offTaskQueue
+    for _, task in ipairs(runningQueue) do
+        local ok, result = pcall(task)
+        if not ok then
+            DEFAULT_CHAT_FRAME:AddMessage("Puppeteer Task Error: "..result)
+        end
+    end
+    ClearTable(runningQueue)
+    if table.getn(taskQueue) == 0 then
+        PTTaskExecutor:SetScript("OnUpdate", nil)
+    end
+end
+function RunLater(func)
+    table.insert(taskQueue, func)
+    if PTTaskExecutor:GetScript("OnUpdate") == nil then
+        PTTaskExecutor:SetScript("OnUpdate", PTTaskExecutor_OnUpdate)
+    end
+end
+
 -- Returns the class without the first return variable fluff
 function GetClass(unit)
     local _, class = UnitClass(unit)

@@ -43,17 +43,21 @@ function PTGuiMultiLineEditBox:OnDispose()
     self:SetAutoFocus(false)
 end
 
+function PTGuiMultiLineEditBox:GetScrollFrame()
+    return self:GetComponent("scroll_frame")
+end
+
 function PTGuiMultiLineEditBox:SetParent(obj)
-    self:GetComponent("scroll_frame"):SetParent(obj)
+    self:GetScrollFrame():SetParent(obj)
 end
 
 function PTGuiMultiLineEditBox:SetWidth(width)
-    self:GetComponent("scroll_frame"):GetHandle():SetWidth(width)
+    self:GetScrollFrame():GetHandle():SetWidth(width)
     return self
 end
 
 function PTGuiMultiLineEditBox:SetHeight(height)
-    self:GetComponent("scroll_frame"):GetHandle():SetHeight(height)
+    self:GetScrollFrame():GetHandle():SetHeight(height)
     return self
 end
 
@@ -61,7 +65,7 @@ function PTGuiMultiLineEditBox:SetPoint(point, relativeFrame, relativePoint, xOf
     if type(relativeFrame) == "table" and relativeFrame.IsPuppeteerGui then
         relativeFrame = relativeFrame:GetAnchor()
     end
-    self:GetComponent("scroll_frame"):SetPoint(point, relativeFrame, relativePoint, xOffset, yOffset)
+    self:GetScrollFrame():SetPoint(point, relativeFrame, relativePoint, xOffset, yOffset)
     return self
 end
 

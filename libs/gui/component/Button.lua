@@ -15,14 +15,20 @@ function PTGuiButton:OnDispose()
     self.super.OnDispose(self)
     self:SetText("")
     self:SetEnabled(true)
+    self:SetUseDefaultTextures(false)
+    -- TODO: Restore default textures to default state
 end
 
 function PTGuiButton:SetupTextures()
     local button = self:GetHandle()
 
-    button:SetNormalTexture(nil)
-    button:SetPushedTexture(nil)
-    button:SetDisabledTexture(nil)
+    self.NormalTexture = button:GetNormalTexture()
+    self.NormalTexture:SetTexture(nil)
+    self.PushedTexture = button:GetPushedTexture()
+    self.PushedTexture:SetTexture(nil)
+    self.DisabledTexture = button:GetDisabledTexture()
+    self.DisabledTexture:SetTexture(nil)
+    self.HighlightTexture = button:GetHighlightTexture()
 
     local topLeft = button:CreateTexture(button:GetName().."TopLeft", "BACKGROUND")
     topLeft:SetWidth(7)
@@ -110,6 +116,27 @@ function PTGuiButton:SetTexture(type) -- "NORMAL", "PUSHED", "DISABLED"
     for _, tex in ipairs(self:GetHandle().textures) do
         tex:SetTexture(texLoc)
     end
+end
+
+function PTGuiButton:SetUseDefaultTextures(useDefault)
+    if not useDefault and self.UsingDefaultTextures then
+        local button = self:GetHandle()
+        for _, tex in ipairs(button.textures) do
+            tex:Show()
+        end
+        self.NormalTexture:SetTexture(nil)
+        self.PushedTexture:SetTexture(nil)
+        self.DisabledTexture:SetTexture(nil)
+        self.HighlightTexture:SetTexture("Interface\\Buttons\\UI-Panel-Button-Highlight")
+        self.UsingDefaultTextures = nil
+    elseif useDefault then
+        local button = self:GetHandle()
+        for _, tex in ipairs(button.textures) do
+            tex:Hide()
+        end
+        self.UsingDefaultTextures = true
+    end
+    return self
 end
 
 function PTGuiButton:SetEnabled(enabled)

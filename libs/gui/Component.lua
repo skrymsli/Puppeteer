@@ -219,6 +219,17 @@ function PTGuiComponent:SetScript(scriptName, script, noSelf)
     return self
 end
 
+function PTGuiComponent:HookScript(scriptName, script)
+    local prevScript = self:GetScript(scriptName)
+    self:GetHandle():SetScript(scriptName, function()
+        if prevScript then
+            prevScript(self)
+        end
+        script(self)
+    end)
+    return self
+end
+
 function PTGuiComponent:OnClick(script, noSelf)
     return self:SetScript("OnClick", script, noSelf)
 end
@@ -349,6 +360,7 @@ end
 
 function PTGuiComponent:ApplyTooltip(...)
     self:ApplyTooltipToAll(arg)
+    return self
 end
 
 function PTGuiComponent:ApplyTooltipTo(component, texts)
@@ -393,5 +405,5 @@ function PTGuiComponent:ApplyTooltipToAll(texts)
 end
 
 
-PTGuiComponent:Import(true, "ClearAllPoints", "SetAllPoints", "SetWidth", "SetHeight", "Show", "Hide")
-PTGuiComponent:Import(false, "GetWidth", "GetHeight", "GetName", "HasScript", "GetScript", "GetParent")
+PTGuiComponent:Import(true, "ClearAllPoints", "SetAllPoints", "SetWidth", "SetHeight", "Show", "Hide", "SetFrameLevel")
+PTGuiComponent:Import(false, "GetWidth", "GetHeight", "GetName", "HasScript", "GetScript", "GetParent", "GetFrameLevel")

@@ -21,6 +21,7 @@ function PTGuiScrollFrame:New(content)
     -- It seems that scroll frames require their child to have a manually set width to function properly,
     -- and I can't think of a better way to ensure the width is always up-to-date other than using OnSizeChanged
     scrollFrame:SetScript("OnSizeChanged", function()
+        obj:GetHandle():SetScrollChild(obj:GetContainer())
         obj:GetContainer():SetWidth(math.max(this:GetWidth() - (obj.ApplyScrollbarPadding and 30 or 0), 0))
         obj:GetContainer():SetHeight(this:GetHeight())
     end)
@@ -58,6 +59,7 @@ end
 
 function PTGuiScrollFrame:SetApplyScrollbarPadding(applyPadding)
     self.ApplyScrollbarPadding = applyPadding
+    return self
 end
 
 function PTGuiScrollFrame:UpdateScrollRange()

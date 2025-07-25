@@ -28,7 +28,7 @@ local tooltipCastsColors = {
 local normalFontColor = {NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b}
 local unboundText = colorize("Unbound", 0.6, 0.6, 0.6)
 
-local targetTypes = {"Friendly", "Enemy"}
+local targetTypes = {"Friendly", "Hostile"}
 ResurrectDisplayCache = {}
 ButtonDisplayCache = nil
 BindingDisplayCache = nil
@@ -135,7 +135,7 @@ function UpdateBindingDisplay(binding, entry, fullUpdate)
 end
 
 function _UpdateBindingDisplay(binding, entry)
-    if binding == nil then
+    if binding == nil or binding.Type == nil then
         entry.Normal = unboundText
         return
     end
@@ -292,7 +292,7 @@ function ApplySpellsTooltip(attachTo, unit, owner)
         resEntry = UpdateBindingDisplay(SpecialSpellBindings[ResurrectionSpells[selfClass]], compost:GetTable())
     end
     
-    local entries = UpdateBindingDisplays(friendly and "Friendly" or "Enemy", GetKeyModifier())
+    local entries = UpdateBindingDisplays(friendly and "Friendly" or "Hostile", GetKeyModifier())
     for _, button in ipairs(PTOptions.Buttons) do
         local focused = not CurrentlyHeldButton or button == CurrentlyHeldButton
         local displayCache = entries[button]

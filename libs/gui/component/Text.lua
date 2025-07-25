@@ -35,6 +35,10 @@ function PTGuiText:GetContainer()
     return self:GetComponent("container")
 end
 
+function PTGuiText:SetBackground(params)
+    return self:GetContainer():SetBackground(params)
+end
+
 function PTGuiText:SetParent(frame)
     self:GetContainer():SetParent(frame)
     return self
