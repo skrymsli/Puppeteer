@@ -12,7 +12,7 @@ function PTScriptEditor:New()
         :SetText("Edit Binding Script")
     obj:AddComponent("Title", title)
     local editbox = PTGuiLib.Get("multi_line_editbox", frame)
-        :SetPoint("TOPLEFT", frame, "TOPLEFT", 5, -140)
+        :SetPoint("TOPLEFT", frame, "TOPLEFT", 5, -155)
         :SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -5, 30)
         :SetScript("OnTabPressed", function(self)
             self:GetHandle():Insert("  ")
@@ -86,9 +86,21 @@ function PTScriptEditor:New()
         :SetJustifyH("LEFT")
         :ApplyTooltip("The unresolved unit being clicked", 
             "If a focus is being clicked, this will be a phony", "unit, such as 'focus1'")
-    local local3 = PTGuiLib.GetText(frame, "local unitFrame")
+    local local3 = PTGuiLib.GetText(frame, "local unitData")
         :SetTextColor(0.4, 1, 0.4)
         :SetPoint("TOPLEFT", local2, "BOTTOMLEFT")
+        :SetJustifyH("LEFT")
+        :ApplyTooltip("Cache stored by Puppeteer about the unit", 
+            "Some useful APIs:",
+            "unitData:HasBuff(buffName) -- Returns true if the unit has buffName",
+            "unitData:HasDebuff(debuffName) -- Returns true if the unit has debuffName",
+            "unitData:HasDebuffType(typeName) -- Returns true if the unit has the debuff type(such as \"Magic\")",
+            "unitData:GetDistance() -- Returns the distance between you and the unit(SuperWoW/UnitXP SP3 required)",
+            "unitData:IsInSight() -- Returns true if the unit is in your sight(UnitXP SP3 required)",
+            "unitData:GetAuraTimeRemaining(auraName) -- Returns the time remaining on an aura, or nil if unknown(SuperWoW required)")
+    local local4 = PTGuiLib.GetText(frame, "local unitFrame")
+        :SetTextColor(0.4, 1, 0.4)
+        :SetPoint("TOPLEFT", local3, "BOTTOMLEFT")
         :SetJustifyH("LEFT")
         :ApplyTooltip("The PTUnitFrame instance that was clicked")
 
@@ -113,7 +125,7 @@ function PTScriptEditor:OnAcquire()
     self.super.OnAcquire(self)
     self:GetEditbox():SetText("")
     self:GetEditbox():GetScrollFrame():FixNextUpdate()
-    self:SetSize(375, 350)
+    self:SetSize(375, 400)
 end
 
 PTScriptEditor:CreateGetter("Editbox")

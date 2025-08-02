@@ -232,8 +232,8 @@ BindingScriptAPI = {
 
 local preScript = "local unit = PTScriptUnit;"..
                 "local unresolvedUnit = PTScriptUnitUnresolved;"..
-                "local unitFrame = PTScriptUnitFrame;"..
-                "local unitData = PTUnit.Get(unit);"
+                "local unitData = PTUnit.Get(unit);"..
+                "local unitFrame = PTScriptUnitFrame;"
 BindingScriptCache = {}
 BindingEnvironment = setmetatable({_G = _G, api = BindingScriptAPI}, {__index = PTUnitProxy or _G})
 function RunBinding_Script(binding, unit, unitFrame)
