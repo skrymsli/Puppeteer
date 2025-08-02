@@ -72,6 +72,15 @@ function PTGuiScrollFrame:UpdateScrollChildRect()
     return self
 end
 
+-- I'm going insane
+function PTGuiScrollFrame:FixNextUpdate()
+    PTUtil.RunLater(function()
+        self:GetHandle():SetScrollChild(self:GetContainer())
+        self:GetContainer():SetWidth(math.max(self:GetWidth() - (self.ApplyScrollbarPadding and 30 or 0), 0))
+        self:GetContainer():SetHeight(self:GetHeight())
+    end)
+end
+
 -- TODO: Reduce the minimum size and make maximum size infinite
 function PTGuiScrollFrame:SetupScrollbar()
     local scrollFrame = self:GetHandle()

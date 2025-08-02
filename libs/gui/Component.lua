@@ -176,6 +176,12 @@ function PTGuiComponent:DoImport(frameName, returnSelf, import)
     end
 end
 
+function PTGuiComponent:CreateGetter(componentName, funcName)
+    self[funcName or ("Get"..componentName)] = function(self)
+        return self:GetComponent(componentName)
+    end
+end
+
 function PTGuiComponent:GetContainer()
     return self.Frame
 end
@@ -351,6 +357,9 @@ local function ShowTooltip(attachTo, texts)
     end
 
     for i, text in ipairs(texts) do
+        if i ~= 1 then
+            text = PTUtil.Colorize(text, 1.0, 0.88, 0.3)
+        end
         infoTooltip:AddLine(text)
         _G["PTGuiInfoTooltipTextLeft"..i]:SetFont("Fonts\\FRIZQT__.TTF", i == 1 and 14 or 12, "OUTLINE")
     end
@@ -380,8 +389,9 @@ local function flattenTexts(element, t)
         for _, e in ipairs(element) do
             flattenTexts(e, t)
         end
+    elseif type(element) == "string" then
+        table.insert(t, element)
     end
-    table.insert(t, element)
     return t
 end
 

@@ -44,7 +44,7 @@ function PTGuiEditBoxSlider:OnAcquire()
 
     editbox:SetScript("OnEditFocusGained", function()
         editbox.hasFocus = true
-        editbox:GetHandle():HighlightText(0, editbox:GetHandle():GetNumLetters())
+        editbox:GetHandle():HighlightText()
     end, true)
 
     editbox:SetScript("OnEditFocusLost", function()

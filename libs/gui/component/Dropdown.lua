@@ -19,6 +19,7 @@
 
 PTGuiDropdown = PTGuiComponent:Extend("dropdown")
 local _G = getfenv(0)
+local compost = AceLibrary("Compost-2.0")
 
 PTGuiDropdown.Options = nil
 
@@ -158,7 +159,18 @@ function PTGuiDropdown:OnDispose()
     self.super.OnDispose(self)
 
     self.Options = nil
+    if self.DynamicOptions then
+        compost:Reclaim(self.DynamicOptions, 1)
+        self.DynamicOptionsArgs = nil
+    end
+    self.TextUpdater = nil
     self:SetText("")
+end
+
+local dynamicOptions
+local function addDynamicOption(k1,v1,k2,v2,k3,v3,k4,v4,k5,v5,k6,v6,k7,v7,k8,v8,k9,v9,k10,v10)
+    local option = compost:AcquireHash(k1,v1,k2,v2,k3,v3,k4,v4,k5,v5,k6,v6,k7,v7,k8,v8,k9,v9,k10,v10)
+    table.insert(dynamicOptions, option)
 end
 
 function PTGuiDropdown:Initialize(level)
@@ -166,14 +178,34 @@ function PTGuiDropdown:Initialize(level)
         return
     end
     level = level or 1
+    local options = self.Options
+    if type(options) == "function" then
+        if self.DynamicOptions then
+            compost:Reclaim(self.DynamicOptions, 1)
+        end
+        self.DynamicOptions = compost:GetTable()
+        dynamicOptions = self.DynamicOptions
+        options(addDynamicOption, level, self.DynamicOptionsArgs)
+        options = dynamicOptions
+        self:BakeOptions(options)
+    end
     local value = UIDROPDOWNMENU_MENU_VALUE
-    local options = level == 1 and self.Options or value.children
+    options = level == 1 and options or value.children
     for _, option in ipairs(options) do
         if option.initFunc then
             option:initFunc(self)
         end
         UIDropDownMenu_AddButton(option, level)
     end
+end
+
+-- Similar to normal dropdown initialization. Really only should be used for single level options.
+-- The initFunc receives a function to add options, use in the style of Compost:AcquireHash
+-- args are passed into the initFunc
+function PTGuiDropdown:SetDynamicOptions(initFunc, args)
+    self.Options = initFunc
+    self.DynamicOptionsArgs = args
+    return self
 end
 
 function PTGuiDropdown:SetSimpleOptions(options, createFunc, dropdownText)
@@ -185,6 +217,7 @@ function PTGuiDropdown:SetSimpleOptions(options, createFunc, dropdownText)
     if dropdownText then
         self:SetText(dropdownText)
     end
+    return self
 end
 
 -- Sets the options for this dropdown. If elements are added afterwards, it is mandatory that this function is called again.
@@ -223,6 +256,31 @@ function PTGuiDropdown:BakeOptions(options, parent)
     end
 end
 
+function PTGuiDropdown:SetTextBy(field, value, textField)
+    for _, option in ipairs(self.Options) do
+        if option[field] == value then
+            self:SetText(option[textField or "text"])
+            return self
+        end
+    end
+    return self
+end
+
+function PTGuiDropdown:SetTextUpdater(updater, noImmediateUpdate)
+    self.TextUpdater = updater
+    if not noImmediateUpdate then
+        self:TextUpdater()
+    end
+    return self
+end
+
+function PTGuiDropdown:UpdateText()
+    if self.TextUpdater then
+        self:TextUpdater()
+    end
+    return self
+end
+
 function PTGuiDropdown:SetText(text)
     UIDropDownMenu_SetText(text, self:GetHandle())
     return self
@@ -232,8 +290,46 @@ function PTGuiDropdown:GetText()
     return UIDropDownMenu_GetText(self:GetHandle())
 end
 
+local dropdownList1 = _G["DropDownList1"]
+function PTGuiDropdown:SetTimer(time)
+    dropdownList1.showTimer = time
+end
+
+function PTGuiDropdown:StopCounting()
+    dropdownList1.isCounting = nil
+end
+
+local keepOpenFrame = CreateFrame("Frame", "PTGuiDropdownKeepOpen")
+local keepOpenDropdown
+local checkNext
+local keepOpenScript = function()
+    if GetTime() > checkNext then
+        if not keepOpenDropdown:IsToggledOn() then
+            keepOpenFrame:SetScript("OnUpdate", nil)
+            return
+        end
+        checkNext = GetTime() + 1
+        dropdownList1.showTimer = 10
+        dropdownList1.isCounting = nil
+    end
+end
+-- Keeps the dropdown open until it is forcibly hidden
+function PTGuiDropdown:SetKeepOpen(keepOpen)
+    if not self:IsToggledOn() then
+        return self
+    end
+    if keepOpen then
+        checkNext = 0
+        keepOpenDropdown = self
+        keepOpenFrame:SetScript("OnUpdate", keepOpenScript)
+    else
+        keepOpenFrame:SetScript("OnUpdate", nil)
+    end
+    return self
+end
+
 function PTGuiDropdown:IsToggledOn()
-    return (_G["DropDownList1"]:IsVisible() ~= nil) and (UIDROPDOWNMENU_OPEN_MENU == self:GetName())
+    return (dropdownList1:IsVisible() ~= nil) and (UIDROPDOWNMENU_OPEN_MENU == self:GetName())
 end
 
 function PTGuiDropdown:SetToggleState(shown, anchor, xOffset, yOffset)

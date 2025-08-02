@@ -6,7 +6,8 @@ local util = PTUtil
 
 _G.BINDING_HEADER_PUPPETEER = "Puppeteer"
 local bindingsNames = {}
-for i = 1, 10 do
+local MAX_BINDINGS = 24
+for i = 1, MAX_BINDINGS do
     bindingsNames[i] = "PUPPETEERBINDING"..i
     _G["BINDING_NAME_"..bindingsNames[i]] = "Dynamic Binding "..i
 end
@@ -41,18 +42,53 @@ function SetupSpecialButtons()
     end
 end
 
+local noOp = function() end
+local ActionButton_UpdateHotkeys
+local PetActionButton_SetHotkeys
+local CharacterMicroButton_OnEvent
+local TalentMicroButton_OnEvent
+local function UnregisterActionButtonUpdates()
+    if ActionButton_UpdateHotkeys ~= nil then
+        return
+    end
+    ActionButton_UpdateHotkeys = _G.ActionButton_UpdateHotkeys
+    PetActionButton_SetHotkeys = _G.PetActionButton_SetHotkeys
+    CharacterMicroButton_OnEvent = _G.CharacterMicroButton_OnEvent
+    TalentMicroButton_OnEvent = _G.TalentMicroButton_OnEvent
+    _G.ActionButton_UpdateHotkeys = noOp
+    _G.PetActionButton_SetHotkeys = noOp
+    _G.CharacterMicroButton_OnEvent = noOp
+    _G.TalentMicroButton_OnEvent = noOp
+end
+
+local function RegisterActionButtonUpdates()
+    if ActionButton_UpdateHotkeys == nil then
+        return
+    end
+    _G.ActionButton_UpdateHotkeys = ActionButton_UpdateHotkeys
+    _G.PetActionButton_SetHotkeys = PetActionButton_SetHotkeys
+    _G.CharacterMicroButton_OnEvent = CharacterMicroButton_OnEvent
+    _G.TalentMicroButton_OnEvent = TalentMicroButton_OnEvent
+    ActionButton_UpdateHotkeys = nil
+end
+
 function ApplyOverrideBindings()
+    RemoveOverrideBindings()
+    UnregisterActionButtonUpdates()
     for fullButton, index in pairs(KeybindIndexMap) do
         local binding = GetBindingAction(fullButton)
         StoredBindings[fullButton] = binding
         SetBinding(fullButton, bindingsNames[index])
     end
+    RegisterActionButtonUpdates()
 end
 
 function RemoveOverrideBindings()
+    UnregisterActionButtonUpdates()
     for button, binding in pairs(StoredBindings) do
         SetBinding(button, binding)
     end
+    RegisterActionButtonUpdates()
     util.ClearTable(StoredBindings)
 end
 

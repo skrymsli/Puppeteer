@@ -9,6 +9,7 @@ end
 
 local _G = getfenv(0)
 PTUtil.SetEnvironment(PTUtil)
+local getn = table.getn
 
 Classes = {"WARRIOR", "PALADIN", "HUNTER", "ROGUE", "PRIEST", "SHAMAN", "MAGE", "WARLOCK", "DRUID"}
 HealerClasses = {"PRIEST", "DRUID", "SHAMAN", "PALADIN"}
@@ -166,6 +167,12 @@ function RemoveElement(t, value)
     table.remove(t, IndexOf(t, value))
 end
 
+function ReverseArray(t)
+	for i = 1, math.floor(getn(t) / 2) do
+        t[i], t[getn(t) - i + 1] = t[getn(t) - i + 1], t[i]
+    end
+end
+
 function CloneTable(table, deep)
     local clone = {}
     for k, v in pairs(table) do
@@ -237,7 +244,7 @@ function InterpolateColors(colors, t)
 end
 
 function InterpolateColorsNoTable(colors, t)
-    local numColors = table.getn(colors)
+    local numColors = getn(colors)
     
     -- Ensure t is between 0 and 1
     t = math.max(0, math.min(1, t))
@@ -299,25 +306,28 @@ function GetColoredRoleText(role)
     return coloredRoles[role]
 end
 
--- Deprecated
 function IsFeigning(unit)
-    local unitClass = GetClass(unit)
-    if unitClass == "HUNTER" then
-        local superwow = IsSuperWowPresent()
-        for i = 1, 32 do
-            local texture, _, id = UnitBuff(unit, i)
-            if superwow then -- Use the ID if SuperWoW is present
-                if id == 5384 then -- 5384 is Feign Death
-                    return true
-                end
-            else -- Use the texture otherwise
-                if texture == "Interface\\Icons\\Ability_Rogue_FeignDeath" then
-                    return true
+    local cache = PTUnit.Get(unit)
+    if not cache then
+        local unitClass = GetClass(unit)
+        if unitClass == "HUNTER" then
+            local superwow = IsSuperWowPresent()
+            for i = 1, 32 do
+                local texture, _, id = UnitBuff(unit, i)
+                if superwow then -- Use the ID if SuperWoW is present
+                    if id == 5384 then -- 5384 is Feign Death
+                        return true
+                    end
+                else -- Use the texture otherwise
+                    if texture == "Interface\\Icons\\Ability_Rogue_FeignDeath" then
+                        return true
+                    end
                 end
             end
         end
+        return false
     end
-    return false
+    return cache:HasBuffIDOrName(5384, "Feign Death")
 end
 
 function HasAura(unit, auraType, auraTexture, auraID)
@@ -389,6 +399,169 @@ function GetItemCount(itemName)
         end
     end
     return total
+end
+
+function IsValidMacro(name)
+    return GetMacroIndexByName(name) ~= 0
+end
+
+function RunMacro(name, target)
+    if not IsValidMacro(name) then
+        return
+    end
+    if target then
+        _G.PT_MacroTarget = target
+    end
+    local _, _, body = GetMacroInfo(GetMacroIndexByName(name))
+    local commands = SplitString(body, "\n")
+    for i = 1, getn(commands) do
+        ChatFrameEditBox:SetText(commands[i])
+        ChatEdit_SendText(ChatFrameEditBox)
+    end
+    if target then
+        _G.PT_MacroTarget = nil
+    end
+end
+
+local ScanningTooltip = CreateFrame("GameTooltip", "PTScanningTooltip", nil, "GameTooltipTemplate");
+ScanningTooltip:SetOwner(WorldFrame, "ANCHOR_NONE");
+-- Allow tooltip SetX() methods to dynamically add new lines based on these
+ScanningTooltip:AddFontStrings(
+    ScanningTooltip:CreateFontString( "$parentTextLeft1", nil, "GameTooltipText" ),
+    ScanningTooltip:CreateFontString( "$parentTextRight1", nil, "GameTooltipText" ) );
+
+-- Thanks ChatGPT
+function ExtractSpellRank(spellname)
+    -- Find the starting position of "Rank "
+    local start_pos = string.find(spellname, "Rank ")
+
+    -- Check if "Rank " was found
+    if start_pos then
+        -- Adjust start_pos to point to the first digit
+        --start_pos = start_pos + 5  -- Move past "Rank "
+
+        -- Find the ending parenthesis
+        local end_pos = string.find(spellname, ")", start_pos)
+
+        -- Extract the number substring
+        if end_pos then
+            local number_str = string.sub(spellname, start_pos, end_pos - 1)
+            --local number = tonumber(number_str)  -- Convert to a number
+
+            return number_str
+        end
+    end
+    return nil
+end
+
+-- Thanks again ChatGPT
+local tooltipResources = {"Mana", "Rage", "Energy"}
+function ExtractResourceCost(costText)
+
+    -- First extract resource type
+    local resource
+    for _, r in ipairs(tooltipResources) do
+        if string.find(costText, r) then
+            resource = string.lower(r)
+            break
+        end
+    end
+
+    -- No resource found, this spell is probably free
+    if not resource then
+        return 0
+    end
+
+    -- Find the position where non-digit characters start
+    local num_end = string.find(costText, "%D")
+
+    -- If a non-digit character is found, extract the number
+    if num_end then
+        -- Extract the number substring from the start to the position before the non-digit character
+        local number_str = string.sub(costText, 1, num_end - 1)
+        -- Convert the substring to a number
+        local number = tonumber(number_str)
+        -- Print the result
+        return number, resource
+    else
+        -- If no non-digit character is found, the entire string is a number
+        local number = tonumber(costText)
+        return number, resource
+    end
+end
+
+
+function GetSpellID(spellname)
+    local id = 1
+    local matchingSpells = compost:GetTable()
+    local spellRank = ExtractSpellRank(spellname)
+
+    if spellRank ~= nil then
+        spellname = string.gsub(spellname, "%b()", "")
+    end
+
+    for i = 1, GetNumSpellTabs() do
+        local _, _, _, numSpells = GetSpellTabInfo(i)
+        for j = 1, numSpells do
+            local spellName, rank, realID = GetSpellName(id, "spell")
+            if spellName == spellname then
+                if rank == spellRank then -- If the rank is specified, then we can check if this is the right spell
+                    return id
+                else
+                    table.insert(matchingSpells, id)
+                end
+            end
+            id = id + 1
+        end
+    end
+    local foundID = matchingSpells[getn(matchingSpells)]
+    compost:Reclaim(matchingSpells)
+    return foundID
+end
+
+-- Returns the numerical cost and the resource name; "unknown" if the spell is unknown; 0 if the spell is free
+function GetResourceCost(spellName)
+    ScanningTooltip:SetOwner(UIParent, "ANCHOR_NONE");
+
+    local spellID, bookType
+    if GetSpellSlotTypeIdForName then -- Nampower 2.6.0 function
+        spellID, bookType = GetSpellSlotTypeIdForName(spellName)
+        if bookType == "unknown" then
+            return "unknown"
+        end
+        if bookType ~= "spell" then
+            return 0
+        end
+    else
+        spellID = GetSpellID(spellName)
+    end
+    if not spellID then
+        return "unknown"
+    end
+
+    ScanningTooltip:SetSpell(spellID, "spell")
+
+    local leftText = _G["PTScanningTooltipTextLeft2"]
+
+    if leftText:GetText() then
+        return ExtractResourceCost(leftText:GetText())
+    end
+    return 0
+end
+
+-- Returns the aura's name and its school type
+function GetAuraInfo(unit, type, index)
+    -- Make these texts blank since they don't clear otherwise
+    local leftText = _G["PTScanningTooltipTextLeft1"]
+    leftText:SetText("")
+    local rightText = _G["PTScanningTooltipTextRight1"]
+    rightText:SetText("")
+    if type == "Buff" then
+        ScanningTooltip:SetUnitBuff(unit, index)
+    else
+        ScanningTooltip:SetUnitDebuff(unit, index)
+    end
+    return leftText:GetText() or "", rightText:GetText() or ""
 end
 
 -- Returns an array of the units in the party number or the unit's raid group
@@ -492,7 +665,7 @@ end
 
 local function _FixFrameLevels(parent, ...)
 	local level = parent:GetFrameLevel() + 1
-	for i = 1, table.getn(arg) do
+	for i = 1, getn(arg) do
 		local child = arg[i]
         -- Children of scroll frames can block components outside if they're layered above the scroll pane
         if parent.GetScrollChild and parent:GetScrollChild() == child then
@@ -542,7 +715,7 @@ local PTTaskExecutor_OnUpdate = function()
         end
     end
     ClearTable(runningQueue)
-    if table.getn(taskQueue) == 0 then
+    if getn(taskQueue) == 0 then
         PTTaskExecutor:SetScript("OnUpdate", nil)
     end
 end
@@ -592,6 +765,110 @@ function GetClassColor(class, asArray)
         return color
     end
     return color[1], color[2], color[3]
+end
+
+-- Returns an array of spells starting with the string, ordered from highest rank to lowest.
+-- Limit is 20 if nil, non-ranks not included. Adds non-ranked name unless specified otherwise.
+function SearchSpells(startStr, limit, noNonRank)
+    startStr = string.upper(startStr)
+    limit = limit or 20
+    local matchingSpells = {}
+    local id = 1
+    for i = 1, GetNumSpellTabs() do
+        local breakOut
+        local tabName, _, _, numSpells = GetSpellTabInfo(i)
+        if tabName == "ZMounts" or tabName == "ZzCompanions" then -- No Turtle "spell" tabs
+            id = id + numSpells
+        else
+            for j = 1, numSpells do
+                local spellName, rank, realID = GetSpellName(id, "spell")
+                if not IsSpellPassive(id, "spell") then
+                    local fullName = spellName
+                    if rank ~= "" then
+                        fullName = fullName.."("..rank..")"
+                    end
+                    if StartsWith(string.upper(fullName), startStr) then
+                        table.insert(matchingSpells, fullName)
+                        if getn(matchingSpells) >= limit then
+                            breakOut = true
+                            break
+                        end
+                    end
+                end
+                id = id + 1
+            end
+        end
+        if breakOut then
+            break
+        end
+    end
+
+    ReverseArray(matchingSpells)
+    
+    if not noNonRank then
+        local alreadyFound = compost:GetTable()
+        local toInsert = compost:GetTable()
+        for i = 1, getn(matchingSpells) do
+            local rank = ExtractSpellRank(matchingSpells[i])
+            -- Don't add non rank if the user is explicitly typing out the rank already
+            if (string.len(matchingSpells[i]) - string.len(rank or "") - 2) < (string.len(startStr)) then
+                break
+            end
+            if rank then
+                local baseSpell = string.sub(matchingSpells[i], 1, string.len(matchingSpells[i]) - string.len(rank) - 2)
+                if not alreadyFound[baseSpell] then
+                    alreadyFound[baseSpell] = true
+                    table.insert(toInsert, compost:Acquire(i, baseSpell))
+                end
+            end
+        end
+        local offset = 0
+        for _, insertion in ipairs(toInsert) do
+            table.insert(matchingSpells, insertion[1] + offset, insertion[2])
+            offset = offset + 1
+        end
+        compost:Reclaim(alreadyFound)
+        compost:Reclaim(toInsert, 1)
+    end
+
+    return matchingSpells
+end
+
+function SearchMacros(startStr, limit)
+    startStr = string.upper(startStr)
+    limit = limit or 20
+    local matchingMacros = {}
+    for i = 1, GetNumMacros() do
+        local name = GetMacroInfo(i)
+        if StartsWith(string.upper(name), startStr) then
+            table.insert(matchingMacros, name)
+            if getn(matchingMacros) >= limit then
+                break
+            end
+        end
+    end
+    return matchingMacros
+end
+
+function SearchItems(startStr, limit)
+    startStr = string.upper(startStr)
+    limit = limit or 20
+    local alreadyFound = compost:GetTable()
+    local matchingItems = {}
+    for bag = 0, NUM_BAG_FRAMES do
+        for slot = 1, GetContainerNumSlots(bag) do
+            local name = GetBagSlotInfo(bag, slot)
+            if name and not alreadyFound[name] and StartsWith(string.upper(name), startStr) then
+                table.insert(matchingItems, name)
+                alreadyFound[name] = true
+                if getn(matchingItems) >= limit then
+                    break
+                end
+            end
+        end
+    end
+    compost:Reclaim(alreadyFound)
+    return matchingItems
 end
 
 -- Checks for feign death as well
@@ -669,6 +946,15 @@ end
 
 function GetKeyModifierTypeByID(id)
     return KeyModifierMap[IsShiftKeyDown() == 1][IsControlKeyDown() == 1][IsAltKeyDown() == 1][id]
+end
+
+local nameOverrides = {
+    ["LeftButton"] = "Left Button",
+    ["RightButton"] = "Right Button",
+    ["MiddleButton"] = "Middle Button"
+}
+function GetButtonName(rawButton)
+    return nameOverrides[rawButton] or GetBindingText(rawButton, "KEY_")
 end
 
 local buttons = {"LeftButton", "MiddleButton", "RightButton", "Button4", "Button5"}

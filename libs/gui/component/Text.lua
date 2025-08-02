@@ -14,14 +14,10 @@ end
 
 function PTGuiText:OnAcquire()
     self.super.OnAcquire(self)
-
-    self:GetContainer():Show()
 end
 
 function PTGuiText:OnDispose()
     self.super.OnDispose(self)
-
-    self:GetContainer():Hide()
 
     self:SetText("")
     self:SetFont("Fonts\\FRIZQT__.TTF", 12)
@@ -37,6 +33,16 @@ end
 
 function PTGuiText:SetBackground(params)
     return self:GetContainer():SetBackground(params)
+end
+
+function PTGuiText:Show()
+    self:GetContainer():Show()
+    return self
+end
+
+function PTGuiText:Hide()
+    self:GetContainer():Hide()
+    return self
 end
 
 function PTGuiText:SetParent(frame)

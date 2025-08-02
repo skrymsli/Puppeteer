@@ -6,6 +6,8 @@ local colorize = util.Colorize
 local GetKeyModifier = util.GetKeyModifier
 local GetClass = util.GetClass
 local GetItemCount = util.GetItemCount
+local IsValidMacro = util.IsValidMacro
+local GetResourceCost = util.GetResourceCost
 
 local lowToHighColors = {
     {1, 0, 0}, 
@@ -45,6 +47,15 @@ end
 SpecialSpellBindings["Revive Champion"] = {
     ["Type"] = "SPELL",
     ["Data"] = "Revive Champion"
+}
+
+BindTypeTooltipColors = {
+    ["SPELL"] = normalFontColor,
+    ["ACTION"] = normalFontColor,
+    ["MACRO"] = {1, 0.6, 1},
+    ["ITEM"] = {1, 1, 1},
+    ["SCRIPT"] = {1, 0.5, 0.3},
+    ["MULTI"] = normalFontColor
 }
 
 
@@ -88,8 +99,8 @@ function InitBindingDisplayCache()
     ButtonDisplayCache = {}
     for _, button in ipairs(PTOptions.Buttons) do
         ButtonDisplayCache[button] = {}
-        ButtonDisplayCache[button]["Normal"] = PTOptions.ButtonNames[button] or button
-        ButtonDisplayCache[button]["Unfocused"] = colorize(PTOptions.ButtonNames[button] or button, 0.3, 0.3, 0.3)
+        ButtonDisplayCache[button]["Normal"] = PTOptions.ButtonInfo[button].Name or button
+        ButtonDisplayCache[button]["Unfocused"] = colorize(PTOptions.ButtonInfo[button].Name or button, 0.3, 0.3, 0.3)
     end
 
     BindingDisplayCache = {}
@@ -135,7 +146,7 @@ function UpdateBindingDisplay(binding, entry, fullUpdate)
 end
 
 function _UpdateBindingDisplay(binding, entry)
-    if binding == nil or binding.Type == nil then
+    if binding == nil or binding.Type == nil or binding.Data == nil then
         entry.Normal = unboundText
         return
     end
@@ -144,6 +155,7 @@ function _UpdateBindingDisplay(binding, entry)
     local maxPower = currentMaxPower or UnitManaMax("player")
     local powerType = currentPowerType or util.GetPowerType("player")
     local needsUpdate = not entry.Normal
+    local textColor = binding.Tooltip and binding.Tooltip.TextColor or BindTypeTooltipColors[binding.Type]
     local text = binding.Tooltip and binding.Tooltip.Data
     if binding.Type == "SPELL" then
         local spell = binding.Data
@@ -175,7 +187,7 @@ function _UpdateBindingDisplay(binding, entry)
         if entry.Casts == casts and not needsUpdate then
             return
         end
-        local spellText = colorize(text or spell, normalFontColor)
+        local spellText = colorize(text or spell, textColor)
         local costText
         if powerType == "mana" and resource == powerType then
             if options.ShowManaCost then
@@ -207,43 +219,54 @@ function _UpdateBindingDisplay(binding, entry)
         entry.Normal = spellText
         entry.Casts = casts
     elseif binding.Type == "ACTION" then
-        entry.Normal = colorize(text or binding.Data, normalFontColor)
+        entry.Normal = colorize(text or binding.Data, textColor)
     elseif binding.Type == "ITEM" then
         local item = binding.Data
-        local casts = GetItemCount(item)
 
-        text = colorize(text or item, 1, 1, 1)
-        if casts <= options.HideCastsAbove then
-            local castsColor
-            if casts == 0 then
-                castsColor = tooltipCastsColors["Zero"]
-            elseif casts <= options.CriticalCastsLevel then
-                castsColor = tooltipCastsColors["Critical"]
-            else
-                castsColor = tooltipCastsColors["Normal"]
+        text = colorize(text or item, textColor)
+
+        if PTOptions.SpellsTooltip.ShowItemCount then
+            if not entry.NextUpdate or GetTime() > entry.NextUpdate then
+                entry.Casts = GetItemCount(item) -- This is giga expensive
+                entry.NextUpdate = GetTime() + 2
             end
-            text = text..colorize(" ("..casts..")", castsColor)
+            local casts = entry.Casts
+            if casts <= options.HideCastsAbove then
+                local castsColor
+                if casts == 0 then
+                    castsColor = tooltipCastsColors["Zero"]
+                elseif casts <= options.CriticalCastsLevel then
+                    castsColor = tooltipCastsColors["Critical"]
+                else
+                    castsColor = tooltipCastsColors["Normal"]
+                end
+                text = text..colorize(" ("..casts..")", castsColor)
+            end
         end
         entry.Normal = text
     elseif binding.Type == "MACRO" then
         text = text or binding.Data
         if IsValidMacro(binding.Data) then
-            text = colorize(text, 1, 0.6, 1)
+            text = colorize(text, textColor)
         else
             text = colorize(text.." (Invalid Macro)", 1, 0.4, 0.4)
         end
         entry.Normal = text
         --rightText = colorize(macro.." (Invalid Macro)", 1, 0.4, 0.4)
     elseif binding.Type == "SCRIPT" then
-        entry.Normal =  colorize(text or "Script", 1, 0.5, 0.3)
+        entry.Normal =  colorize(text or "Script", textColor)
     elseif binding.Type == "MULTI" then
-        entry.Normal = text or (binding.Data.Title ~= "" and binding.Data.Title) or "Multi"
-    else -- TODO: Handle other types
+        entry.Normal = colorize(text or (binding.Data.Title ~= "" and binding.Data.Title) or "Multi", textColor)
+    else
         entry.Normal = "Unhandled"
     end
 end
 
 function ApplySpellsTooltip(attachTo, unit, owner)
+    if not PTOptions.SpellsTooltip.Enabled then
+        return
+    end
+    StartTiming("SpellsTooltip")
     SetTooltipKeyListenerEnabled(true)
     SpellsTooltipOwner = owner
     SpellsTooltipAttach = attachTo
@@ -283,7 +306,7 @@ function ApplySpellsTooltip(attachTo, unit, owner)
     local deadFriend = util.IsDeadFriend(unit)
     local selfClass = GetClass("player")
     local canResurrect = PTOptions.AutoResurrect and deadFriend and ResurrectionSpells[selfClass]
-    local canReviveChampion = canResurrect and GetSpellID("Revive Champion") and 
+    local canReviveChampion = canResurrect and util.GetSpellID("Revive Champion") and 
         PTUnit.Get(unit):HasBuffIDOrName(45568, "Holy Champion") and UnitAffectingCombat("player")
     local resEntry
     if canReviveChampion then
@@ -292,7 +315,9 @@ function ApplySpellsTooltip(attachTo, unit, owner)
         resEntry = UpdateBindingDisplay(SpecialSpellBindings[ResurrectionSpells[selfClass]], compost:GetTable())
     end
     
+    StartTiming("BindingDisplays")
     local entries = UpdateBindingDisplays(friendly and "Friendly" or "Hostile", GetKeyModifier())
+    EndTiming("BindingDisplays")
     for _, button in ipairs(PTOptions.Buttons) do
         local focused = not CurrentlyHeldButton or button == CurrentlyHeldButton
         local displayCache = entries[button]
@@ -300,21 +325,25 @@ function ApplySpellsTooltip(attachTo, unit, owner)
         local leftText = focused and ButtonDisplayCache[button].Normal or ButtonDisplayCache[button].Unfocused
 
         local rightText
+        local usingRes
         if resEntry then
             local binding = GetBindingFor(unit, modifier, button)
             if not binding or binding.Type == "SPELL" then
                 rightText = focused and resEntry.Normal or resEntry.Unfocused
+                usingRes = true
             end
         end
         rightText = rightText or (focused and displayCache.Normal or displayCache.Unfocused)
 
-
-        SpellsTooltip:AddDoubleLine(leftText, rightText)
+        if displayCache.Normal ~= unboundText or usingRes or PTOptions.ButtonInfo[button].ShowUnbound then
+            SpellsTooltip:AddDoubleLine(leftText, rightText)
+        end
     end
     if resEntry then
         compost:Reclaim(resEntry)
     end
     SpellsTooltip:Show()
+    EndTiming("SpellsTooltip")
 end
 
 function HideSpellsTooltip()

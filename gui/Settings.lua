@@ -1,17 +1,22 @@
 PTSettingsGui = {}
 PTUtil.SetEnvironment(PTSettingsGui, PuppeteerSettings)
 local util = PTUtil
+local colorize = util.Colorize
 local compost = AceLibrary("Compost-2.0")
 local GetOption = PuppeteerSettings.GetOption
 local SetOption = PuppeteerSettings.SetOption
 
-TabFrame = PTGuiLib.Get("tab_frame")--:Hide()
+TabFrame = PTGuiLib.Get("tab_frame"):Hide()
 
 function Init()
     TabFrame:SetPoint("CENTER")
         :SetSize(425, 475)
         :SetSimpleBackground(PTGuiComponent.BACKGROUND_DIALOG)
         :SetSpecial()
+
+    if PTOptions.Debug then
+        TabFrame:Show()
+    end
 
     local title = PTGuiLib.Get("title", TabFrame)
     title:SetPoint("TOP", TabFrame, "TOP", 0, 22)
@@ -23,10 +28,269 @@ function Init()
     closeButton:SetPoint("TOPRIGHT", TabFrame:GetHandle(), "TOPRIGHT", 0, 0)
     closeButton:SetScript("OnClick", function() TabFrame:Hide() end)
 
-    TabFrame:CreateTab("Bindings")
+    CreateTab_Bindings()
     CreateTab_Options()
-    TabFrame:CreateTab("Customize")
+    CreateTab_Customize()
     CreateTab_About()
+end
+
+OverlayStack = {}
+OverlayBlockInputs = {}
+function AddOverlayFrame(overlayFrame)
+    table.insert(OverlayStack, overlayFrame)
+    local block = PTGuiLib.Get("puppeteer_input_block", TabFrame)
+    block:SetScript("OnMouseDown", TabFrame:GetScript("OnMouseDown"), true)
+    block:SetScript("OnMouseUp", TabFrame:GetScript("OnMouseUp"), true)
+    table.insert(OverlayBlockInputs, block)
+    block:SetFrameLevel(overlayFrame:GetFrameLevel() + (table.getn(OverlayStack) * 200) - 100)
+    overlayFrame:SetFrameLevel(overlayFrame:GetFrameLevel() + (table.getn(OverlayStack) * 200))
+    PTUtil.FixFrameLevels(overlayFrame:GetHandle())
+end
+
+function PopOverlayFrame()
+    local index = table.getn(OverlayStack)
+    table.remove(OverlayStack, index)
+    local block = table.remove(OverlayBlockInputs, index)
+    block:Dispose()
+end
+
+EditedBindings = {}
+BindingsContext = {Target = "Friendly", Modifier = "None"}
+function CreateTab_Bindings()
+    local container = TabFrame:CreateTab("Bindings")
+
+    local selectLoadoutLabel = CreateLabel(container, "Select Loadout")
+        :SetPoint("TOPLEFT", container, "TOPLEFT", 30, -40)
+    local selectLoadoutDropdown = CreateDropdown(container, 130)
+        :SetPoint("LEFT", selectLoadoutLabel, "RIGHT", 5, 0)
+        :SetDynamicOptions(function(addOption, level, args)
+            for _, name in ipairs(Puppeteer.GetBindingLoadoutNames()) do
+                addOption("text", name,
+                    "dropdownText", name,
+                    "checked", Puppeteer.GetSelectedBindingsLoadoutName() == name,
+                    "func", args.func)
+            end
+        end, {
+            func = function(self)
+                Puppeteer.SetSelectedBindingsLoadout(self.text)
+            end
+        })
+        :SetTextUpdater(function(self)
+            self:SetText(Puppeteer.GetSelectedBindingsLoadoutName())
+        end)
+    LoadoutsDropdown = selectLoadoutDropdown
+    local newLoadout = PTGuiLib.Get("button", container)
+        :SetPoint("LEFT", selectLoadoutDropdown, "RIGHT", 5, 0)
+        :SetSize(60, 22)
+        :SetText("New")
+        :OnClick(function(self)
+            local newLoadout = PTGuiLib.Get("puppeteer_new_loadout", TabFrame)
+                :SetPoint("CENTER", TabFrame, "CENTER")
+            AddOverlayFrame(newLoadout)
+            PlaySound("igMainMenuOpen")
+        end)
+    local deleteLoadout = PTGuiLib.Get("button", container)
+        :SetPoint("LEFT", newLoadout, "RIGHT", 5, 0)
+        :SetSize(60, 22)
+        :SetText("Delete")
+        :OnClick(function()
+            local loadouts = Puppeteer.GetBindingLoadouts()
+            local currentLoadoutName = Puppeteer.GetSelectedBindingsLoadoutName()
+            local anotherLoadoutName
+            for k, v in pairs(loadouts) do
+                if k ~= Puppeteer.GetSelectedBindingsLoadoutName() then
+                    anotherLoadoutName = k
+                    break
+                end
+            end
+            if not anotherLoadoutName then
+                DEFAULT_CHAT_FRAME:AddMessage("Cannot delete the only loadout")
+                return
+            end
+            local dialog = PTGuiLib.Get("simple_dialog", TabFrame)
+                :SetPoint("CENTER", TabFrame, "CENTER", 0, 40)
+            dialog:SetTitle("Confirm Delete")
+            dialog:SetText("Are you sure you want to delete binding loadout '"..currentLoadoutName.."'?")
+            dialog:AddButton("Yes, delete loadout", function()
+                dialog:Dispose()
+                PopOverlayFrame()
+                Puppeteer.SetSelectedBindingsLoadout(anotherLoadoutName)
+                loadouts[currentLoadoutName] = nil
+            end)
+            dialog:AddButton("No, keep loadout", function()
+                dialog:Dispose()
+                PopOverlayFrame()
+            end)
+            dialog:PlayOpenSound()
+            AddOverlayFrame(dialog)
+        end)
+
+    local bindingsForLabel = CreateLabel(container, "Bindings For")
+        :SetPoint("TOPLEFT", container, "TOPLEFT", 40, -95)
+
+    local bindingsForDropdown = CreateDropdown(container, 100)
+        :SetPoint("LEFT", bindingsForLabel, "RIGHT", 5, 0)
+        :SetDynamicOptions(function(addOption, level, args)
+            if not EditedBindings.UseFriendlyForHostile then
+                for _, option in ipairs(args.options) do
+                    addOption("text", option,
+                        "dropdownText", option,
+                        "initFunc", args.initFunc,
+                        "func", args.func)
+                end
+            end
+        end, {
+            options = {"Friendly", "Hostile"},
+            initFunc = function(self, gui)
+                self.checked = self.text == gui:GetText()
+            end,
+            func = function(self)
+                SetTargetContext(self.text)
+                UpdateBindingsInterface()
+            end
+        })
+        :SetTextUpdater(function(self)
+            self:SetText(EditedBindings.UseFriendlyForHostile and "All Targets" or BindingsContext.Target)
+        end)
+    BindingsForDropdown = bindingsForDropdown
+
+    local useSame = CreateLabel(container, "Universal Bindings")
+        :SetPoint("LEFT", bindingsForDropdown, "RIGHT", 10, 0)
+        :ApplyTooltip("Use the same bindings for both friendly and hostile targets")
+    local universalBindingsCheckbox = CreateCheckbox(container, 20, 20)
+        :SetPoint("LEFT", useSame, "RIGHT", 5, 0)
+        :ApplyTooltip("Use the same bindings for both friendly and hostile targets")
+        :OnClick(function(self)
+            EditedBindings.UseFriendlyForHostile = self:GetChecked() == 1
+            SetTargetContext("Friendly")
+            UpdateBindingsInterface()
+        end)
+    UniversalBindingsCheckbox = universalBindingsCheckbox
+
+    local keyLabel = CreateLabel(container, "Key")
+        :SetPoint("TOPLEFT", container, "TOPLEFT", 120, -125)
+    
+    local keyDropdown = CreateDropdown(container, 150)
+        :SetPoint("LEFT", keyLabel, "RIGHT", 5, 0)
+        :SetSimpleOptions(util.GetKeyModifiers(), function(modifier)
+            return {
+                text = modifier,
+                initFunc = function(self, gui)
+                    self.checked = self.text == gui:GetText()
+                end,
+                func = function(self, gui)
+                    gui:SetText(self.text)
+                    SetModifierContext(self.text)
+                    UpdateBindingsInterface()
+                end
+            }
+        end, "None")
+
+    local interface = PTGuiLib.Get("puppeteer_spell_bind_interface", container)
+        :SetPoint("TOPLEFT", container, "TOPLEFT", 5, -160)
+        :SetPoint("BOTTOMRIGHT", container, "BOTTOMRIGHT", -5, 80)
+
+    SpellBindInterface = interface
+
+    LoadBindings()
+    
+
+    local addButton = PTGuiLib.Get("button", container)
+        :SetPoint("TOP", container, "TOP", 0, -440)
+        :SetSize(200, 25)
+        :SetText("Edit Buttons")
+        :ApplyTooltip("Edit what buttons you use and their names")
+        :OnClick(function()
+            local editor = PTGuiLib.Get("puppeteer_button_editor", TabFrame)
+                :SetPoint("CENTER", TabFrame, "CENTER")
+            AddOverlayFrame(editor)
+        end)
+
+    local discardButton = PTGuiLib.Get("button", container)
+        :SetPoint("BOTTOMLEFT", container, "BOTTOMLEFT", 10, 50)
+        :SetSize(125, 25)
+        :SetText("Discard Changes")
+        :OnClick(function()
+            LoadBindings()
+        end)
+    local saveAndCloseButton = PTGuiLib.Get("button", container)
+        :SetPoint("BOTTOM", container, "BOTTOM", 0, 50)
+        :SetSize(125, 25)
+        :SetText("Save & Close")
+        :OnClick(function()
+            SaveBindings()
+            TabFrame:Hide()
+        end)
+    local saveButton = PTGuiLib.Get("button", container)
+        :SetPoint("BOTTOMRIGHT", container, "BOTTOMRIGHT", -10, 50)
+        :SetSize(125, 25)
+        :SetText("Save Changes")
+        :OnClick(function()
+            SaveBindings()
+        end)
+end
+
+function SetTargetContext(friendlyOrHostile)
+    BindingsContext.Target = friendlyOrHostile
+    BindingsForDropdown:UpdateText()
+end
+
+function SetModifierContext(modifier)
+    BindingsContext.Modifier = modifier
+
+end
+
+function SetBindingsContext(friendlyOrHostile, modifier)
+    SetTargetContext(friendlyOrHostile)
+    SetModifierContext(modifier)
+end
+
+function GetBindingsContext()
+    local targetBindings = EditedBindings.Bindings[BindingsContext.Target]
+    if not targetBindings then
+        targetBindings = {}
+        EditedBindings.Bindings[BindingsContext.Target] = targetBindings
+    end
+    local bindings = EditedBindings.Bindings[BindingsContext.Target][BindingsContext.Modifier]
+    if not bindings then
+        bindings = {}
+        EditedBindings.Bindings[BindingsContext.Target][BindingsContext.Modifier] = bindings
+    end
+    return bindings
+end
+
+function UpdateBindingsInterface()
+    local bindings = GetBindingsContext()
+    for _, button in ipairs(PTOptions.Buttons) do
+        if not bindings[button] then
+            bindings[button] = {}
+        end
+    end
+    SpellBindInterface:SetBindings(bindings)
+end
+
+function ReloadBindingLines()
+    SpellBindInterface:ClearSpellLines()
+    for _, button in ipairs(PTOptions.Buttons) do
+        SpellBindInterface:AddSpellLine(button, PTOptions.ButtonInfo[button].Name or button)
+    end
+end
+
+function LoadBindings()
+    ReloadBindingLines()
+    LoadoutsDropdown:UpdateText()
+    EditedBindings = util.CloneTable(Puppeteer.GetBindings(), true)
+    UniversalBindingsCheckbox:SetChecked(EditedBindings.UseFriendlyForHostile)
+    if EditedBindings.UseFriendlyForHostile then
+        SetTargetContext("Friendly")
+    end
+    BindingsForDropdown:UpdateText()
+    UpdateBindingsInterface()
+end
+
+function SaveBindings()
+    Puppeteer.GetBindingLoadouts()[Puppeteer.GetSelectedBindingsLoadoutName()] = EditedBindings
+    LoadBindings()
 end
 
 function CreateTab_Options()
@@ -36,11 +300,12 @@ function CreateTab_Options()
     tabPanel:SetPoint("TOPLEFT", container, "TOPLEFT", 5, -28 - 50)
     tabPanel:SetPoint("BOTTOMRIGHT", container, "BOTTOMRIGHT", -5, 5)
     tabPanel:SetSimpleBackground()
+    container.TabPanel = tabPanel
 
     CreateTab_Options_Casting(tabPanel)
     CreateTab_Options_SpellsTooltip(tabPanel)
-    CreateTab_Options_TurtleWoW(tabPanel)
     CreateTab_Options_Other(tabPanel)
+    CreateTab_Options_Advanced(tabPanel)
     CreateTab_Options_Mods(tabPanel)
 end
 
@@ -56,10 +321,18 @@ function CreateTab_Options_Casting(panel)
         end
     end)
     local resSpell = Puppeteer.ResurrectionSpells[util.GetClass("player")]
-    local autoResInfo = not resSpell and "This does nothing for your class" or {"Cast "..resSpell..
-        " when clicking on a dead target instead of bound spells", "Special binds, such as \"Target\", can still be used"}
+    local autoResInfo = not resSpell and "This does nothing for your class" or {"Replaces your bound spells with "..resSpell..
+        " when clicking on a dead ally", "All other types of binds, such as Actions, will not be replaced"}
     factory:checkbox("Auto Resurrect", autoResInfo, "AutoResurrect")
-    factory:checkbox("Target On Cast", "If enabled, casting a spell on a player will also cause you to target them", "AutoTarget")
+    factory:checkbox("Target While Casting", {"Target the unit while most bindings run",
+        "Note that these binding types override this rule:",
+        "Spell - Always targets unless using SuperWoW",
+        "Action - Never targets unless specified by action",
+        "Item - Always targets",
+        "Multi - Never targets"}, "TargetWhileCasting")
+    factory:checkbox("Target After Casting", {"Target the unit after most bindings run",
+        "Note that these binding types override this rule:",
+        "Multi - Never targets"}, "TargetAfterCasting")
 end
 
 function CreateTab_Options_SpellsTooltip(panel)
@@ -94,16 +367,8 @@ function CreateTab_Options_SpellsTooltip(panel)
     layout:offset(0, 10)
     factory:dropdown("Anchor", "Where the tooltip should be anchored", "SpellsTooltip.Anchor", 
         {"Top Left", "Top Right", "Bottom Left", "Bottom Right"})
-end
-
-function CreateTab_Options_TurtleWoW(panel)
-    local container = panel:CreateTab("Turtle WoW")
-    local layout = NewLabeledColumnLayout(container, {150, 310}, -20, 10)
-    local factory = NewComponentFactory(container, layout)
-    container.factory = factory
-    factory:checkbox("LFT Auto Role", {"Automatically assign roles when joining LFT groups", 
-            "This functionality was created for 1.17.2 and may break in future updates"}, "LFTAutoRole",
-            function() Puppeteer.SetLFTAutoRoleEnabled(PTOptions.LFTAutoRole) end)
+    factory:checkbox("Show Item Count", {"Show the amount of your bound items", colorize("Warning: This causes lag!", 1, 0.2, 0.2)}, 
+        "SpellsTooltip.ShowItemCount")
 end
 
 function CreateTab_Options_Other(panel)
@@ -139,6 +404,17 @@ function CreateTab_Options_Other(panel)
     inverseDropdown:SetPoint("LEFT", dragAllCheckbox, "RIGHT", 90, 0)
     factory:checkbox("Show Heal Predictions", {"See predictions on incoming healing", "Improved predictions if using SuperWoW"},
         "UseHealPredictions", function() Puppeteer.UpdateAllIncomingHealing() end)
+
+    factory:checkbox("(TWoW) LFT Auto Role", {"Automatically assign roles when joining LFT groups", 
+            "This functionality was created for 1.17.2 and may break in future updates"}, "LFTAutoRole",
+            function() Puppeteer.SetLFTAutoRoleEnabled(PTOptions.LFTAutoRole) end)
+end
+
+function CreateTab_Options_Advanced(panel)
+    local container = panel:CreateTab("Advanced")
+    local layout = NewLabeledColumnLayout(container, {150, 220, 300}, -20, 10)
+    local factory = NewComponentFactory(container, layout)
+    container.factory = factory
 end
 
 function CreateTab_Options_Mods(panel)
@@ -158,8 +434,8 @@ function CreateTab_Options_Mods(panel)
     local nampowerDetected = util.IsNampowerPresent()
 
     local detectedTexts = {
-        [true] = util.Colorize("Mod Detected", 0.2, 1, 0.2),
-        [false] = util.Colorize("Mod Not Detected", 1, 0.2, 0.2)
+        [true] = colorize("Mod Detected", 0.2, 1, 0.2),
+        [false] = colorize("Mod Not Detected", 1, 0.2, 0.2)
     }
     local superWowLabel = CreateLabel(container, "SuperWoW")
         :SetPoint("TOP", generalInfo, "BOTTOM", 0, -20)
@@ -239,27 +515,106 @@ function CreateTab_Options_Mods(panel)
     scrollFrame:UpdateScrollRange()
 end
 
+function CreateTab_Customize()
+    local container = TabFrame:CreateTab("Customize")
+    local layout = NewLabeledColumnLayout(container, {150}, -40, 10)
+
+    local frameDropdown = CreateLabeledDropdown(container, "Select Frame", "The frame to edit the style of")
+        :SetDynamicOptions(function(addOption, level, args)
+            for name, group in pairs(Puppeteer.UnitFrameGroups) do
+                addOption("text", name,
+                    "dropdownText", name,
+                    "initFunc", args.initFunc,
+                    "func", args.func)
+            end
+        end, {
+            initFunc = function(self, gui)
+                self.checked = self.text == gui:GetText()
+            end,
+            func = function(self, gui)
+                StyleDropdown:UpdateText()
+            end
+        })
+        :SetText("Party")
+    FrameDropdown = frameDropdown
+    layout:layoutComponent(frameDropdown)
+    local GetSelectedProfileName = PuppeteerSettings.GetSelectedProfileName
+    local styleDropdown = CreateLabeledDropdown(container, "Choose Style", "The style of the frame")
+        :SetDynamicOptions(function(addOption, level, args)
+            local profiles = util.ToArray(PTDefaultProfiles)
+            util.RemoveElement(profiles, "Base")
+            table.sort(profiles, function(a, b)
+                return (PTProfileManager.DefaultProfileOrder[a] or 1000) < (PTProfileManager.DefaultProfileOrder[b] or 1000)
+            end)
+            for _, profile in ipairs(profiles) do
+                addOption("text", profile,
+                    "checked", GetSelectedProfileName(frameDropdown:GetText()) == profile,
+                    "func", args.func)
+            end
+        end, {
+            func = function(self, gui)
+                local selectedFrame = frameDropdown:GetText()
+                PTOptions.ChosenProfiles[selectedFrame] = self.text
+
+                if selectedFrame == "Focus" and not util.IsSuperWowPresent() then
+                    return
+                end
+
+                -- Here's some probably buggy profile hotswapping
+                local group = Puppeteer.UnitFrameGroups[selectedFrame]
+                group.profile = GetSelectedProfile(selectedFrame)
+                local oldUIs = group.uis
+                group.uis = {}
+                group:ResetFrameLevel() -- Need to lower frame or the added UIs are somehow under it
+                for unit, ui in pairs(oldUIs) do
+                    ui:GetRootContainer():SetParent(nil)
+                    -- Forget about the old UI, and cause a fat memory leak why not
+                    ui:GetRootContainer():Hide()
+                    local newUI = PTUnitFrame:New(unit, ui.isCustomUnit)
+                    util.RemoveElement(Puppeteer.AllUnitFrames, ui)
+                    table.insert(Puppeteer.AllUnitFrames, newUI)
+                    local unitUIs = Puppeteer.GetUnitFrames(unit)
+                    util.RemoveElement(unitUIs, ui)
+                    table.insert(unitUIs, newUI)
+                    group:AddUI(newUI, true)
+                    if ui.guidUnit then
+                        newUI.guidUnit = ui.guidUnit
+                    elseif unit ~= "target" then
+                        newUI:Hide()
+                    end
+                end
+                Puppeteer.CheckGroup()
+                group:UpdateUIPositions()
+                group:ApplyProfile()
+
+                gui:UpdateText()
+            end
+        })
+        :SetTextUpdater(function(self)
+            self:SetText(GetSelectedProfileName(frameDropdown:GetText()))
+        end)
+    StyleDropdown = styleDropdown
+    layout:layoutComponent(styleDropdown)
+end
+
 function CreateTab_About()
     local container = TabFrame:CreateTab("About")
 
     local text = PTGuiLib.GetText(container, 
             "Puppeteer Version "..Puppeteer.VERSION..
-            "\n\n\nPuppeteer Author: OldManAlpha\nDiscord: oldmana\nTurtle IGN: Oldmana, Lowall, Jmdruid"..
+            "\n\n\nPuppeteer Author: OldManAlpha\nTurtle Nordanaar IGN: Oldmana, Lowall, Jmdruid"..
             "\n\nHealersMate Original Author: i2ichardt\nEmail: rj299@yahoo.com"..
-            "\n\nContributers: Turtle WoW Community, ChatGPT"..
+            "\n\nAdditional Contributors"..
+            "\nTurtle WoW Community: Answers to addon development questions"..
+            "\nShagu: Utility functions & providing a wealth of research material"..
+            "\nChatGPT: Utility functions"..
             "\n\n\nCheck For Updates, Report Issues, Make Suggestions:\n",
             12)
         :SetPoint("TOP", container, "TOP", 0, -80)
 
-    local site = "https://github.com/OldManAlpha/Puppeteer"
-    PTGuiLib.Get("editbox", container)
-        :SetText(site)
+    CreateLinkEditbox(container, "https://github.com/OldManAlpha/Puppeteer")
         :SetPoint("TOP", text, "BOTTOM", 0, -10)
         :SetSize(300, 20)
-        :SetJustifyH("CENTER")
-        :SetScript("OnTextChanged", function(self)
-            self:SetText(site)
-        end)
 end
 
 
@@ -333,9 +688,8 @@ function NewComponentFactory(container, layout)
         ["dropdown"] = function(self, text, tooltipText, optionLoc, options, selectFunc)
             local dropdown, label = CreateLabeledDropdown(container, text, tooltipText)
             self:doLayout(dropdown)
-            local optionsTable = {}
-            for _, option in ipairs(options) do
-                table.insert(optionsTable, {
+            dropdown:SetSimpleOptions(options, function(option)
+                return {
                     text = option,
                     dropdownText = option,
                     initFunc = function(self)
@@ -347,10 +701,8 @@ function NewComponentFactory(container, layout)
                             selectFunc(self)
                         end
                     end
-                })
-            end
-            dropdown:SetText(GetOption(optionLoc))
-            dropdown:SetOptions(optionsTable)
+                }
+            end, GetOption(optionLoc))
             return dropdown, label
         end,
         ["slider"] = function(self, text, tooltipText, optionLoc, minValue, maxValue)

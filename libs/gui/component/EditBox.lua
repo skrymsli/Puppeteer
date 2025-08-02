@@ -1,6 +1,6 @@
 PTGuiEditbox = PTGuiComponent:Extend("editbox")
 local _G = getfenv(0)
-PTGuiEditbox:Import(true, "SetText", "SetMultiLine", "SetAutoFocus", "SetFocus", "ClearFocus", "SetNumeric", "SetJustifyH")
+PTGuiEditbox:Import(true, "SetText", "SetMultiLine", "SetAutoFocus", "SetFocus", "ClearFocus", "SetNumeric", "SetJustifyH", "HighlightText")
 PTGuiEditbox:Import(false, "GetText", "IsMultiLine", "IsAutoFocus", "IsNumeric")
 
 function PTGuiEditbox:New()

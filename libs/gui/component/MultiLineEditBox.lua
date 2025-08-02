@@ -1,5 +1,5 @@
 PTGuiMultiLineEditBox = PTGuiComponent:Extend("multi_line_editbox")
-PTGuiMultiLineEditBox:Import(true, "SetText", "SetMultiLine", "SetAutoFocus", "SetFocus", "ClearFocus")
+PTGuiMultiLineEditBox:Import(true, "SetText", "SetMultiLine", "SetAutoFocus", "SetFocus", "ClearFocus", "HighlightText")
 PTGuiMultiLineEditBox:Import(false, "GetText", "IsMultiLine", "IsAutoFocus")
 PTGuiMultiLineEditBox:ImportComponent("scroll_frame", true, "Show", "Hide", "ClearAllPoints")
 

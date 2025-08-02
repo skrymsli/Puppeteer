@@ -6,6 +6,7 @@ PTUtil.SetEnvironment(PTUnit)
 local _G = getfenv(0)
 
 local util = PTUtil
+local GetAuraInfo = util.GetAuraInfo
 local AllUnits = util.AllUnits
 local AllUnitsSet = util.AllUnitsSet
 local superwow = util.IsSuperWowPresent()
@@ -235,7 +236,7 @@ function PTUnit:UpdateAuras()
         if not texture then
             break
         end
-        local name, type = PT.GetAuraInfo(unit, "Buff", index)
+        local name, type = GetAuraInfo(unit, "Buff", index)
         if PuppeteerSettings.TrackedHealingBuffs[name] then
             self.HasHealingModifier = true
         end
@@ -262,7 +263,7 @@ function PTUnit:UpdateAuras()
             break
         end
         type = type or ""
-        local name = PT.GetAuraInfo(unit, "Debuff", index)
+        local name = GetAuraInfo(unit, "Debuff", index)
         if PuppeteerSettings.TrackedHealingDebuffs[name] then
             self.HasHealingModifier = true
         end
@@ -346,4 +347,12 @@ end
 
 function PTUnit:GetDebuffs(name)
     return self.DebuffsMap[name]
+end
+
+function PTUnit:GetAuraTimeRemaining(name)
+    local auraTime = self.AuraTimes[name]
+    if not auraTime then
+        return
+    end
+    return auraTime.startTime - GetTime() + auraTime.duration
 end

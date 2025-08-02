@@ -31,6 +31,7 @@ end
 local TRACKING_UPDATE_INTERVAL = 1.25
 
 function RunTrackingScan()
+    StartTiming("TrackingScan")
     local UnitFrames = UnitFrames
     local time = GetTime()
     if time > nextTrackingUpdate then
@@ -77,9 +78,11 @@ function RunTrackingScan()
             end
         end
     end
+    EndTiming("TrackingScan")
 end
 
 function EvaluateTracking(unit, update)
+    StartTiming("TrackingEval")
     local UnitFrames = UnitFrames
     local cache = PTUnit.Get(unit)
     local distanceChanged = cache:UpdateDistance()
@@ -110,6 +113,7 @@ function EvaluateTracking(unit, update)
             table.insert(sightTrackedUnits, unit)
         end
     end
+    EndTiming("TrackingEval")
 end
 
 function StartDistanceScanner()

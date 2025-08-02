@@ -43,8 +43,10 @@ libs\gui\component\EditBox.lua
 libs\gui\component\MultiLineEditBox.lua
 libs\gui\component\TabPanel.lua
 libs\gui\component\EditBoxSlider.lua
+libs\gui\component\ColorSelect.lua
 
 libs\gui\frame\TabFrame.lua
+libs\gui\frame\SimpleDialog.lua
 
 Puppeteer.lua
 core\SpellsTooltip.lua
@@ -52,6 +54,9 @@ core\EventHandler.lua
 core\DistanceScanner.lua
 core\Command.lua
 core\SpecialButtons.lua
+core\Bindings.lua
+core\ActionBindings.lua
+core\Roles.lua
 
 PuppeteerSettings.lua
 PTUnitFrame.lua
@@ -59,6 +64,15 @@ PTUnitFrameGroup.lua
 Profile.lua
 ProfileManager.lua
 
+gui\GuiUtil.lua
+gui\component\SpellLine.lua
+gui\component\InputBlock.lua
+gui\component\SpellBindInterface.lua
+gui\component\ScriptEditor.lua
+gui\component\MultiEditor.lua
+gui\component\BindingOptions.lua
+gui\component\ButtonEditor.lua
+gui\component\NewLoadout.lua
 gui\SettingsOld.lua
 gui\Settings.lua
 

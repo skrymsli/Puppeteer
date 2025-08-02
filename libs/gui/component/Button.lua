@@ -141,6 +141,7 @@ end
 
 function PTGuiButton:SetEnabled(enabled)
     (enabled and self.Enable or self.Disable)(self)
+    return self
 end
 
 function PTGuiButton:SetScript(scriptName, script, noSelf)
@@ -148,12 +149,16 @@ function PTGuiButton:SetScript(scriptName, script, noSelf)
         return self.super.SetScript(self, scriptName, script, noSelf)
     end
     self:GetHandle():SetScript(scriptName, function()
-        PlaySound("GAMESPELLBUTTONMOUSEDOWN")
+        self:PlayClickSound()
         if script then
             script(self)
         end
     end)
     return self
+end
+
+function PTGuiButton:PlayClickSound()
+    PlaySound("GAMESPELLBUTTONMOUSEDOWN")
 end
 
 PTGuiLib.RegisterComponent(PTGuiButton)

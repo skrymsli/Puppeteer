@@ -76,6 +76,8 @@ function SetDefaults()
             },
             ["AlwaysShowTargetFrame"] = false,
             ["AutoTarget"] = false,
+            ["TargetWhileCasting"] = false,
+            ["TargetAfterCasting"] = false,
             ["FrameDrag"] = {
                 ["MoveAll"] = false,
                 ["AltMoveKey"] = "Shift"
@@ -97,7 +99,8 @@ function SetDefaults()
                 ["AbbreviatedKeys"] = false,
                 ["ColoredKeys"] = true,
                 ["ShowPowerBar"] = true,
-                ["ShowPowerAs"] = isManaUser and "Power %" or "Power" -- "Power", "Power/Max Power", "Power %"
+                ["ShowPowerAs"] = isManaUser and "Power %" or "Power", -- "Power", "Power/Max Power", "Power %"
+                ["ShowItemCount"] = false
             },
             ["ShowAuraTimesAt"] = {
                 ["Short"] = 5, -- <1 min
@@ -128,14 +131,35 @@ function SetDefaults()
                 "MOUSEWHEELUP",
                 "MOUSEWHEELDOWN"
             },
-            ["ButtonNames"] = {
-                ["LeftButton"] = "Left",
-                ["MiddleButton"] = "Middle",
-                ["RightButton"] = "Right",
-                ["Button5"] = "Forward",
-                ["Button4"] = "Back",
-                ["MOUSEWHEELUP"] = "Wheel Up",
-                ["MOUSEWHEELDOWN"] = "Wheel Down"
+            ["ButtonInfo"] = {
+                ["LeftButton"] = {
+                    ["Name"] = "Left",
+                    ["ShowUnbound"] = true
+                },
+                ["MiddleButton"] = {
+                    ["Name"] = "Middle",
+                    ["ShowUnbound"] = true
+                },
+                ["RightButton"] = {
+                    ["Name"] = "Right",
+                    ["ShowUnbound"] = true
+                },
+                ["Button5"] = {
+                    ["Name"] = "Forward",
+                    ["ShowUnbound"] = true
+                },
+                ["Button4"] = {
+                    ["Name"] = "Back",
+                    ["ShowUnbound"] = true
+                },
+                ["MOUSEWHEELUP"] = {
+                    ["Name"] = "Wheel Up",
+                    ["ShowUnbound"] = true
+                },
+                ["MOUSEWHEELDOWN"] = {
+                    ["Name"] = "Wheel Down",
+                    ["ShowUnbound"] = true
+                },
             },
             ["Scripts"] = {
                 ["OnLoad"] = "",
@@ -197,6 +221,8 @@ function SetDefaults()
                 else
                     PTOptions[field] = value
                 end
+                -- TODO: Redo default application
+            --[[
             elseif type(value) == "table" then
                 for field2, value2 in pairs(value) do
                     if PTOptions[field][field2] == nil then
@@ -206,7 +232,7 @@ function SetDefaults()
                             PTOptions[field][field2] = value2
                         end
                     end
-                end
+                end]]
             end
         end
     end
