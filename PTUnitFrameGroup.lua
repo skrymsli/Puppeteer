@@ -101,13 +101,13 @@ function PTUnitFrameGroup:ApplyToplevel()
 end
 
 function PTUnitFrameGroup:Initialize()
-    local container = CreateFrame("Frame", self.name.."PTUnitFrameGroupContainer", UIParent) --type, name, parent
+    local container = CreateFrame("Frame", "PTUnitFrameGroupContainer_"..self.name, UIParent)
     self.container = container
     self:ApplyToplevel()
     if container:GetNumPoints() == 0 then
         container:SetPoint(util.GetCenterScreenPoint(0, 0))
     end
-    container:SetBackdrop({bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background"}) -- set a light gray background
+    container:SetBackdrop({bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background"})
     container:SetBackdropColor(0, 0, 0, 0.5)
     container:EnableMouse(true)
     container:SetMovable(true)
@@ -188,13 +188,13 @@ function PTUnitFrameGroup:Initialize()
         arg1 = prevArg
     end)
 
-    local header = CreateFrame("Frame", self.name.."PTUnitFrameGroupContainerHeader", container) --type, name, parent
+    local header = CreateFrame("Frame", "$parentHeader", container) --type, name, parent
     self.header = header
     header:SetPoint("TOPLEFT", container, 0, 0)
     header:SetBackdrop({bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background"})
     header:SetBackdropColor(0, 0, 0, 0.5)
 
-    local borderFrame = CreateFrame("Frame", self.name.."PTUnitFrameGroupContainerBorder", container)
+    local borderFrame = CreateFrame("Frame", "$parentBorder", container)
     self.borderFrame = borderFrame
     borderFrame:SetPoint("CENTER", container, 0, 0)
 

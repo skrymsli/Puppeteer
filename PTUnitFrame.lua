@@ -1120,15 +1120,15 @@ function PTUnitFrame:Initialize()
 
     -- Container Elements
 
-    local rootContainer = CreateFrame("Frame", unit.."HealRootContainer", UIParent)
+    local rootContainer = CreateFrame("Frame", "PTUnitFrame_"..unit, UIParent)
     self.rootContainer = rootContainer
     rootContainer:SetPoint("CENTER", 0, 0)
 
-    local container = CreateFrame("Frame", unit.."HealContainer", rootContainer) --type, name, parent
+    local container = CreateFrame("Frame", "$parentContainer", rootContainer)
     self.container = container
     container:SetAllPoints(rootContainer)
 
-    local overlayContainer = CreateFrame("Frame", unit.."HealOverlayContainer", rootContainer)
+    local overlayContainer = CreateFrame("Frame", "$parentOverlayContainer", rootContainer)
     self.overlayContainer = overlayContainer
     overlayContainer:SetFrameLevel(container:GetFrameLevel() + 5)
     overlayContainer:SetAllPoints(rootContainer)
@@ -1168,18 +1168,18 @@ function PTUnitFrame:Initialize()
 
     -- Health Bar Element
 
-    local healthBar = CreateFrame("StatusBar", unit.."HealthBar", container)
+    local healthBar = CreateFrame("StatusBar", "$parentHealthBar", container)
     self.healthBar = healthBar
     healthBar:SetStatusBarTexture(PT.BarStyles[profile.HealthBarStyle])
     healthBar:SetMinMaxValues(0, 1)
 
-    local incomingHealthBar = CreateFrame("StatusBar", unit.."IncomingHealthBar", container)
+    local incomingHealthBar = CreateFrame("StatusBar", "$parentIncomingHealthBar", container)
     self.incomingHealthBar = incomingHealthBar
     incomingHealthBar:SetStatusBarTexture(PT.BarStyles[profile.HealthBarStyle])
     incomingHealthBar:SetMinMaxValues(0, 1)
     incomingHealthBar:SetFrameLevel(healthBar:GetFrameLevel() - 1)
 
-    local incomingDirectHealthBar = CreateFrame("StatusBar", unit.."IncomingDirectHealthBar", container)
+    local incomingDirectHealthBar = CreateFrame("StatusBar", "$parentIncomingDirectHealthBar", container)
     self.incomingDirectHealthBar = incomingDirectHealthBar
     incomingDirectHealthBar:SetStatusBarTexture(PT.BarStyles[profile.HealthBarStyle])
     incomingDirectHealthBar:SetMinMaxValues(0, 1)
@@ -1191,11 +1191,10 @@ function PTUnitFrame:Initialize()
     self.nameText = name
     name:SetAlpha(profile.NameText:GetAlpha())
 
-    -- Create a background texture for the status bar
     local bg = healthBar:CreateTexture(nil, "BACKGROUND")
     healthBar.background = bg
     bg:SetAllPoints(true)
-    bg:SetTexture(0.5, 0.5, 0.5, 0.25) -- set color to light gray with high transparency
+    bg:SetTexture(0.5, 0.5, 0.5, 0.25)
 
     -- Incoming Text
     local incomingHealText = overlayContainer:CreateFontString(nil, "ARTWORK", "GameFontNormal")
@@ -1209,20 +1208,20 @@ function PTUnitFrame:Initialize()
 
     -- Power Bar Element
 
-    local powerBar = CreateFrame("StatusBar", unit.."PowerStatusBar", container)
+    local powerBar = CreateFrame("StatusBar", "$parentPowerStatusBar", container)
     self.powerBar = powerBar
     powerBar:SetStatusBarTexture(PT.BarStyles[profile.PowerBarStyle])
     powerBar:SetMinMaxValues(0, 1)
     powerBar:SetValue(1)
     powerBar:SetStatusBarColor(0, 0, 1)
-    powerBar:SetBackdrop({bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background"}) -- set a light gray background
+    powerBar:SetBackdrop({bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background"})
     local powerText = powerBar:CreateFontString(nil, "ARTWORK", "GameFontNormal")
     self.powerText = powerText
     powerText:SetAlpha(profile.PowerText:GetAlpha())
 
     -- Button Element
 
-    local button = CreateFrame("Button", unit.."Button", healthBar, "UIPanelButtonTemplate")
+    local button = CreateFrame("Button", "$parentButton", healthBar, "UIPanelButtonTemplate")
     self.button = button
     local healthText = button:GetFontString()
     self.healthText = healthText
@@ -1239,7 +1238,7 @@ function PTUnitFrame:Initialize()
     end)
     button:SetScript("OnMouseDown", function()
         local buttonType = arg1
-        PT.CurrentlyHeldButton = buttonType--PuppeteerSettings.CustomButtonNames[buttonType] or PT.ReadableButtonMap[buttonType]
+        PT.CurrentlyHeldButton = buttonType
         PT.ReapplySpellsTooltip()
         self.pressed = true
         self:AdjustHealthPosition()
@@ -1290,7 +1289,7 @@ function PTUnitFrame:Initialize()
 
     -- Buff Panel Element
 
-    local buffPanel = CreateFrame("Frame", unit.."BuffPanel", container)
+    local buffPanel = CreateFrame("Frame", "$parentBuffPanel", container)
     self.auraPanel = buffPanel
     buffPanel:SetFrameLevel(container:GetFrameLevel() + 2)
 
@@ -1307,28 +1306,6 @@ function PTUnitFrame:Initialize()
     self.flashTexture = {frame = flashFrame, texture = flashTexture}
     flashTexture:SetTexture(1, 1, 1)
     flashFrame:Hide()
-
-    --[[
-    local scrollingDamageFrame = CreateFrame("Frame", unit.."ScrollingDamageFrame", container)
-    self.scrollingDamageFrame = scrollingDamageFrame
-    scrollingDamageFrame:SetWidth(100) -- width
-    scrollingDamageFrame:SetHeight(20) -- height
-    scrollingDamageFrame:SetPoint("CENTER", 0, 0) -- Adjust the initial position as needed
-    scrollingDamageFrame.text = scrollingDamageFrame:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-    scrollingDamageFrame.text:SetPoint("CENTER", 0, 0)
-    scrollingDamageFrame:Hide() -- Hide the frame initially
-    scrollingDamageFrame:SetFrameLevel(100) -- Set the frame level to a high value to ensure it's on top
-
-    local scrollingHealFrame = CreateFrame("Frame", unit.."ScrollingHealFrame", container)
-    self.scrollingHealFrame = scrollingHealFrame
-    scrollingHealFrame:SetWidth(100) -- width
-    scrollingHealFrame:SetHeight(20) -- height
-    scrollingHealFrame:SetPoint("CENTER", 0, 0) -- Adjust the initial position as needed
-    scrollingHealFrame.text = scrollingHealFrame:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-    scrollingHealFrame.text:SetPoint("CENTER", 0, 0)
-    scrollingHealFrame:Hide() -- Hide the frame initially
-    scrollingHealFrame:SetFrameLevel(100) -- Set the frame level to a high value to ensure it's on top
-    ]]
 
     self:SetHealthBarValue(0)
     self:SizeElements()
