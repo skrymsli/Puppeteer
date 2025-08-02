@@ -4,13 +4,14 @@ PTUtil.SetEnvironment(Puppeteer)
 local _G = getfenv(0)
 local util = PTUtil
 
-_G.BINDING_HEADER_PUPPETEER = "Puppeteer"
+_G.BINDING_HEADER_PUPPETEER = "Puppeteer (Don't Touch These)"
 local bindingsNames = {}
 local MAX_BINDINGS = 24
 for i = 1, MAX_BINDINGS do
     bindingsNames[i] = "PUPPETEERBINDING"..i
     _G["BINDING_NAME_"..bindingsNames[i]] = "Dynamic Binding "..i
 end
+local bindingsNamesSet = util.ToSet(bindingsNames)
 
 local BindingPrefixes = {
     "",
@@ -40,59 +41,114 @@ function SetupSpecialButtons()
             index = index + 1
         end
     end
+
+    for _, bindingName in ipairs(bindingsNames) do
+        local k1, k2, k3, k4, k5, k6, k7, k8 = GetBindingKey(bindingName)
+        for _, key in ipairs({k1, k2, k3, k4, k5, k6, k7, k8}) do
+            if key then
+                SetBinding(key, nil)
+            end
+        end
+    end
 end
+
+
+-- Stuff to stop expensive UPDATE_BINDINGS events as much as possible
 
 local noOp = function() end
-local ActionButton_UpdateHotkeys
-local PetActionButton_SetHotkeys
-local CharacterMicroButton_OnEvent
-local TalentMicroButton_OnEvent
-local function UnregisterActionButtonUpdates()
-    if ActionButton_UpdateHotkeys ~= nil then
+local updateBindingsFunctions = {}
+local updateBindingsFrames = {}
+local holdingFunctionsHostage = false
+function AddUpdateBindingsFunction(funcName)
+    table.insert(updateBindingsFunctions, {
+        funcName = funcName
+    })
+end
+function AddUpdateBindingsFrame(frameName)
+    table.insert(updateBindingsFrames, {
+        frame = _G[frameName]
+    })
+end
+-- Alternative method
+function HookUpdateBindingsFrame(frameName)
+    local frame = _G[frameName]
+    local realScript = frame:GetScript("OnEvent")
+    frame:SetScript("OnEvent", function()
+        if holdingFunctionsHostage then
+            return
+        end
+        realScript()
+    end)
+end
+AddUpdateBindingsFunction("ActionButton_OnEvent")
+AddUpdateBindingsFunction("BonusActionButton_OnEvent")
+AddUpdateBindingsFunction("PetActionButton_OnEvent")
+AddUpdateBindingsFunction("CharacterMicroButton_OnEvent")
+AddUpdateBindingsFunction("TalentMicroButton_OnEvent")
+AddUpdateBindingsFrame("MainMenuMicroButton")
+AddUpdateBindingsFrame("QuestLogMicroButton")
+AddUpdateBindingsFrame("SocialsMicroButton")
+AddUpdateBindingsFrame("WorldMapMicroButton")
+
+local function StopUpdateBindingsUpdates()
+    if holdingFunctionsHostage then
         return
     end
-    ActionButton_UpdateHotkeys = _G.ActionButton_UpdateHotkeys
-    PetActionButton_SetHotkeys = _G.PetActionButton_SetHotkeys
-    CharacterMicroButton_OnEvent = _G.CharacterMicroButton_OnEvent
-    TalentMicroButton_OnEvent = _G.TalentMicroButton_OnEvent
-    _G.ActionButton_UpdateHotkeys = noOp
-    _G.PetActionButton_SetHotkeys = noOp
-    _G.CharacterMicroButton_OnEvent = noOp
-    _G.TalentMicroButton_OnEvent = noOp
+    holdingFunctionsHostage = true
+    for _, entry in ipairs(updateBindingsFunctions) do
+        entry.func = _G[entry.funcName]
+        _G[entry.funcName] = noOp
+    end
+    for _, entry in ipairs(updateBindingsFrames) do
+        entry.func = entry.frame:GetScript("OnEvent")
+        entry.frame:SetScript("OnEvent", nil)
+    end
 end
 
-local function RegisterActionButtonUpdates()
-    if ActionButton_UpdateHotkeys == nil then
+local function StartUpdateBindingsUpdates()
+    if not holdingFunctionsHostage then
         return
     end
-    _G.ActionButton_UpdateHotkeys = ActionButton_UpdateHotkeys
-    _G.PetActionButton_SetHotkeys = PetActionButton_SetHotkeys
-    _G.CharacterMicroButton_OnEvent = CharacterMicroButton_OnEvent
-    _G.TalentMicroButton_OnEvent = TalentMicroButton_OnEvent
-    ActionButton_UpdateHotkeys = nil
+    for _, entry in ipairs(updateBindingsFunctions) do
+        _G[entry.funcName] = entry.func
+    end
+    for _, entry in ipairs(updateBindingsFrames) do
+        entry.frame:SetScript("OnEvent", entry.func)
+    end
+    holdingFunctionsHostage = false
 end
+
+-- End of UPDATE_BINDINGS mitigation
 
 function ApplyOverrideBindings()
     RemoveOverrideBindings()
-    UnregisterActionButtonUpdates()
+    StopUpdateBindingsUpdates()
     for fullButton, index in pairs(KeybindIndexMap) do
         local binding = GetBindingAction(fullButton)
-        StoredBindings[fullButton] = binding
-        SetBinding(fullButton, bindingsNames[index])
+        
+        if binding == "" then -- Lazy set the binding to our binding and don't touch until setting up again
+            SetBinding(fullButton, bindingsNames[index])
+        elseif not bindingsNamesSet[binding] then -- If it's not our binding, it must be stored and replaced
+            StoredBindings[fullButton] = binding
+            SetBinding(fullButton, bindingsNames[index])
+        end
     end
-    RegisterActionButtonUpdates()
+    StartUpdateBindingsUpdates()
 end
 
 function RemoveOverrideBindings()
-    UnregisterActionButtonUpdates()
+    StopUpdateBindingsUpdates()
     for button, binding in pairs(StoredBindings) do
         SetBinding(button, binding)
     end
-    RegisterActionButtonUpdates()
+    StartUpdateBindingsUpdates()
     util.ClearTable(StoredBindings)
 end
 
 function HandleKeyPress(index)
+    if not Mouseover then
+        return
+    end
     local button = IndexButtonMap[index]
     if keystate == "down" then
         CurrentlyHeldButton = button
