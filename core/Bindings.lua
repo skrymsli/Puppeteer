@@ -380,7 +380,7 @@ function RunBinding(binding, unit, unitFrame)
     if binding.Data == nil then
         return
     end
-    local targetCastable = UnitIsConnected(unit) and UnitIsVisible(unit)
+    local targetCastable = UnitExists(unit) and UnitIsConnected(unit) and UnitIsVisible(unit)
     local bindingType = binding.Type
     if bindingType == "SPELL" then
         if targetCastable then

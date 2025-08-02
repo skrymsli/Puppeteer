@@ -594,6 +594,9 @@ end
 
 local emptySpell = {}
 function UnitFrame_OnClick(button, unit, unitFrame)
+    if not UnitExists(unit) then
+        return
+    end
     local binding = GetBindingFor(unit, GetKeyModifier(), button)
     local targetCastable = UnitIsConnected(unit) and UnitIsVisible(unit)
     local wantToRes = PTOptions.AutoResurrect and util.IsDeadFriend(unit) and ResurrectionSpells[GetClass("player")]

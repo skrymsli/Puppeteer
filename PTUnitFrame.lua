@@ -1234,9 +1234,6 @@ function PTUnitFrame:Initialize()
 
     self:RegisterClicks()
     button:SetScript("OnClick", function()
-        if self:IsFake() then
-            return
-        end
         local buttonType = arg1
         PT.UnitFrame_OnClick(buttonType, unit, self)
     end)
@@ -1270,7 +1267,7 @@ function PTUnitFrame:Initialize()
         if PTOptions.SetMouseover and util.IsSuperWowPresent() then
             SetMouseoverUnit(self:GetResolvedUnit())
         end
-        PT.Mouseover = self:GetResolvedUnit()
+        PT.Mouseover = self:GetUnit()
         PT.MouseoverFrame = self
         PT.ApplyOverrideBindings()
     end)
