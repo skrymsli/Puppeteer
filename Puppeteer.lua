@@ -51,10 +51,10 @@ BarStyles = {
     ["Blizzard Smooth"] = ptBarsPath.."Blizzard-Smooth",
     ["Blizzard Raid"] = ptBarsPath.."Blizzard-Raid",
     ["Blizzard Raid Sideless"] = ptBarsPath.."Blizzard-Raid-Sideless",
-    ["HealersMate"] = ptBarsPath.."HealersMate",
-    ["HealersMate Borderless"] = ptBarsPath.."HealersMate-Borderless",
-    ["HealersMate Shineless"] = ptBarsPath.."HealersMate-Shineless",
-    ["HealersMate Shineless Borderless"] = ptBarsPath.."HealersMate-Shineless-Borderless"
+    ["Puppeteer"] = ptBarsPath.."Puppeteer",
+    ["Puppeteer Borderless"] = ptBarsPath.."Puppeteer-Borderless",
+    ["Puppeteer Shineless"] = ptBarsPath.."Puppeteer-Shineless",
+    ["Puppeteer Shineless Borderless"] = ptBarsPath.."Puppeteer-Shineless-Borderless"
 }
 
 GameTooltip = CreateFrame("GameTooltip", "PTGameTooltip", UIParent, "GameTooltipTemplate")

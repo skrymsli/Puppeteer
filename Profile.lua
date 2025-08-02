@@ -105,7 +105,7 @@ function PTUIProfile.SetDefaults()
     profile.HealthBarHeight = 24
     profile.HealthBarColor = "Green To Red" -- "Class", "Green", "Green To Red"
     profile.EnemyHealthBarColor = "Green"
-    profile.HealthBarStyle = "HealersMate" -- "Blizzard", "Blizzard Raid", "HealersMate"
+    profile.HealthBarStyle = "Puppeteer" -- "Blizzard", "Blizzard Raid", "Puppeteer"
 
     profile.HealthDisplay = "Health" -- "Health", "Health/Max Health", "% Health", "Hidden"
     profile.MissingHealthDisplay = "-Health" -- "Hidden", "-Health", "-% Health"
@@ -149,7 +149,7 @@ function PTUIProfile.SetDefaults()
     profile.NotAlertedOpacity = 60
 
     profile.PowerBarHeight = 10
-    profile.PowerBarStyle = "HealersMate Borderless" -- "Blizzard", "Blizzard Raid"
+    profile.PowerBarStyle = "Puppeteer Borderless" -- "Blizzard", "Blizzard Raid"
     profile.PowerText = createTextObject({
         ["FontSize"] = 10,
         ["AlignmentH"] = "RIGHT",
