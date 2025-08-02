@@ -257,78 +257,92 @@ function SetOption(location, value)
     optionTable[location] = value
 end
 
-TrackedBuffs = nil -- Default tracked is variable based on class
-TrackedDebuffs = nil -- Default tracked is variable based on class
-TrackedDebuffTypes = {} -- Default tracked is variable based on class
-
 -- Buffs/debuffs that significantly modify healing
-TrackedHealingBuffs = {"Amplify Magic", "Dampen Magic"}
-TrackedHealingDebuffs = {"Mortal Strike", "Wound Poison", "Curse of the Deadwood", "Veil of Shadow", "Gehennas' Curse", 
+DefaultTrackedHealingBuffs = {"Amplify Magic", "Dampen Magic"}
+DefaultTrackedHealingDebuffs = {"Mortal Strike", "Wound Poison", "Curse of the Deadwood", "Veil of Shadow", "Gehennas' Curse", 
     "Necrotic Poison", "Blood Fury", "Necrotic Aura", 
     "Shadowbane Curse" -- Turtle WoW
 }
+-- Tracked buffs for all classes
+DefaultTrackedBuffs = {
+    "Blessing of Protection", "Hand of Protection", "Divine Protection", "Divine Shield", "Divine Intervention", -- Paladin
+        "Bulwark of the Righteous", "Blessing of Sacrifice", "Hand of Sacrifice",
+    "Power Infusion", "Spirit of Redemption", "Inner Focus", "Abolish Disease", "Power Word: Shield", -- Priest
+    "Shield Wall", "Recklessness", "Last Stand", -- Warrior
+    "Evasion", "Vanish", -- Rogue
+    "Deterrence", "Feign Death", "Mend Pet", -- Hunter
+    "Frenzied Regeneration", "Innervate", "Abolish Poison", -- Druid
+    "Soulstone Resurrection", "Hellfire", "Health Funnel", -- Warlock
+    "Ice Block", "Evocation", "Ice Barrier", "Mana Shield", -- Mage
+    "Quel'dorei Meditation", "Grace of the Sunwell", -- Racial
+    "First Aid", "Food", "Drink" -- Generic
+}
+-- Tracked buffs for specific classes
+DefaultClassTrackedBuffs = {
+    ["PALADIN"] = {"Blessing of Wisdom", "Blessing of Might", "Blessing of Salvation", "Blessing of Sanctuary", 
+        "Blessing of Kings", "Blessing of Light", "Greater Blessing of Wisdom", "Greater Blessing of Might", 
+        "Greater Blssing of Salvation", "Greater Blessing of Sanctuary", "Greater Blessing of Kings", 
+        "Greater Blessing of Light", "Daybreak", "Blessing of Freedom", "Hand of Freedom", "Redoubt", "Holy Shield"},
+    ["PRIEST"] = {"Prayer of Fortitude", "Power Word: Fortitude", "Prayer of Spirit", "Divine Spirit", 
+        "Prayer of Shadow Protection", "Shadow Protection", "Holy Champion", "Champion's Grace", "Empower Champion", 
+        "Fear Ward", "Inner Fire", "Renew", "Greater Heal", "Lightwell Renew", "Inspiration", 
+        "Fade", "Spirit Tap", "Enlighten"},
+    ["WARRIOR"] = {"Battle Shout"},
+    ["DRUID"] = {"Gift of the Wild", "Mark of the Wild", "Thorns", "Rejuvenation", "Regrowth"},
+    ["SHAMAN"] = {"Water Walking", "Healing Way", "Ancestral Fortitude"},
+    ["MAGE"] = {"Arcane Brilliance", "Arcane Intellect", "Frost Armor", "Ice Armor", "Mage Armor"},
+    ["WARLOCK"] = {"Demon Armor", "Demon Skin", "Unending Breath", "Shadow Ward", "Fire Shield"},
+    ["HUNTER"] = {"Rapid Fire", "Quick Shots", "Quick Strikes", "Aspect of the Pack", 
+        "Aspect of the Wild", "Bestial Wrath", "Feed Pet Effect"}
+}
 
-do
-    -- Tracked buffs for all classes
-    local defaultTrackedBuffs = {
-        "Blessing of Protection", "Hand of Protection", "Divine Protection", "Divine Shield", "Divine Intervention", -- Paladin
-            "Bulwark of the Righteous", "Blessing of Sacrifice", "Hand of Sacrifice",
-        "Power Infusion", "Spirit of Redemption", "Inner Focus", "Abolish Disease", "Power Word: Shield", -- Priest
-        "Shield Wall", "Recklessness", "Last Stand", -- Warrior
-        "Evasion", "Vanish", -- Rogue
-        "Deterrence", "Feign Death", "Mend Pet", -- Hunter
-        "Frenzied Regeneration", "Innervate", "Abolish Poison", -- Druid
-        "Soulstone Resurrection", "Hellfire", -- Warlock
-        "Ice Block", "Evocation", "Ice Barrier", "Mana Shield", -- Mage
-        "Quel'dorei Meditation", "Grace of the Sunwell", -- Racial
-        "First Aid", "Food", "Drink" -- Generic
-    }
-    -- Tracked buffs for specific classes
-    local defaultClassTrackedBuffs = {
-        ["PALADIN"] = {"Blessing of Wisdom", "Blessing of Might", "Blessing of Salvation", "Blessing of Sanctuary", 
-            "Blessing of Kings", "Greater Blessing of Wisdom", "Greater Blessing of Might", 
-            "Greater Blssing of Salvation", "Greater Blessing of Sanctuary", "Greater Blessing of Kings", "Daybreak", 
-            "Blessing of Freedom", "Hand of Freedom", "Redoubt", "Holy Shield"},
-        ["PRIEST"] = {"Prayer of Fortitude", "Power Word: Fortitude", "Prayer of Spirit", "Divine Spirit", 
-            "Prayer of Shadow Protection", "Shadow Protection", "Holy Champion", "Champion's Grace", "Empower Champion", 
-            "Fear Ward", "Inner Fire", "Renew", "Lightwell Renew", "Inspiration", 
-            "Fade", "Spirit Tap"},
-        ["WARRIOR"] = {"Battle Shout"},
-        ["DRUID"] = {"Gift of the Wild", "Mark of the Wild", "Thorns", "Rejuvenation", "Regrowth"},
-        ["SHAMAN"] = {"Water Walking", "Healing Way", "Ancestral Fortitude"},
-        ["MAGE"] = {"Arcane Brilliance", "Arcane Intellect", "Frost Armor", "Ice Armor", "Mage Armor"},
-        ["WARLOCK"] = {"Demon Armor", "Demon Skin", "Unending Breath", "Shadow Ward", "Fire Shield"},
-        ["HUNTER"] = {"Rapid Fire", "Quick Shots", "Quick Strikes", "Aspect of the Pack", 
-            "Aspect of the Wild", "Bestial Wrath", "Feed Pet Effect"}
-    }
-    local trackedBuffs = defaultClassTrackedBuffs[playerClass] or {}
-    util.AppendArrayElements(trackedBuffs, TrackedHealingBuffs)
-    util.AppendArrayElements(trackedBuffs, defaultTrackedBuffs)
-    trackedBuffs = util.ToSet(trackedBuffs, true)
+-- Tracked debuffs for all classes
+DefaultTrackedDebuffs = {
+    "Forbearance", -- Paladin
+    "Death Wish", -- Warrior
+    "Enrage", -- Druid
+    "Recently Bandaged", "Resurrection Sickness", "Ghost", -- Generic
+    "Deafening Screech" -- Applied by mobs
+}
+-- Tracked debuffs for specific classes
+DefaultClassTrackedDebuffs = {
+    ["PRIEST"] = {"Weakened Soul"}
+}
 
-    -- Tracked debuffs for all classes
-    local defaultTrackedDebuffs = {
-        "Forbearance", -- Paladin
-        "Death Wish", -- Warrior
-        "Enrage", -- Druid
-        "Recently Bandaged", "Resurrection Sickness", "Ghost", -- Generic
-        "Deafening Screech" -- Applied by mobs
-    }
-    -- Tracked debuffs for specific classes
-    local defaultClassTrackedDebuffs = {
-        ["PRIEST"] = {"Weakened Soul"}
-    }
-    local trackedDebuffs = defaultClassTrackedDebuffs[playerClass] or {}
-    util.AppendArrayElements(trackedDebuffs, TrackedHealingDebuffs)
-    util.AppendArrayElements(trackedDebuffs, defaultTrackedDebuffs)
-    trackedDebuffs = util.ToSet(trackedDebuffs, true)
+-- The baked aura sets
+TrackedBuffs = {}
+TrackedDebuffs = {}
+TrackedDebuffTypes = {}
+TrackedHealingBuffs = {}
+TrackedHealingDebuffs = {}
 
-    TrackedBuffs = trackedBuffs
-    TrackedDebuffs = trackedDebuffs
+function BakeTrackedAuras()
+    util.ClearTable(TrackedBuffs)
+    util.ClearTable(TrackedDebuffs)
+    util.ClearTable(TrackedHealingBuffs)
+    util.ClearTable(TrackedHealingDebuffs)
 
-    TrackedHealingBuffs = util.ToSet(TrackedHealingBuffs)
-    TrackedHealingDebuffs = util.ToSet(TrackedHealingDebuffs)
+    local trackedBuffsArray = {}
+    if DefaultClassTrackedBuffs[playerClass] then
+        util.AppendArrayElements(trackedBuffsArray, DefaultClassTrackedBuffs[playerClass])
+    end
+    util.AppendArrayElements(trackedBuffsArray, TrackedHealingBuffs)
+    util.AppendArrayElements(trackedBuffsArray, DefaultTrackedBuffs)
+    util.ToSet(trackedBuffsArray, true, TrackedBuffs)
+
+    local trackedDebuffsArray = {}
+    if DefaultClassTrackedDebuffs[playerClass] then
+        util.AppendArrayElements(trackedDebuffsArray, DefaultClassTrackedDebuffs[playerClass])
+    end
+    util.AppendArrayElements(trackedDebuffsArray, TrackedHealingDebuffs)
+    util.AppendArrayElements(trackedDebuffsArray, DefaultTrackedDebuffs)
+    util.ToSet(trackedDebuffsArray, true, TrackedDebuffs)
+
+    util.ToSet(DefaultTrackedHealingBuffs, false, TrackedHealingBuffs)
+    util.ToSet(DefaultTrackedHealingDebuffs, false, TrackedHealingDebuffs)
 end
+
+BakeTrackedAuras()
 
 ShowEmptySpells = true
 IgnoredEmptySpells = {--[["MiddleButton"]]}

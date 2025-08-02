@@ -121,8 +121,8 @@ end
 
 -- Returns a new table with the elements of the given array being the keys with 1 being the value of all keys, 
 -- or the index if indexValue is true
-function ToSet(array, indexValue)
-    local set = {}
+function ToSet(array, indexValue, to)
+    local set = to or {}
     for index, value in ipairs(array) do
         set[value] = indexValue and index or 1
     end
