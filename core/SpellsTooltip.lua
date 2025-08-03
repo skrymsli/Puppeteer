@@ -67,7 +67,7 @@ SpellsTooltipPowerBar = nil
 do
     local manaBar = CreateFrame("StatusBar", "PTSpellsTooltipManaBar", SpellsTooltip)
     SpellsTooltipPowerBar = manaBar
-    manaBar:SetStatusBarTexture(BarStyles["HealersMate"])
+    manaBar:SetStatusBarTexture(BarStyles["Puppeteer"])
     manaBar:SetMinMaxValues(0, 1)
     manaBar:SetWidth(100)
     manaBar:SetHeight(12)
