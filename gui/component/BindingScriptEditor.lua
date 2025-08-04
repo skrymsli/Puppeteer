@@ -1,7 +1,7 @@
-PTScriptEditor = PTGuiComponent:Extend("puppeteer_script_editor")
+PTBindingScriptEditor = PTGuiComponent:Extend("puppeteer_binding_script_editor")
 local colorize = PTUtil.Colorize
 
-function PTScriptEditor:New()
+function PTBindingScriptEditor:New()
     local obj = setmetatable({}, self)
     local frame = CreateFrame("Frame", self:GenerateName())
     obj:SetHandle(frame)
@@ -121,29 +121,29 @@ function PTScriptEditor:New()
     return obj
 end
 
-function PTScriptEditor:OnAcquire()
+function PTBindingScriptEditor:OnAcquire()
     self.super.OnAcquire(self)
     self:GetEditbox():SetText("")
     self:GetEditbox():GetScrollFrame():FixNextUpdate()
     self:SetSize(375, 400)
 end
 
-PTScriptEditor:CreateGetter("Editbox")
-PTScriptEditor:CreateGetter("TooltipTextEditbox")
-PTScriptEditor:CreateGetter("TooltipColorCheckbox")
-PTScriptEditor:CreateGetter("TooltipColorSelect")
+PTBindingScriptEditor:CreateGetter("Editbox")
+PTBindingScriptEditor:CreateGetter("TooltipTextEditbox")
+PTBindingScriptEditor:CreateGetter("TooltipColorCheckbox")
+PTBindingScriptEditor:CreateGetter("TooltipColorSelect")
 
-PTScriptEditor.UpdateTooltipTextColor = PTGuiUtil.CreateColorUpdater(
-    PTScriptEditor.GetTooltipColorCheckbox,
-    PTScriptEditor.GetTooltipColorSelect,
+PTBindingScriptEditor.UpdateTooltipTextColor = PTGuiUtil.CreateColorUpdater(
+    PTBindingScriptEditor.GetTooltipColorCheckbox,
+    PTBindingScriptEditor.GetTooltipColorSelect,
     function(self) return self.Binding and self.Binding.Tooltip.TextColor end)
 
-function PTScriptEditor:SetCallback(func)
+function PTBindingScriptEditor:SetCallback(func)
     self.Callback = func
     return self
 end
 
-function PTScriptEditor:SetBinding(binding)
+function PTBindingScriptEditor:SetBinding(binding)
     self.Binding = binding
     if not binding.Tooltip then
         binding.Tooltip = {}
@@ -154,4 +154,4 @@ function PTScriptEditor:SetBinding(binding)
     return self
 end
 
-PTGuiLib.RegisterComponent(PTScriptEditor)
+PTGuiLib.RegisterComponent(PTBindingScriptEditor)

@@ -367,7 +367,7 @@ function PTSpellLine:Update()
         self:GetContentButton():OnClick(function()
             local TabFrame = PTSettingsGui.TabFrame
             local editor
-            editor = PTGuiLib.Get("puppeteer_script_editor", TabFrame)
+            editor = PTGuiLib.Get("puppeteer_binding_script_editor", TabFrame)
                 :SetPoint("CENTER", TabFrame, "CENTER")
                 :SetBinding(binding)
                 :SetCallback(function(save, scriptData, nameData)

@@ -68,7 +68,7 @@ gui\GuiUtil.lua
 gui\component\SpellLine.lua
 gui\component\InputBlock.lua
 gui\component\SpellBindInterface.lua
-gui\component\ScriptEditor.lua
+gui\component\BindingScriptEditor.lua
 gui\component\MultiEditor.lua
 gui\component\BindingOptions.lua
 gui\component\ButtonEditor.lua
