@@ -122,6 +122,13 @@ function SetDefaults()
                 ["Target"] = "Long",
                 ["Focus"] = "Default"
             },
+            ["Scripts"] = {
+                ["OnLoad"] = "",
+                ["OnPostLoad"] = ""
+            },
+            ["OptionsVersion"] = OPTIONS_VERSION
+        }
+        local specialDefaults = {
             ["Buttons"] = {
                 "LeftButton",
                 "MiddleButton",
@@ -154,18 +161,13 @@ function SetDefaults()
                 },
                 ["MOUSEWHEELUP"] = {
                     ["Name"] = "Wheel Up",
-                    ["ShowUnbound"] = true
+                    ["ShowUnbound"] = false
                 },
                 ["MOUSEWHEELDOWN"] = {
                     ["Name"] = "Wheel Down",
-                    ["ShowUnbound"] = true
+                    ["ShowUnbound"] = false
                 },
-            },
-            ["Scripts"] = {
-                ["OnLoad"] = "",
-                ["OnPostLoad"] = ""
-            },
-            ["OptionsVersion"] = OPTIONS_VERSION
+            }
         }
 
         local optionsUpgrades = {
@@ -213,27 +215,25 @@ function SetDefaults()
                 end
             end
         end
-    
-        for field, value in pairs(defaults) do
-            if PTOptions[field] == nil then
-                if type(value) == "table" then
-                    PTOptions[field] = PTUtil.CloneTable(value, true)
-                else
-                    PTOptions[field] = value
-                end
-                -- TODO: Redo default application
-            --[[
-            elseif type(value) == "table" then
-                for field2, value2 in pairs(value) do
-                    if PTOptions[field][field2] == nil then
-                        if type(value2) == "table" then
-                            PTOptions[field][field2] = PTUtil.CloneTable(value2, true)
-                        else
-                            PTOptions[field][field2] = value2
-                        end
-                    end
-                end]]
-            end
+
+        ApplyDefaults(PTOptions, defaults)
+        -- Special defaults
+        if not PTOptions["Buttons"] then
+            PTOptions["Buttons"] = util.CloneTable(specialDefaults["Buttons"])
+        end
+        if not PTOptions["ButtonInfo"] then
+            PTOptions["ButtonInfo"] = util.CloneTable(specialDefaults["ButtonInfo"])
+        end
+    end
+end
+
+function ApplyDefaults(t, defaults)
+    for field, value in pairs(defaults) do
+        if type(value) == "table" then
+            t[field] = t[field] or {}
+            ApplyDefaults(t[field], value)
+        elseif t[field] == nil then
+            t[field] = value
         end
     end
 end
