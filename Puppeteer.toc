@@ -73,6 +73,7 @@ gui\component\MultiEditor.lua
 gui\component\BindingOptions.lua
 gui\component\ButtonEditor.lua
 gui\component\NewLoadout.lua
+gui\component\LoadScriptEditor.lua
 gui\SettingsOld.lua
 gui\Settings.lua
 

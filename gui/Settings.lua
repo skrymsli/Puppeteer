@@ -415,6 +415,65 @@ function CreateTab_Options_Advanced(panel)
     local layout = NewLabeledColumnLayout(container, {150, 220, 300}, -20, 10)
     local factory = NewComponentFactory(container, layout)
     container.factory = factory
+
+    local TEXT_WIDTH = 370
+
+    local loadScriptInfo = CreateLabel(container, "The Load Script runs after profiles are initialized, but before UIs are created, "..
+            "making it good for editing profile attributes. GetProfile and CreateProfile are defined locals.")
+        :SetWidth(TEXT_WIDTH)
+        :SetPoint("TOP", container, "TOP", 0, -10)
+    local loadScriptButton = PTGuiLib.Get("button", container)
+        :SetPoint("TOP", loadScriptInfo, "BOTTOM", 0, -5)
+        :SetSize(150, 20)
+        :SetText("Edit Load Script")
+        :OnClick(function()
+            local editor
+            editor = PTGuiLib.Get("puppeteer_load_script_editor", TabFrame)
+                :SetPoint("CENTER", TabFrame, "CENTER")
+                :SetTitle("Edit Load Script")
+            editor:GetEditbox():SetText(PTOptions.Scripts.OnLoad or "")
+            editor:SetCallback(function(save, data)
+                if save then
+                    PTOptions.Scripts.OnLoad = data
+                end
+                editor:Dispose()
+                PopOverlayFrame()
+            end)
+            AddOverlayFrame(editor)
+        end)
+    local postLoadScriptInfo = CreateLabel(container, "The Postload Script runs after everything is initialized. "..
+        "GetProfile and CreateProfile are defined locals.")
+        :SetWidth(TEXT_WIDTH)
+        :SetPoint("TOP", loadScriptButton, "BOTTOM", 0, -10)
+    local postLoadScriptButton = PTGuiLib.Get("button", container)
+        :SetPoint("TOP", postLoadScriptInfo, "BOTTOM", 0, -5)
+        :SetSize(150, 20)
+        :SetText("Edit Postload Script")
+        :OnClick(function()
+            local editor
+            editor = PTGuiLib.Get("puppeteer_load_script_editor", TabFrame)
+                :SetPoint("CENTER", TabFrame, "CENTER")
+                :SetTitle("Edit Postload Script")
+            editor:GetEditbox():SetText(PTOptions.Scripts.OnPostLoad or "")
+            editor:SetCallback(function(save, data)
+                if save then
+                    PTOptions.Scripts.OnPostLoad = data
+                end
+                editor:Dispose()
+                PopOverlayFrame()
+            end)
+            AddOverlayFrame(editor)
+        end)
+    local reloadInfo = CreateLabel(container, "A reload or relog is required for any changes to take effect.")
+        :SetWidth(TEXT_WIDTH)
+        :SetPoint("TOP", postLoadScriptButton, "BOTTOM", 0, -20)
+    local reloadButton = PTGuiLib.Get("button", container)
+        :SetPoint("TOP", reloadInfo, "BOTTOM", 0, -5)
+        :SetSize(120, 20)
+        :SetText("Reload UI")
+        :OnClick(function()
+            ReloadUI()
+        end)
 end
 
 function CreateTab_Options_Mods(panel)
