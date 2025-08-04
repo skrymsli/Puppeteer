@@ -11,6 +11,11 @@ function PTGuiButton:New()
     return obj
 end
 
+function PTGuiButton:OnAcquire()
+    self.super.OnAcquire(self)
+    self:SetClickSound(_G.PlaySound, "GAMESPELLBUTTONMOUSEDOWN")
+end
+
 function PTGuiButton:OnDispose()
     self.super.OnDispose(self)
     self:SetText("")
@@ -158,7 +163,13 @@ function PTGuiButton:SetScript(scriptName, script, noSelf)
 end
 
 function PTGuiButton:PlayClickSound()
-    PlaySound("GAMESPELLBUTTONMOUSEDOWN")
+    self.ClickSoundFunc(self.ClickSoundName)
+end
+
+function PTGuiButton:SetClickSound(soundFunc, soundName)
+    self.ClickSoundFunc = soundFunc
+    self.ClickSoundName = soundName
+    return self
 end
 
 PTGuiLib.RegisterComponent(PTGuiButton)

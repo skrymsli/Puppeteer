@@ -58,9 +58,7 @@ function PTNewLoadout:New()
             PTSettingsGui.PopOverlayFrame()
             obj:Dispose()
         end)
-    cancelButton.PlayClickSound = function()
-        PlaySound("igMainMenuClose")
-    end
+    cancelButton:SetClickSound(PlaySound, "igMainMenuClose")
 
     local createLoadoutButton = PTGuiLib.Get("button", frame)
         :SetText("Create Loadout")
@@ -82,9 +80,7 @@ function PTNewLoadout:New()
             PTSettingsGui.PopOverlayFrame()
             obj:Dispose()
         end)
-    createLoadoutButton.PlayClickSound = function()
-        PlaySound("igMainMenuClose")
-    end
+    createLoadoutButton:SetClickSound(PlaySound, "igMainMenuClose")
     
     return obj
 end

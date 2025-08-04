@@ -89,9 +89,10 @@ function PTGuiSimpleDialog:AddButton(text, onClick)
         :SetSize(200, 20)
         :SetPoint("TOP", anchor, "BOTTOM", 0, anchor == self:GetComponent("text") and -10 or -5)
         :OnClick(onClick)
+        :SetClickSound(PlaySound, "igMainMenuClose")
     table.insert(self.Buttons, button)
     self:UpdateHeight()
-    return self
+    return self, button
 end
 
 PTGuiLib.RegisterComponent(PTGuiSimpleDialog)
