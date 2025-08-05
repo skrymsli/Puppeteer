@@ -215,6 +215,7 @@ end
 
 function PTSpellLine:SetBinding(binding)
     self.Binding = binding
+    Puppeteer.ExpandBinding(binding)
     self:Update()
     return self
 end

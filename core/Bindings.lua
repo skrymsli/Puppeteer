@@ -47,6 +47,7 @@ end
 function SetSelectedBindingsLoadout(name)
     PTBindings.SelectedLoadout = name
     PTSettingsGui.LoadBindings()
+    InitBindingDisplayCache()
 end
 
 function GetBindingLoadouts()
@@ -83,41 +84,76 @@ function GetBindingLoadoutNames()
     return names
 end
 
--- TODO: Not finished
-function PruneBindings(bindings)
-    for k, v in pairs(bindings) do
-        local shouldRemove = PruneBinding(v)
-        if shouldRemove then
-            bindings[k] = nil
+function PruneLoadout(loadout, copy)
+    if copy then
+        loadout = util.CloneTable(loadout, true)
+    end
+    for targetName, target in pairs(loadout.Bindings) do
+        for modifierName, modifier in pairs(target) do
+            for button, binding in pairs(modifier) do
+                local shouldRemove = PruneBinding(binding)
+                if shouldRemove then
+                    modifier[button] = nil
+                end
+            end
+            if util.IsTableEmpty(modifier) then
+                target[modifierName] = nil
+            end
+        end
+    end
+    return loadout
+end
+
+function PruneBinding(binding)
+    if not binding.Type then
+        return true
+    end
+    if binding.Tooltip then
+        local tooltip = binding.Tooltip
+        if tooltip.Type ~= "DEFAULT" and (tooltip.Data == nil or tooltip.Data == "") then
+            tooltip.Type = nil
+            tooltip.Data = nil
+        end
+
+        if util.IsTableEmpty(tooltip) then
+            binding.Tooltip = nil
+        end
+    end
+    -- Empty spells are default and don't need to be stored
+    if binding.Type == "SPELL" and (not binding.Data or binding.Data == "") then
+        return true
+    end
+    if binding.Type == "MULTI" then
+        if binding.Data.Title == "" then
+            binding.Data.Title = nil
+        end
+        for _, subBinding in ipairs(binding.Data.Bindings) do
+            PruneBinding(subBinding)
         end
     end
 end
 
-function PruneBinding(binding)
-    if binding.Tooltip then
-        local hasTooltipElements = false
-        local tooltip = binding.Tooltip
-        local type = tooltip.Type
-        if type == "CUSTOM" and tooltip.Data == "" then
-            tooltip.Type = nil
-            tooltip.Data = nil
-        elseif type and type ~= "DEFAULT" then
-            hasTooltipElements = true
-        else
-            tooltip.Type = nil
-            tooltip.Data = nil
+local stringDataBindings = util.ToSet({"SPELL", "ACTION", "ITEM", "MACRO", "SCRIPT"})
+function ExpandBinding(binding)
+    if not binding.Type then
+        binding.Type = "SPELL"
+    end
+    if not binding.Data then
+        if stringDataBindings[binding.Type] then
+            binding.Data = ""
+        elseif binding.Type == "MULTI" then
+            binding.Data = {Bindings = {}}
         end
-        if tooltip.TextColor then
-            hasTooltipElements = true
-        end
+    end
+    if not binding.Tooltip then
+        binding.Tooltip = {}
+    end
+end
 
-        if not hasTooltipElements then
-            binding.Tooltip = nil
-        end
-    end
-    if binding.Type == "SPELL" and (not binding.Data or binding.Data == "") then
-        return true
-    end
+function LoadoutEquals(loadout1, loadout2)
+    PruneLoadout(loadout1)
+    PruneLoadout(loadout2)
+    return util.TableEquals(loadout1, loadout2)
 end
 
 -- Returns a copy of the clipboard

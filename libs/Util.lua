@@ -208,6 +208,49 @@ function ClearTable(t)
     table.setn(t, 0)
 end
 
+function GetTableSize(t)
+    local size = 0
+    for _ in pairs(t) do
+        size = size + 1
+    end
+    return size
+end
+
+function IsTableEmpty(t)
+    for _ in pairs(t) do
+        return false
+    end
+    return true
+end
+
+-- Recursion not supported
+function TableEquals(t1, t2)
+    -- Verify the tables have the same keys
+    for k, v in pairs(t1) do
+        if t2[k] == nil then
+            return false
+        end
+    end
+    for k, v in pairs(t2) do
+        if t1[k] == nil then
+            return false
+        end
+    end
+    -- Verify the tables have equal values
+    for k, v in pairs(t1) do
+        if type(v) == "table" then
+            if type(t2[k]) ~= "table" or not TableEquals(v, t2[k]) then
+                return false
+            end
+        else
+            if v ~= t2[k] then
+                return false
+            end
+        end
+    end
+    return true
+end
+
 -- Courtesy of ChatGPT
 function SplitString(str, delimiter)
     local result = {}

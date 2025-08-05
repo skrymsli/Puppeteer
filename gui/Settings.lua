@@ -66,13 +66,45 @@ function CreateTab_Bindings()
         :SetDynamicOptions(function(addOption, level, args)
             for _, name in ipairs(Puppeteer.GetBindingLoadoutNames()) do
                 addOption("text", name,
-                    "dropdownText", name,
                     "checked", Puppeteer.GetSelectedBindingsLoadoutName() == name,
                     "func", args.func)
             end
         end, {
             func = function(self)
-                Puppeteer.SetSelectedBindingsLoadout(self.text)
+                local loadoutName = self.text
+                if Puppeteer.LoadoutEquals(Puppeteer.GetBindings(), EditedBindings, true) then
+                    Puppeteer.SetSelectedBindingsLoadout(loadoutName)
+                else
+                    local dialog
+                    dialog = PTGuiLib.Get("simple_dialog", TabFrame)
+                        :SetPoint("CENTER", TabFrame, "CENTER")
+                        :SetTitle("Unsaved Changes")
+                        :SetText("You have unsaved changes to your bindings. What would you like to do?")
+                        :AddButton("Save changes & switch", function()
+                            SaveBindings()
+                            Puppeteer.SetSelectedBindingsLoadout(loadoutName)
+                            PopOverlayFrame()
+                            dialog:Dispose()
+                        end)
+                        :AddButton("Discard changes & switch", function()
+                            Puppeteer.SetSelectedBindingsLoadout(loadoutName)
+                            PopOverlayFrame()
+                            dialog:Dispose()
+                        end)
+                        :AddButton("Carry changes over", function()
+                            local editedBindings = EditedBindings
+                            Puppeteer.SetSelectedBindingsLoadout(loadoutName)
+                            EditedBindings = editedBindings
+                            UpdateBindingsInterface()
+                            PopOverlayFrame()
+                            dialog:Dispose()
+                        end)
+                        :AddButton("Cancel", function()
+                            PopOverlayFrame()
+                            dialog:Dispose()
+                        end)
+                    AddOverlayFrame(dialog)
+                end
             end
         })
         :SetTextUpdater(function(self)
@@ -84,10 +116,32 @@ function CreateTab_Bindings()
         :SetSize(60, 22)
         :SetText("New")
         :OnClick(function(self)
-            local newLoadout = PTGuiLib.Get("puppeteer_new_loadout", TabFrame)
-                :SetPoint("CENTER", TabFrame, "CENTER")
-            AddOverlayFrame(newLoadout)
-            PlaySound("igMainMenuOpen")
+            if Puppeteer.LoadoutEquals(Puppeteer.GetBindings(), EditedBindings, true) then
+                PromptNewLoadout()
+            else
+                local dialog
+                dialog = PTGuiLib.Get("simple_dialog", TabFrame)
+                    :SetPoint("CENTER", TabFrame, "CENTER")
+                    :SetTitle("Unsaved Changes")
+                    :SetText("You have unsaved changes to your bindings. What would you like to do?")
+                    :AddButton("Save changes", function()
+                        SaveBindings()
+                        PopOverlayFrame()
+                        dialog:Dispose()
+                        PromptNewLoadout()
+                    end)
+                    :AddButton("Discard changes", function()
+                        LoadBindings()
+                        PopOverlayFrame()
+                        dialog:Dispose()
+                        PromptNewLoadout()
+                    end)
+                    :AddButton("Cancel", function()
+                        PopOverlayFrame()
+                        dialog:Dispose()
+                    end)
+                AddOverlayFrame(dialog)
+            end
         end)
     local deleteLoadout = PTGuiLib.Get("button", container)
         :SetPoint("LEFT", newLoadout, "RIGHT", 5, 0)
@@ -230,6 +284,13 @@ function CreateTab_Bindings()
         end)
 end
 
+function PromptNewLoadout()
+    local newLoadout = PTGuiLib.Get("puppeteer_new_loadout", TabFrame)
+        :SetPoint("CENTER", TabFrame, "CENTER")
+    AddOverlayFrame(newLoadout)
+    PlaySound("igMainMenuOpen")
+end
+
 function SetTargetContext(friendlyOrHostile)
     BindingsContext.Target = friendlyOrHostile
     BindingsForDropdown:UpdateText()
@@ -289,7 +350,7 @@ function LoadBindings()
 end
 
 function SaveBindings()
-    Puppeteer.GetBindingLoadouts()[Puppeteer.GetSelectedBindingsLoadoutName()] = EditedBindings
+    Puppeteer.GetBindingLoadouts()[Puppeteer.GetSelectedBindingsLoadoutName()] = Puppeteer.PruneLoadout(EditedBindings)
     LoadBindings()
 end
 
