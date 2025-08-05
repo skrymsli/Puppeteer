@@ -72,7 +72,7 @@ function CreateTab_Bindings()
         end, {
             func = function(self)
                 local loadoutName = self.text
-                if Puppeteer.LoadoutEquals(Puppeteer.GetBindings(), EditedBindings, true) then
+                if Puppeteer.LoadoutEquals(Puppeteer.GetBindings(), EditedBindings) then
                     Puppeteer.SetSelectedBindingsLoadout(loadoutName)
                 else
                     local dialog
@@ -116,7 +116,7 @@ function CreateTab_Bindings()
         :SetSize(60, 22)
         :SetText("New")
         :OnClick(function(self)
-            if Puppeteer.LoadoutEquals(Puppeteer.GetBindings(), EditedBindings, true) then
+            if Puppeteer.LoadoutEquals(Puppeteer.GetBindings(), EditedBindings) then
                 PromptNewLoadout()
             else
                 local dialog

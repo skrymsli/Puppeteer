@@ -150,10 +150,8 @@ function ExpandBinding(binding)
     end
 end
 
-function LoadoutEquals(loadout1, loadout2)
-    PruneLoadout(loadout1)
-    PruneLoadout(loadout2)
-    return util.TableEquals(loadout1, loadout2)
+function LoadoutEquals(loadout1, loadout2, noCopy)
+    return util.TableEquals(PruneLoadout(loadout1, not noCopy), PruneLoadout(loadout2, not noCopy))
 end
 
 -- Returns a copy of the clipboard
