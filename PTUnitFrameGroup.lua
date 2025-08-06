@@ -29,6 +29,7 @@ ContextMenu:SetDynamicOptions(function(addOption, level, args)
     addOption("text", "Lock Position",
         "func", function(self, gui)
             PuppeteerSettings.SetFrameLocked(gui.FrameGroup.name, not self.checked)
+            gui.FrameGroup:UpdateHeaderColor()
         end,
         "initFunc", function(self, gui)
             self.checked = PuppeteerSettings.IsFrameLocked(gui.FrameGroup.name)
@@ -117,6 +118,11 @@ end
 function PTUnitFrameGroup:ApplyToplevel()
     self.container:SetToplevel(true)
     self.container:SetFrameStrata("MEDIUM")
+end
+
+function PTUnitFrameGroup:UpdateHeaderColor()
+    local opacity = PuppeteerSettings.IsFrameLocked(self.name) and 0.1 or 0.5
+    self.header:SetBackdropColor(0, 0, 0, opacity)
 end
 
 function PTUnitFrameGroup:Initialize()
@@ -223,11 +229,11 @@ function PTUnitFrameGroup:Initialize()
         arg1 = prevArg
     end)
 
-    local header = CreateFrame("Frame", "$parentHeader", container) --type, name, parent
+    local header = CreateFrame("Frame", "$parentHeader", container)
     self.header = header
     header:SetPoint("TOPLEFT", container, 0, 0)
     header:SetBackdrop({bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background"})
-    header:SetBackdropColor(0, 0, 0, 0.5)
+    self:UpdateHeaderColor()
 
     local borderFrame = CreateFrame("Frame", "$parentBorder", container)
     self.borderFrame = borderFrame
