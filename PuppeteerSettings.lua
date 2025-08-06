@@ -391,3 +391,10 @@ end
 function IsFrameLocked(frameName)
     return PTOptions.FrameOptions[frameName] and PTOptions.FrameOptions[frameName].Locked
 end
+
+function SetFrameLocked(frameName, locked)
+    if not PTOptions.FrameOptions[frameName] then
+        PTOptions.FrameOptions[frameName] = {}
+    end
+    PTOptions.FrameOptions[frameName].Locked = locked
+end

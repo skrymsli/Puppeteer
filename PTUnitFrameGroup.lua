@@ -24,6 +24,25 @@ PTUnitFrameGroup.moveContainer = CreateFrame("Frame", "PTUnitFrameGroupBulkMoveC
 PTUnitFrameGroup.moveContainer:EnableMouse(true)
 PTUnitFrameGroup.moveContainer:SetMovable(true)
 
+ContextMenu = PTGuiLib.Get("dropdown", UIParent)
+ContextMenu:SetDynamicOptions(function(addOption, level, args)
+    addOption("text", "Lock Position",
+        "func", function(self, gui)
+            PuppeteerSettings.SetFrameLocked(gui.FrameGroup.name, not self.checked)
+        end,
+        "initFunc", function(self, gui)
+            self.checked = PuppeteerSettings.IsFrameLocked(gui.FrameGroup.name)
+        end)
+
+    addOption("notCheckable", true)
+
+    addOption("text", "Open Settings",
+        "notCheckable", true,
+        "func", function(self, gui)
+            PTSettingsGui.TabFrame:Show()
+        end)
+end)
+
 function PTUnitFrameGroup:New(name, environment, units, petGroup, profile, sortByRole)
     local obj = setmetatable({name = name, environment = environment, uis = {}, units = units, petGroup = petGroup, 
         profile = profile, sortByRole = sortByRole}, self)
@@ -119,6 +138,10 @@ function PTUnitFrameGroup:Initialize()
             return
         end
 
+        if PuppeteerSettings.IsFrameLocked(self.name) then
+            return
+        end
+
         container.isMoving = true
 
         if (util.GetKeyModifier() == PTOptions.FrameDrag.AltMoveKey) == PTOptions.FrameDrag.MoveAll then
@@ -135,19 +158,31 @@ function PTUnitFrameGroup:Initialize()
         -- If the container doesn't have a size, it doesn't move
         moveContainer:SetWidth(1)
         moveContainer:SetHeight(1)
+        local movingGroups = {}
         for _, group in pairs(Puppeteer.UnitFrameGroups) do
-            group:RemoveToplevel()
-            local gc = group:GetContainer()
-            local xOffset = gc:GetLeft()
-            local yOffset = gc:GetTop() - GetScreenHeight()
-            gc:ClearAllPoints()
-            gc:SetPoint("TOPLEFT", moveContainer, "TOPLEFT", xOffset, yOffset)
+            if not PuppeteerSettings.IsFrameLocked(group.name) and group:GetContainer():IsVisible() then
+                group:RemoveToplevel()
+                local gc = group:GetContainer()
+                local xOffset = gc:GetLeft()
+                local yOffset = gc:GetTop() - GetScreenHeight()
+                gc:ClearAllPoints()
+                gc:SetPoint("TOPLEFT", moveContainer, "TOPLEFT", xOffset, yOffset)
+                table.insert(movingGroups, group)
+            end
         end
+        moveContainer.groups = movingGroups
         moveContainer:StartMoving()
     end)
 
     container:SetScript("OnMouseUp", function()
         local button = arg1
+
+        if button == "RightButton" then
+            ContextMenu.FrameGroup = self
+            ContextMenu:SetToggleState(true, container, container:GetWidth(), container:GetHeight())
+            PlaySound("igMainMenuOpen")
+            return
+        end
 
         if (button ~= "LeftButton" or not container.isMoving) then
             return
@@ -165,7 +200,7 @@ function PTUnitFrameGroup:Initialize()
 
         local moveContainer = PTUnitFrameGroup.moveContainer
         moveContainer:StopMovingOrSizing()
-        for _, group in pairs(Puppeteer.UnitFrameGroups) do
+        for _, group in pairs(moveContainer.groups) do
             group:ApplyToplevel()
             local gc = group:GetContainer()
             local xOffset = gc:GetLeft()
