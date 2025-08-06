@@ -252,7 +252,6 @@ function _UpdateBindingDisplay(binding, entry)
             text = colorize(text.." (Invalid Macro)", 1, 0.4, 0.4)
         end
         entry.Normal = text
-        --rightText = colorize(macro.." (Invalid Macro)", 1, 0.4, 0.4)
     elseif binding.Type == "SCRIPT" then
         entry.Normal =  colorize(text or "Script", textColor)
     elseif binding.Type == "MULTI" then

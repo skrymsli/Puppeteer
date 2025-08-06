@@ -137,6 +137,9 @@ function ApplyOverrideBindings()
 end
 
 function RemoveOverrideBindings()
+    if util.IsTableEmpty(StoredBindings) then
+        return
+    end
     StopUpdateBindingsUpdates()
     for button, binding in pairs(StoredBindings) do
         SetBinding(button, binding)
