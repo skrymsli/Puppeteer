@@ -122,6 +122,8 @@ function SetDefaults()
                 ["Target"] = "Long",
                 ["Focus"] = "Default"
             },
+            ["StyleOverrides"] = {},
+            ["FrameOptions"] = {},
             ["Scripts"] = {
                 ["OnLoad"] = "",
                 ["OnPostLoad"] = ""
@@ -372,12 +374,20 @@ SpellsContext = {}
 
 function GetSelectedProfileName(frame)
     local selected = PTOptions.ChosenProfiles[frame]
-    if not PTDefaultProfiles[selected] then
+    if not PTProfileManager.GetProfile(selected) then
         selected = "Default"
     end
     return selected
 end
 
 function GetSelectedProfile(frame)
-    return PTDefaultProfiles[GetSelectedProfileName(frame)]
+    return PTProfileManager.GetProfile(GetSelectedProfileName(frame))
+end
+
+function IsFrameHidden(frameName)
+    return PTOptions.FrameOptions[frameName] and PTOptions.FrameOptions[frameName].Hidden
+end
+
+function IsFrameLocked(frameName)
+    return PTOptions.FrameOptions[frameName] and PTOptions.FrameOptions[frameName].Locked
 end

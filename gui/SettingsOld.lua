@@ -890,11 +890,7 @@ function InitSettings()
         label:SetPoint("RIGHT", profileDropdown, "RIGHT", -40, 5)
         label:SetText("Choose Style")
 
-        local targets = util.ToArray(PTDefaultProfiles)
-        util.RemoveElement(targets, "Base")
-        table.sort(targets, function(a, b)
-            return (PTProfileManager.DefaultProfileOrder[a] or 1000) < (PTProfileManager.DefaultProfileOrder[b] or 1000)
-        end)
+        local targets = PTProfileManager.GetProfileNames()
         local profileOptions = {}
 
         for _, target in ipairs(targets) do

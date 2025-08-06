@@ -1,13 +1,14 @@
 PTProfileManager = {}
 
-PTDefaultProfiles = {}
-
-PTUserProfiles = {}
-
 PTUtil.SetEnvironment(PTProfileManager)
 local _G = getfenv(0)
 
 local util = PTUtil
+
+-- Profiles that have not had style overrides applied
+DefaultProfiles = {}
+-- Profiles that have had style overrides applied
+Profiles = {}
 
 DefaultProfileOrder = {
     "Default", "Default (Short Bar)", "Small", "Very Small", "Very Small (Horizontal)", "Long", "Long (Small)", 
@@ -16,19 +17,51 @@ DefaultProfileOrder = {
 DefaultProfileOrder = util.ToSet(DefaultProfileOrder, true)
 
 function GetProfile(name)
-    return PTDefaultProfiles[name]
+    return Profiles[name] or DefaultProfiles[name]
 end
 
-function CreateProfile(name, baseName)
-    PTDefaultProfiles[name] = PTUIProfile:New(GetProfile(baseName or "Default"))
-    return PTDefaultProfiles[name]
+function GetDefaultProfile(name)
+    return DefaultProfiles[name]
+end
+
+function GetProfileNames()
+    local names = util.ToArray(DefaultProfiles)
+    util.RemoveElement(names, "Base")
+    table.sort(names, function(a, b)
+        return (DefaultProfileOrder[a] or 1000) < (DefaultProfileOrder[b] or 1000)
+    end)
+    return names
+end
+
+function CreateProfile(name, baseName, useDefault)
+    local profileGetter = (useDefault or useDefault == nil) and GetDefaultProfile or GetProfile
+    DefaultProfiles[name] = PTUIProfile:New(profileGetter(baseName or "Default"))
+    return DefaultProfiles[name]
+end
+
+function ApplyOverrides(profileName)
+    local overrides = PTOptions.StyleOverrides[profileName]
+    local profile = GetDefaultProfile(profileName)
+    if overrides and profile then
+        profile = PTUIProfile:New(profile)
+        Profiles[profileName] = profile
+        for attribute, value in pairs(overrides) do
+            if type(value) ~= "table" then
+                profile[attribute] = value
+            else
+                for k, v in pairs(value) do
+                    profile[attribute][k] = v
+                end
+            end
+        end
+    end
 end
 
 function InitializeDefaultProfiles()
     PTUIProfile.SetDefaults()
 
     -- Master base profile
-    PTDefaultProfiles["Base"] = PTUIProfile:New()
+    DefaultProfiles["Base"] = PTUIProfile:New()
 
     do
         local profile = CreateProfile("Long", "Base")
@@ -368,5 +401,9 @@ function InitializeDefaultProfiles()
         profile.RaidMarkIcon.Height = 16
 
         profile.BorderStyle = "Hidden"
+    end
+
+    for profileName, overrides in pairs(PTOptions.StyleOverrides) do
+        ApplyOverrides(profileName)
     end
 end

@@ -41,7 +41,7 @@ function PTUnitFrameGroup:EvaluateShown()
 end
 
 function PTUnitFrameGroup:ShowCondition()
-    if PTOptions.Hidden then
+    if PTOptions.Hidden or PuppeteerSettings.IsFrameHidden(self.name) then
         return false
     end
 

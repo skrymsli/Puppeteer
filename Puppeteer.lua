@@ -225,11 +225,12 @@ local function initUnitFrames()
         CreateUnitFrameGroup("Focus", "all", PTUnitProxy.CustomUnitsMap["focus"], false, getSelectedProfile("Focus"), false)
     end
 
+    local baseCondition = UnitFrameGroups["Target"].ShowCondition
     UnitFrameGroups["Target"].ShowCondition = function(self)
         local friendly = not UnitCanAttack("player", "target")
         return (PTOptions.AlwaysShowTargetFrame or (UnitExists("target") and 
             (friendly and PTOptions.ShowTargets.Friendly) or (not friendly and PTOptions.ShowTargets.Hostile))) 
-            and not PTOptions.Hidden
+            and baseCondition(self)
     end
 
     OpenUnitFramesIterator()

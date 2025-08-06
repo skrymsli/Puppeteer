@@ -637,9 +637,10 @@ end
 
 function CreateTab_Customize()
     local container = TabFrame:CreateTab("Customize")
-    local layout = NewLabeledColumnLayout(container, {150}, -40, 10)
+    local layout = NewLabeledColumnLayout(container, {100, 340}, -40, 10)
 
     local frameDropdown = CreateLabeledDropdown(container, "Select Frame", "The frame to edit the style of")
+        :SetWidth(150)
         :SetDynamicOptions(function(addOption, level, args)
             for name, group in pairs(Puppeteer.UnitFrameGroups) do
                 addOption("text", name,
@@ -653,6 +654,7 @@ function CreateTab_Customize()
             end,
             func = function(self, gui)
                 StyleDropdown:UpdateText()
+                HideFrameCheckbox:SetChecked(PuppeteerSettings.IsFrameHidden(self.text))
             end
         })
         :SetText("Party")
@@ -660,12 +662,9 @@ function CreateTab_Customize()
     layout:layoutComponent(frameDropdown)
     local GetSelectedProfileName = PuppeteerSettings.GetSelectedProfileName
     local styleDropdown = CreateLabeledDropdown(container, "Choose Style", "The style of the frame")
+        :SetWidth(150)
         :SetDynamicOptions(function(addOption, level, args)
-            local profiles = util.ToArray(PTDefaultProfiles)
-            util.RemoveElement(profiles, "Base")
-            table.sort(profiles, function(a, b)
-                return (PTProfileManager.DefaultProfileOrder[a] or 1000) < (PTProfileManager.DefaultProfileOrder[b] or 1000)
-            end)
+            local profiles = PTProfileManager.GetProfileNames()
             for _, profile in ipairs(profiles) do
                 addOption("text", profile,
                     "checked", GetSelectedProfileName(frameDropdown:GetText()) == profile,
@@ -714,7 +713,167 @@ function CreateTab_Customize()
             self:SetText(GetSelectedProfileName(frameDropdown:GetText()))
         end)
     StyleDropdown = styleDropdown
-    layout:layoutComponent(styleDropdown)
+    layout:offset(0, 10):layoutComponent(styleDropdown)
+
+    local hideFrameCheckbox = CreateLabeledCheckbox(container, "Hide Frame", "If checked, this frame will not be visible")
+        :OnClick(function(self)
+            local frameName = frameDropdown:GetText()
+            if not PTOptions.FrameOptions[frameName] then
+                PTOptions.FrameOptions[frameName] = {}
+            end
+            local options = PTOptions.FrameOptions[frameName]
+            options.Hidden = self:GetChecked() == 1
+            Puppeteer.CheckGroup()
+        end)
+    layout:column(2):levelAt(1):layoutComponent(hideFrameCheckbox)
+    HideFrameCheckbox = hideFrameCheckbox
+
+    local overrideContainer = PTGuiLib.Get("scroll_frame", container)
+        :SetPoint("TOPLEFT", container, "TOPLEFT", 5, -100)
+        :SetPoint("BOTTOMRIGHT", container, "BOTTOMRIGHT", -5, 5)
+        :SetSimpleBackground()
+    StyleOverrideContainer = overrideContainer
+
+    local container = overrideContainer
+
+    local styleOverridesText = PTGuiLib.GetText(container, "Style Overrides")
+        :SetFontSize(14)
+        :SetPoint("TOP", container, "TOP", 0, -5)
+    local explainer = PTGuiLib.GetText(container, "Style Overrides are an inelegant, temporary measure to enable customization "..
+            "of commonly requested unit frame edits. Some settings may be visually incompatible with one another. "..
+            "This will be replaced in a future date with a system that is much more robust.\n\n"..
+            colorize("You must reload or relog for any changes to take effect!", 1, 0.5, 0.5))
+        :SetPoint("TOP", styleOverridesText, "TOP", 0, -20)
+        :SetWidth(360)
+
+    local layout = NewLabeledColumnLayout(container, {160}, -120, 5)
+
+    local styleDropdown = CreateLabeledDropdown(container, "Edit Style", "The style to edit the overrides of")
+        :SetWidth(160)
+        :SetText("Default")
+        :SetDynamicOptions(function(addOption, level, args)
+            local profiles = PTProfileManager.GetProfileNames()
+            for _, profile in ipairs(profiles) do
+                addOption("text", profile,
+                    "initFunc", args.initFunc,
+                    "func", args.func)
+            end
+        end, {
+            initFunc = function(self, gui)
+                self.checked = gui:GetText() == self.text
+            end,
+            func = function(self)
+                SetSelectedStyleOverride(self.text)
+            end
+        })
+    layout:offset(-65, 0):layoutComponent(styleDropdown)
+    layout:offset(65, 0)
+    StyleOverrideDropdown = styleDropdown
+
+    local reloadUI = PTGuiLib.Get("button", container)
+        :SetPoint("LEFT", styleDropdown, "RIGHT", 10, 0)
+        :SetSize(100, 20)
+        :SetText("Reload UI")
+        :OnClick(ReloadUI)
+
+    local function add(component, offsetY)
+        layout:offset(0, offsetY or 0):layoutComponent(component)
+    end
+    local createDropdown = CreateStyleOverrideDropdown
+
+    local barStyles = util.ToArray(Puppeteer.BarStyles)
+    table.sort(barStyles)
+
+    add(createDropdown("Health Bar Color", nil, "HealthBarColor", {"Green To Red", "Green", "Class"}), -10)
+    add(createDropdown("Health Bar Texture", nil, "HealthBarStyle", barStyles))
+    add(createDropdown("Health Display", "What kind of text is displayed as health", "HealthDisplay", {"Health", "Health/Max Health", "% Health", "Hidden"}))
+    add(createDropdown("Missing Health Display", "What kind of text is displayed as missing health", "MissingHealthDisplay", {"Hidden", "-Health", "-% Health"}))
+    add(createDropdown("Power Bar Texture", nil, "PowerBarStyle", barStyles))
+    add(createDropdown("Power Display", "What kind of text is displayed as missing", "PowerDisplay", {"Power", "Power/Max Power", "% Power", "Hidden"}))
+    add(createDropdown("Name Text Color", "'Default' is default Blizzard yellow text", "NameText.Color", {"Class", "Default"}))
+    add(createDropdown("Show Debuff Colors On", nil, "ShowDebuffColorsOn", {"Health Bar", "Name", "Health", "Hidden"}))
+    add(createDropdown("Sort Units By", "The sorting algorithm for units in a group", "SortUnitsBy", {"ID", "Name", "Class Name"}))
+    add(createDropdown("Growth Direction", "Vertical grows units down, Horizontal grows units right", "Orientation", {"Vertical", "Horizontal"}))
+    add(createDropdown("Border Style", "The border of the group", "BorderStyle", {"Tooltip", "Dialog Box", "Borderless"}))
+    add(createDropdown("Max Units In Axis", "The maximum number of units in the growth axis until it must shift down", "MaxUnitsInAxis", {1, 2, 3, 4, 5, 6, 7, 8, 9, 10}))
+    add(createDropdown("Min Units X", "The minimum amount of unit space to take on the X-axis", "MinUnitsX", {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10}))
+    add(createDropdown("Min Units Y", "The minimum amount of unit space to take on the Y-axis", "MinUnitsY", {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10}))
+    add(createDropdown("Horizontal Spacing", "The number of pixels between units", "HorizontalSpacing", {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10}))
+    add(createDropdown("Vertical Spacing", "The number of pixels between units", "VerticalSpacing", {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10}))
+end
+
+StyleOverrideComponents = {}
+
+CurrentStyleOverride = "Default"
+
+function CreateStyleOverrideDropdown(text, tooltip, optionLoc, options)
+    local dropdown, label = CreateLabeledDropdown(StyleOverrideContainer, text, tooltip)
+    dropdown:SetWidth(200)
+    dropdown:SetDynamicOptions(function(addOption, level, args)
+        addOption("text", "Use Style Default",
+            "initFunc", args.initFunc,
+            "func", args.func)
+        for _, option in ipairs(options) do
+            addOption("text", option,
+                "option", option,
+                "initFunc", args.initFunc,
+                "func", args.func)
+        end
+    end, {
+        initFunc = function(self, gui)
+            self.checked = gui:GetText() == self.text
+        end,
+        func = function(self, gui)
+            SetStyleOverride(GetSelectedStyleOverride(), optionLoc, self.option)
+            gui:UpdateText()
+        end
+    })
+    :SetTextUpdater(function(gui)
+        gui:SetText(GetStyleOverride(GetSelectedStyleOverride(), optionLoc) or "Use Style Default")
+    end)
+    StyleOverrideComponents[optionLoc] = dropdown
+    return dropdown
+end
+
+function GetSelectedStyleOverride()
+    return PTOptions.StyleOverrides[CurrentStyleOverride]
+end
+
+function SetSelectedStyleOverride(style)
+    CurrentStyleOverride = style
+    if not PTOptions.StyleOverrides[CurrentStyleOverride] then
+        PTOptions.StyleOverrides[CurrentStyleOverride] = {}
+    end
+    StyleOverrideDropdown:SetText(style)
+    PopulateStyleOverrides()
+end
+
+function PopulateStyleOverrides()
+    for _, dropdown in pairs(StyleOverrideComponents) do
+        dropdown:UpdateText()
+    end
+end
+
+function TraverseOverride(style, location)
+    local path = util.SplitString(location, ".")
+    local currentTable = style
+    for i = 1, table.getn(path) - 1 do
+        if not currentTable[path[i]] then
+            currentTable[path[i]] = {}
+        end
+        currentTable = currentTable[path[i]]
+    end
+    return currentTable, path[table.getn(path)]
+end
+
+function GetStyleOverride(style, location)
+    local optionTable, location = TraverseOverride(style, location)
+    return optionTable[location]
+end
+
+function SetStyleOverride(style, location, value)
+    local optionTable, location = TraverseOverride(style, location)
+    optionTable[location] = value
 end
 
 function CreateTab_About()
@@ -773,6 +932,7 @@ function NewLabeledColumnLayout(container, columns, startY, spacing)
         local lastAdded = self.lastAdded[columnIndex]
         self.lastAdded[self.selectedColumn] = lastAdded
         self:offset(columns[self.selectedColumn] - columns[columnIndex], spacing + lastAdded:GetHeight())
+        return self
     end
     function layout:setLastAdded(columnIndex, component)
         self.lastAdded[columnIndex] = component
