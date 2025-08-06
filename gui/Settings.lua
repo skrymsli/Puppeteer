@@ -104,6 +104,7 @@ function CreateTab_Bindings()
                             dialog:Dispose()
                         end)
                     AddOverlayFrame(dialog)
+                    PlaySound("igMainMenuOpen")
                 end
             end
         })
@@ -116,6 +117,11 @@ function CreateTab_Bindings()
         :SetSize(60, 22)
         :SetText("New")
         :OnClick(function(self)
+            if util.GetTableSize(Puppeteer.GetBindingLoadouts()) >= 20 then
+                DEFAULT_CHAT_FRAME:AddMessage("You cannot create any more loadouts!")
+                return
+            end
+
             if Puppeteer.LoadoutEquals(Puppeteer.GetBindings(), EditedBindings) then
                 PromptNewLoadout()
             else
@@ -141,6 +147,7 @@ function CreateTab_Bindings()
                         dialog:Dispose()
                     end)
                 AddOverlayFrame(dialog)
+                PlaySound("igMainMenuOpen")
             end
         end)
     local deleteLoadout = PTGuiLib.Get("button", container)
