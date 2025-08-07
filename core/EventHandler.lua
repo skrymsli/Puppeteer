@@ -62,12 +62,12 @@ RegisterEventHandler("UNIT_AURA", function()
     end
 end)
 RegisterEventHandler({"PARTY_MEMBERS_CHANGED", "RAID_ROSTER_UPDATE"}, function()
-    CheckGroup()
+    CheckGroupThrottled()
 end)
 RegisterEventHandler({"UNIT_PET", "PLAYER_PET_CHANGED"}, function()
     local unit = arg1
     if IsRelevantUnit(unit) then
-        CheckGroup()
+        CheckGroupThrottled()
     end
 end)
 RegisterEventHandler("PLAYER_TARGET_CHANGED", function()
@@ -75,7 +75,7 @@ RegisterEventHandler("PLAYER_TARGET_CHANGED", function()
         ui:EvaluateTarget()
     end
     local exists, guid = UnitExists("target")
-    if guid then
+    if util.IsSuperWowPresent() then
         PTUnit.UpdateGuidCaches()
     end
     

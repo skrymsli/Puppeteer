@@ -30,9 +30,6 @@ function PopulateRoster()
             AddUnit(guid, unit)
         end
     end
-    for unit, guid in pairs(PTUnitProxy.CustomUnitGUIDMap) do
-        AddUnit(guid, unit)
-    end
 end
 
 function AddUnit(guid, unit)

@@ -142,6 +142,9 @@ end
 
 -- Returns true if the distance changed
 function PTUnit:UpdateDistance()
+    if not self.Unit then
+        return
+    end
     local prevDist = self.Distance
     self.Distance = util.GetDistanceTo(self.Unit)
 
@@ -168,6 +171,9 @@ function PTUnit:IsInSight()
 end
 
 function PTUnit:IsBeingResurrected()
+    if not self.Unit then
+        return false
+    end
     if PTHealPredict then
         return PTHealPredict.IsBeingResurrected(self.Unit)
     end
@@ -175,6 +181,9 @@ function PTUnit:IsBeingResurrected()
 end
 
 function PTUnit:GetResurrectionCasts()
+    if not self.Unit then
+        return 0
+    end
     if PTHealPredict then
         return PTHealPredict.GetResurrectionCount(self.Unit)
     end
@@ -218,6 +227,10 @@ end
 
 function PTUnit:UpdateAuras()
     local unit = self.Unit
+
+    if not unit then
+        return
+    end
 
     self:ClearAuras()
 

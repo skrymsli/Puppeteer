@@ -673,8 +673,52 @@ function UnitFrame_OnClick(button, unit, unitFrame)
     RunBinding(binding, unit, unitFrame)
 end
 
--- Reevaluates what UI frames should be shown
+local CheckGroupThrottler = CreateFrame("Frame", "PTCheckGroupThrottler")
+local MAX_GROUP_UPDATE_TOKENS = 2
+local GROUP_UPDATE_RECOVERY = 0.1
+local groupUpdateTokens = 2
+local nextGroupUpdateToken = 0
+local groupUpdateWaiting = false
+local CheckGroupThrottler_OnUpdate = function()
+    if nextGroupUpdateToken <= GetTime() then
+        groupUpdateTokens = groupUpdateTokens + 1
+        nextGroupUpdateToken = GetTime() + GROUP_UPDATE_RECOVERY
+        if groupUpdateWaiting then
+            groupUpdateWaiting = false
+            print("Delayed Group Update")
+            CheckGroupThrottled()
+        end
+        if groupUpdateTokens == MAX_GROUP_UPDATE_TOKENS then
+            CheckGroupThrottler:SetScript("OnUpdate", nil)
+        end
+    end
+end
+function UseGroupUpdateToken()
+    if groupUpdateTokens > 0 then
+        groupUpdateTokens = groupUpdateTokens - 1
+        if CheckGroupThrottler:GetScript("OnUpdate") == nil then
+            nextGroupUpdateToken = GetTime() + GROUP_UPDATE_RECOVERY
+            CheckGroupThrottler:SetScript("OnUpdate", CheckGroupThrottler_OnUpdate)
+        end
+        return true
+    end
+    groupUpdateWaiting = true
+    return false
+end
+
+-- Same as CheckGroup, but may delay and consolidate checks if there's been many calls
+function CheckGroupThrottled()
+    if UseGroupUpdateToken() then
+        CheckGroup()
+        print("Group Update "..groupUpdateTokens)
+    else
+        print("GROUP UPDATE THROTTLED")
+    end
+end
+
+-- Reevaluates what UI frames should be shown and updates the roster if using SuperWoW
 function CheckGroup()
+    StartTiming("CheckGroup")
     if GetNumRaidMembers() > 0 then
         if not CurrentlyInRaid then
             CurrentlyInRaid = true
@@ -724,6 +768,7 @@ function CheckGroup()
         PTHealPredict.SetRelevantGUIDs(GuidRoster.GetTrackedGuids())
     end
     RunTrackingScan()
+    EndTiming("CheckGroup")
 end
 
 function CheckTarget()
@@ -751,7 +796,6 @@ function CheckTarget()
 end
 
 function IsRelevantUnit(unit)
-    --return not string.find(unit, "0x")
     return AllUnitsSet[unit] ~= nil or GUIDCustomUnitMap[unit]
 end
 
