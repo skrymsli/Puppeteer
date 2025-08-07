@@ -151,14 +151,6 @@ function Debug(msg)
     DEFAULT_CHAT_FRAME:AddMessage(msg)
 end
 
-function GetSpells()
-    return PTSpells["Friendly"]
-end
-
-function GetHostileSpells()
-    return PTSpells["Hostile"]
-end
-
 function UpdateUnitFrameGroups()
     for _, group in pairs(UnitFrameGroups) do
         group:UpdateUIPositions()
@@ -238,29 +230,134 @@ end
 
 function OnAddonLoaded()
     StartTiming("OnLoad")
-    local freshInstall = false
-    if PTSpells == nil then
-        freshInstall = true
-        local PTSpells = {}
-        PTSpells["Friendly"] = {}
-        PTSpells["Hostile"] = {}
-        setglobal("PTSpells", PTSpells)
-    end
-
-    for _, spells in pairs(PTSpells) do
-        for _, modifier in ipairs(util.GetKeyModifiers()) do
-            if not spells[modifier] then
-                spells[modifier] = {}
-            end
-        end
-    end
 
     if PTBindings == nil then
+        -- Create default bindings
         _G.PTBindings = {}
         PTBindings["SelectedLoadout"] = "Default"
         local loadouts = {}
         PTBindings["Loadouts"] = loadouts
         loadouts["Default"] = CreateEmptyBindingsLoadout()
+
+        local friendlyOrHostile = "Friendly"
+        local modifier
+        local function setContext(a, b)
+            friendlyOrHostile = a
+            modifier = b
+        end
+        local function setBinding(button, binding)
+            local bindings = GetBindings()
+            local l1 = bindings.Bindings[friendlyOrHostile]
+            if not l1 then
+                l1 = {}
+                bindings.Bindings[friendlyOrHostile] = l1
+            end
+            local l2 = l1[modifier]
+            if not l2 then
+                l2 = {}
+                l1[modifier] = l2
+            end
+            l2[button] = binding
+        end
+        local function setSpell(button, spell)
+            setBinding(button, {Type = "SPELL", Data = spell})
+        end
+        local function setBestSpell(button, spells)
+            local selected
+            for _, spell in ipairs(spells) do
+                if util.GetSpellID(spell) then
+                    selected = spell
+                    break
+                end
+            end
+            if not selected then
+                return
+            end
+            setSpell(button, selected)
+        end
+        local function setMulti(button, tooltip, spells)
+            local bindings = {}
+            for i, spell in ipairs(spells) do
+                bindings[i] = {Type = "SPELL", Data = spell}
+            end
+            setBinding(button, {
+                Type = "MULTI",
+                Tooltip = {
+                    Type = "CUSTOM",
+                    Data = tooltip
+                },
+                Data = {
+                    Bindings = bindings
+                }
+            })
+        end
+        local function setAction(button, action)
+            setBinding(button, {Type = "ACTION", Data = action})
+        end
+        local function addHealerControls()
+            setContext("Friendly", "Shift")
+            setAction("LeftButton", "Target")
+            setAction("MiddleButton", "Role")
+            setAction("RightButton", "Menu")
+        end
+
+        local class = GetClass("player")
+        if class == "PRIEST" then
+            setContext("Friendly", "None")
+            setSpell("LeftButton", "Power Word: Shield")
+            setSpell("MiddleButton", "Renew")
+            setBestSpell("RightButton", {"Greater Heal", "Heal", "Lesser Heal"})
+
+            addHealerControls()
+
+            setContext("Friendly", "Control")
+            setMulti("LeftButton", "Buffs", {"Power Word: Fortitude", "Divine Spirit", "Shadow Protection"})
+            setBinding("RightButton", "Dispel Magic")
+
+            setContext("Hostile", "None")
+            setSpell("RightButton", "Dispel Magic")
+            
+            setContext("Hostile", "Control")
+            setSpell("RightButton", "Dispel Magic")
+        elseif class == "DRUID" then
+            setContext("Friendly", "None")
+            setSpell("LeftButton", "Rejuvenation")
+            setSpell("RightButton", "Healing Touch")
+
+            addHealerControls()
+
+            setContext("Friendly", "Control")
+            setSpell("RightButton", "Remove Curse")
+        elseif class == "PALADIN" then
+            setContext("Friendly", "None")
+            setSpell("LeftButton", "Flash of Light")
+            setSpell("RightButton", "Holy Light")
+
+            addHealerControls()
+
+            setContext("Friendly", "Control")
+            setMulti("LeftButton", "Blessings", {"Blessing of Might", "Blessing of Wisdom", "Blessing of Salvation", "Blessing of Kings"})
+            setBestSpell("RightButton", {"Cleanse", "Purify"})
+        elseif class == "SHAMAN" then
+            setContext("Friendly", "None")
+            setBestSpell("LeftButton", {"Healing Wave", "Lesser Healing Wave"})
+            setSpell("RightButton", "Chain Heal")
+
+            addHealerControls()
+
+            setContext("Friendly", "Control")
+            setSpell("RightButton", "Cure Disease")
+        else
+            -- Non-healer classes can use this addon like traditional raid frames
+            setContext("Friendly", "None")
+            setAction("LeftButton", "Target")
+            setAction("MiddleButton", "Role")
+            setAction("RightButton", "Menu")
+
+            setContext("Hostile", "None")
+            setAction("LeftButton", "Target")
+            setAction("RightButton", "Menu")
+        end
     end
 
     PuppeteerSettings.SetDefaults()
@@ -327,17 +424,21 @@ function OnAddonLoaded()
         if PTOptions.Scripts.OnLoad then
             local scriptString = "local GetProfile = PTProfileManager.GetProfile "..
                 "local CreateProfile = PTProfileManager.CreateProfile "..PTOptions.Scripts.OnLoad
-            local script = loadstring(scriptString)
-            local ok, result = pcall(script)
-            if not ok then
+            local script, err = loadstring(scriptString)
+            if script then
+                local ok, result = pcall(script)
+                if not ok then
+                    DEFAULT_CHAT_FRAME:AddMessage(colorize("[Puppeteer] ", 1, 0.4, 0.4)..colorize("ERROR: ", 1, 0.2, 0.2)
+                        ..colorize("The Load Script produced an error! If this causes Puppeteer to fail to load, "..
+                            "you will need to manually edit the script in your game files.", 1, 0.4, 0.4))
+                    DEFAULT_CHAT_FRAME:AddMessage(colorize("OnLoad Script Error: "..tostring(result), 1, 0, 0))
+                end
+            else
                 DEFAULT_CHAT_FRAME:AddMessage(colorize("[Puppeteer] ", 1, 0.4, 0.4)..colorize("ERROR: ", 1, 0.2, 0.2)
-                    ..colorize("The Load Script produced an error! If this causes Puppeteer to fail to load, "..
-                        "you will need to manually edit the script in your game files.", 1, 0.4, 0.4))
-                DEFAULT_CHAT_FRAME:AddMessage(colorize("OnLoad Script Error: "..tostring(result), 1, 0, 0))
+                    ..colorize("The Load Script failed to load: "..err, 1, 0.4, 0.4))
             end
         end
     end
-    PTSettingsGUIOld.InitSettings()
     PTSettingsGui.Init()
     if PTHealPredict then
         PTHealPredict.OnLoad()
@@ -450,60 +551,21 @@ function OnAddonLoaded()
         end)
     end
 
-    -- Create default bindings for new characters
-    if freshInstall then
-        local class = GetClass("player")
-        local spells = GetSpells()
-        local hostileSpells = GetHostileSpells()
-        if class == "PRIEST" then
-            spells["None"]["LeftButton"] = "Power Word: Shield"
-            spells["None"]["MiddleButton"] = "Renew"
-            spells["None"]["RightButton"] = "Lesser Heal"
-            spells["Shift"]["LeftButton"] = "Target"
-            spells["Shift"]["RightButton"] = "Context"
-            spells["Control"]["RightButton"] = "Dispel Magic"
-
-            hostileSpells["None"]["RightButton"] = "Dispel Magic"
-        elseif class == "DRUID" then
-            spells["None"]["LeftButton"] = "Rejuvenation"
-            spells["None"]["RightButton"] = "Healing Touch"
-            spells["Shift"]["LeftButton"] = "Target"
-            spells["Shift"]["MiddleButton"] = "Role"
-            spells["Shift"]["RightButton"] = "Context"
-            spells["Control"]["RightButton"] = "Remove Curse"
-        elseif class == "PALADIN" then
-            spells["None"]["LeftButton"] = "Flash of Light"
-            spells["None"]["RightButton"] = "Holy Light"
-            spells["Shift"]["LeftButton"] = "Target"
-            spells["Shift"]["MiddleButton"] = "Role"
-            spells["Shift"]["RightButton"] = "Context"
-            spells["Control"]["RightButton"] = "Cleanse"
-        elseif class == "SHAMAN" then
-            spells["None"]["LeftButton"] = "Healing Wave"
-            spells["None"]["RightButton"] = "Lesser Healing Wave"
-            spells["Shift"]["LeftButton"] = "Target"
-            spells["Shift"]["MiddleButton"] = "Role"
-            spells["Shift"]["RightButton"] = "Context"
-            spells["Control"]["RightButton"] = "Cure Disease"
-        else
-            -- Non-healer classes can use this addon like traditional raid frames
-            spells["None"]["LeftButton"] = "Target"
-            spells["None"]["MiddleButton"] = "Role"
-            spells["None"]["RightButton"] = "Context"
-        end
-        hostileSpells["None"]["LeftButton"] = "Target"
-    end
-
     do
         if PTOptions.Scripts.OnPostLoad then
             local scriptString = PTOptions.Scripts.OnPostLoad
-            local script = loadstring(scriptString)
-            local ok, result = pcall(script)
-            if not ok then
+            local script, err = loadstring(scriptString)
+            if script then
+                local ok, result = pcall(script)
+                if not ok then
+                    DEFAULT_CHAT_FRAME:AddMessage(colorize("[Puppeteer] ", 1, 0.4, 0.4)..colorize("ERROR: ", 1, 0.2, 0.2)
+                        ..colorize("The Postload Script produced an error! If this causes Puppeteer to fail to operate, "..
+                            "you may need to manually edit the script in your game files.", 1, 0.4, 0.4))
+                    DEFAULT_CHAT_FRAME:AddMessage(colorize("OnPostLoad Script Error: "..tostring(result), 1, 0, 0))
+                end
+            else
                 DEFAULT_CHAT_FRAME:AddMessage(colorize("[Puppeteer] ", 1, 0.4, 0.4)..colorize("ERROR: ", 1, 0.2, 0.2)
-                    ..colorize("The Postload Script produced an error! If this causes Puppeteer to fail to operate, "..
-                        "you may need to manually edit the script in your game files.", 1, 0.4, 0.4))
-                DEFAULT_CHAT_FRAME:AddMessage(colorize("OnPostLoad Script Error: "..tostring(result), 1, 0, 0))
+                    ..colorize("The Postload Script failed to load: "..err, 1, 0.4, 0.4))
             end
         end
     end

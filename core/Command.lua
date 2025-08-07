@@ -67,17 +67,6 @@ SlashCmdList["PUPPETEER"] = function(args)
         DEFAULT_CHAT_FRAME:AddMessage(PTUtil.Colorize("/pt show", 0, 0.8, 0).." -- Shows the UI")
         DEFAULT_CHAT_FRAME:AddMessage(PTUtil.Colorize("/pt hide", 0, 0.8, 0).." -- Hides the UI")
         DEFAULT_CHAT_FRAME:AddMessage(PTUtil.Colorize("/pt silent", 0, 0.8, 0).." -- Turns off/on message when addon loads")
-    elseif args == "old" then
-        local container = PuppeteerSettings.HM_SettingsContainer
-        if container then
-            if container:IsVisible() then
-                container:Hide()
-            else
-                container:Show()
-            end
-        else
-            DEFAULT_CHAT_FRAME:AddMessage("HM_SettingsContainer frame not found.")
-        end
     elseif args == "" then
         PTSettingsGui.TabFrame:Show()
     else

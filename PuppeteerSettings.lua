@@ -346,31 +346,12 @@ end
 
 BakeTrackedAuras()
 
-ShowEmptySpells = true
-IgnoredEmptySpells = {--[["MiddleButton"]]}
-IgnoredEmptySpells = util.ToSet(IgnoredEmptySpells)
-CustomButtonOrder = {
-    "LeftButton",
-    "MiddleButton",
-    "RightButton",
-    "Button5",
-    "Button4"
-}
-CustomButtonNames = {
-    ["Button4"] = "Back", 
-    ["Button5"] = "Forward"
-}
-
 DebuffTypeColors = {
     ["Magic"] = {0.35, 0.35, 1},
     ["Curse"] = {0.5, 0, 1},
     ["Disease"] = {0.45, 0.35, 0.16},
     ["Poison"] = {0.6, 0.7, 0}
 }
-
-
-EditedSpells = {}
-SpellsContext = {}
 
 function GetSelectedProfileName(frame)
     local selected = PTOptions.ChosenProfiles[frame]
