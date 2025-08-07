@@ -778,6 +778,7 @@ function CreateTab_Customize()
     layout:offset(-65, 0):layoutComponent(styleDropdown)
     layout:offset(65, 0)
     StyleOverrideDropdown = styleDropdown
+    SetSelectedStyleOverride("Default")
 
     local reloadUI = PTGuiLib.Get("button", container)
         :SetPoint("LEFT", styleDropdown, "RIGHT", 10, 0)
@@ -813,7 +814,7 @@ end
 
 StyleOverrideComponents = {}
 
-CurrentStyleOverride = "Default"
+CurrentStyleOverride = nil
 
 function CreateStyleOverrideDropdown(text, tooltip, optionLoc, options)
     local dropdown, label = CreateLabeledDropdown(StyleOverrideContainer, text, tooltip)
