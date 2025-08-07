@@ -53,7 +53,7 @@ core\SpellsTooltip.lua
 core\EventHandler.lua
 core\DistanceScanner.lua
 core\Command.lua
-core\SpecialButtons.lua
+core\OverrideBindings.lua
 core\Bindings.lua
 core\ActionBindings.lua
 core\Roles.lua
