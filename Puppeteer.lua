@@ -362,7 +362,7 @@ function OnAddonLoaded()
 
     PuppeteerSettings.SetDefaults()
 
-    SetupSpecialButtons()
+    InitOverrideBindingsMapping()
     InitBindingDisplayCache()
 
     if util.IsSuperWowPresent() then

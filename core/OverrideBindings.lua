@@ -28,7 +28,7 @@ StoredBindings = {} -- Key: Baked keybind key(like "ALT-SHIFT-R") | Value: The s
 IndexButtonMap = {} -- Key: Index corresponding to the binding | Value: Button name
 KeybindIndexMap = {} -- Key: Baked keybind key | Value: Index corresponding to the binding
 
-function SetupSpecialButtons()
+function InitOverrideBindingsMapping()
     util.ClearTable(IndexButtonMap)
     util.ClearTable(KeybindIndexMap)
     local index = 1
