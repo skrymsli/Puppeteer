@@ -525,11 +525,11 @@ function ExtractResourceCost(costText)
         -- Convert the substring to a number
         local number = tonumber(number_str)
         -- Print the result
-        return number, resource
+        return number or 0, resource
     else
         -- If no non-digit character is found, the entire string is a number
         local number = tonumber(costText)
-        return number, resource
+        return number or 0, resource
     end
 end
 

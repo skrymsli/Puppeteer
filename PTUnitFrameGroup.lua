@@ -183,8 +183,9 @@ function PTUnitFrameGroup:Initialize()
     container:SetScript("OnMouseUp", function()
         local button = arg1
 
-        if button == "RightButton" then
+        if button == "RightButton" and MouseIsOver(self.header) then
             ContextMenu.FrameGroup = self
+            ContextMenu:SetToggleState(false)
             ContextMenu:SetToggleState(true, container, container:GetWidth(), container:GetHeight())
             PlaySound("igMainMenuOpen")
             return
