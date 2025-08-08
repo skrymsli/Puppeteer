@@ -463,6 +463,8 @@ function CreateTab_Options_Other(panel)
     factory:checkbox("In Raid", {"Hide default party frames while in raid", "This may cause issues with other addons"},
         "DisablePartyFrames.InRaid", function() Puppeteer.CheckPartyFramesEnabled() end)
     layout:column(1)
+    factory:checkbox("Hide While Solo", "If enabled, all Puppeteer frames will be hidden when not in a party or raid", 
+        "HideWhileSolo", function() Puppeteer.CheckGroup() end)
     local dragAllCheckbox = factory:checkbox("Drag All Frames", {"If enabled, all frames will be moved when dragging", 
         "Use the inverse key to move a single frame; Opposite effect if disabled"}, "FrameDrag.MoveAll")
     layout:ignoreNext()

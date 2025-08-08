@@ -118,6 +118,7 @@ function SetDefaults()
             ["LFTAutoRole"] = true, -- Turtle WoW
             ["TestUI"] = false,
             ["Hidden"] = false,
+            ["HideWhileSolo"] = false,
             ["ChosenProfiles"] = {
                 ["Party"] = "Default",
                 ["Pets"] = "Default",

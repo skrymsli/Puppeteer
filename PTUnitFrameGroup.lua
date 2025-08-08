@@ -65,6 +65,10 @@ function PTUnitFrameGroup:ShowCondition()
         return false
     end
 
+    if PTOptions.HideWhileSolo and (GetNumPartyMembers() == 0 and GetNumRaidMembers() == 0) then
+        return false
+    end
+
     for _, ui in pairs(self.uis) do
         if ui:IsShown() then
             return true
