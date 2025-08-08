@@ -65,7 +65,12 @@ function SetDefaults()
         _G.PTOptions = {}
     end
     
-    local OPTIONS_VERSION = 2
+    local OPTIONS_VERSION = 3
+
+    if PTOptions.OptionsVersion and (PTOptions.OptionsVersion > OPTIONS_VERSION) then
+        -- TODO: Shut down addon
+    end
+
     local isHealer = util.IsHealerClass("player")
     local isManaUser = util.ClassPowerTypes[util.GetClass("player")] == "mana"
     do
@@ -75,7 +80,6 @@ function SetDefaults()
                 ["Hostile"] = false
             },
             ["AlwaysShowTargetFrame"] = false,
-            ["AutoTarget"] = false,
             ["TargetWhileCasting"] = false,
             ["TargetAfterCasting"] = false,
             ["FrameDrag"] = {
@@ -204,6 +208,31 @@ function SetDefaults()
                 shouldUpgrade = function(self, options)
                     return options.OptionsVersion < self.version
                 end
+            },
+            {
+                version = 3,
+                upgrade = function(self, options)
+                    local upgraded = util.CloneTable(options, true)
+                    if options["AutoTarget"] then
+                        upgraded["TargetWhileCasting"] = true
+                        upgraded["TargetAfterCasting"] = true
+                    end
+                    if options["Scripts"] then
+                        local guard = "-- Auto-generated guard to prevent errors in new addon version, remove if you're sure "..
+                            "your script won't produce errors\nif true then return end\n\n"
+                        if options["Scripts"]["OnLoad"] ~= nil or options["Scripts"]["OnLoad"] ~= "" then
+                            upgraded["Scripts"]["OnLoad"] = guard..options["Scripts"]["OnLoad"]
+                        end
+                        if options["Scripts"]["OnPostLoad"] ~= nil or options["Scripts"]["OnPostLoad"] ~= "" then
+                            upgraded["Scripts"]["OnPostLoad"] = guard..options["Scripts"]["OnPostLoad"]
+                        end
+                    end
+                    upgraded["OptionsVersion"] = self.version
+                    return upgraded
+                end,
+                shouldUpgrade = function(self, options)
+                    return options.OptionsVersion < self.version
+                end
             }
         }
 
@@ -226,6 +255,21 @@ function SetDefaults()
         if not PTOptions["ButtonInfo"] then
             PTOptions["ButtonInfo"] = util.CloneTable(specialDefaults["ButtonInfo"])
         end
+    end
+
+    if not PTGlobalOptions then
+        _G.PTGlobalOptions = {}
+    end
+
+    if PTGlobalOptions.OptionsVersion and (PTGlobalOptions.OptionsVersion > OPTIONS_VERSION) then
+        -- TODO: Shut down addon
+    end
+    do
+        local defaults = {
+            ["ShowLoadMessage"] = true,
+            ["OptionsVersion"] = OPTIONS_VERSION
+        }
+        ApplyDefaults(PTGlobalOptions, defaults)
     end
 end
 

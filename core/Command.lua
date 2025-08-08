@@ -1,6 +1,8 @@
 SLASH_PUPPETEER1 = "/puppeteer"
 SLASH_PUPPETEER2 = "/pt"
-SLASH_PUPPETEER3 = "/hm"
+if not IsAddOnLoaded("HealersMate") then
+    SLASH_PUPPETEER3 = "/hm"
+end
 SlashCmdList["PUPPETEER"] = function(args)
     if args == "reset" then
         for _, group in pairs(Puppeteer.UnitFrameGroups) do
@@ -55,9 +57,9 @@ SlashCmdList["PUPPETEER"] = function(args)
         DEFAULT_CHAT_FRAME:AddMessage("The Puppeteer UI is now "..(PTOptions.Hidden and 
             PTUtil.Colorize("hidden", 1, 0.6, 0.6) or PTUtil.Colorize("shown", 0.6, 1, 0.6))..".")
     elseif args == "silent" then
-        PTOnLoadInfoDisabled = not PTOnLoadInfoDisabled
-        DEFAULT_CHAT_FRAME:AddMessage("Load message is now "..(PTOnLoadInfoDisabled and 
-            PTUtil.Colorize("off", 1, 0.6, 0.6) or PTUtil.Colorize("on", 0.6, 1, 0.6))..".")
+        PTGlobalOptions.ShowLoadMessage = not PTGlobalOptions.ShowLoadMessage
+        DEFAULT_CHAT_FRAME:AddMessage("Load message is now "..(PTGlobalOptions.ShowLoadMessage and 
+            PTUtil.Colorize("on", 0.6, 1, 0.6) or PTUtil.Colorize("off", 1, 0.6, 0.6))..".")
     elseif args == "help" or args == "?" then
         DEFAULT_CHAT_FRAME:AddMessage(PTUtil.Colorize("/pt", 0, 0.8, 0).." -- Opens the addon configuration")
         DEFAULT_CHAT_FRAME:AddMessage(PTUtil.Colorize("/pt reset", 0, 0.8, 0).." -- Resets all frame positions")
@@ -67,6 +69,8 @@ SlashCmdList["PUPPETEER"] = function(args)
         DEFAULT_CHAT_FRAME:AddMessage(PTUtil.Colorize("/pt show", 0, 0.8, 0).." -- Shows the UI")
         DEFAULT_CHAT_FRAME:AddMessage(PTUtil.Colorize("/pt hide", 0, 0.8, 0).." -- Hides the UI")
         DEFAULT_CHAT_FRAME:AddMessage(PTUtil.Colorize("/pt silent", 0, 0.8, 0).." -- Turns off/on message when addon loads")
+    elseif args == "importhm" then
+        Puppeteer.ImportHealersMateSettings()
     elseif args == "" then
         PTSettingsGui.TabFrame:Show()
     else

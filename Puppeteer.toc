@@ -3,7 +3,7 @@
 ## Title: Puppeteer
 ## Notes: Unit frames addon tailored for healers
 ## Author: OldManAlpha, Richard Truax(i2ichardt)
-## SavedVariables: PTOnLoadInfoDisabled, PTHealCache, PTPlayerHealCache, PTRoleCache
+## SavedVariables: PTGlobalOptions, PTHealCache, PTPlayerHealCache, PTRoleCache
 ## SavedVariablesPerCharacter: PTBindings, PTOptions
 
 libs\ace\AceLibrary\AceLibrary.lua

@@ -7,11 +7,12 @@ function PTGuiSimpleDialog:New()
     frame:SetWidth(300)
     frame:SetHeight(200)
     frame:EnableMouse(true)
-    --frame:SetMovable(true)
     obj:SetHandle(frame)
     obj:SetSimpleBackground(PTGuiComponent.BACKGROUND_DIALOG)
     local title = PTGuiLib.Get("title", frame)
-        :SetSize(192, 36)
+        :SetPoint("LEFT", frame, "TOPLEFT", 50, 0)
+        :SetPoint("RIGHT", frame, "TOPRIGHT", -50, 0)
+        :SetHeight(36)
         :SetPoint("CENTER", frame, "TOP")
     obj:AddComponent("title", title)
     local text = PTGuiLib.Get("text", frame)
@@ -20,21 +21,6 @@ function PTGuiSimpleDialog:New()
         :SetTextColor(1, 1, 1)
     obj:AddComponent("text", text)
     obj.Buttons = {}
-    --[[
-    frame:SetScript("OnMouseDown", function()
-        local button = arg1
-
-        if button == "LeftButton" then
-            frame:StartMoving()
-        end
-    end)
-    frame:SetScript("OnMouseUp", function()
-        local button = arg1
-
-        if button == "LeftButton" then
-            frame:StopMovingOrSizing()
-        end
-    end)]]
     return obj
 end
 
@@ -51,6 +37,22 @@ function PTGuiSimpleDialog:OnDispose()
         button:Dispose()
     end
     PTUtil.ClearTable(self.Buttons)
+    self:SetMovable(false)
+end
+
+function PTGuiSimpleDialog:SetMovable(movable)
+    self:GetHandle():SetMovable(movable)
+    self:GetHandle():SetScript("OnMouseDown", movable and function()
+        if arg1 == "LeftButton" then
+            self:GetHandle():StartMoving()
+        end
+    end or nil)
+    self:GetHandle():SetScript("OnMouseUp", movable and function()
+        if arg1 == "LeftButton" then
+            self:GetHandle():StopMovingOrSizing()
+        end
+    end or nil)
+    return self
 end
 
 function PTGuiSimpleDialog:PlayOpenSound()
@@ -86,7 +88,7 @@ function PTGuiSimpleDialog:AddButton(text, onClick)
     local anchor = getn(self.Buttons) == 0 and self:GetComponent("text") or self.Buttons[getn(self.Buttons)]
     local button = PTGuiLib.Get("button", self)
         :SetText(text)
-        :SetSize(200, 20)
+        :SetSize(self:GetWidth() - 80, 20)
         :SetPoint("TOP", anchor, "BOTTOM", 0, anchor == self:GetComponent("text") and -10 or -5)
         :OnClick(onClick)
         :SetClickSound(PlaySound, "igMainMenuClose")
