@@ -112,7 +112,11 @@ function PTButtonEditor:New()
             return
         end
         if not obj:ContainsButton(arg1) then
-            obj:AddButtonLine(arg1, arg1)
+            if not obj:AreBindingsFull() then
+                obj:AddButtonLine(arg1, arg1)
+            else
+                DEFAULT_CHAT_FRAME:AddMessage("You cannot add any more non-mouse buttons!")
+            end
         end
         obj:SetAddMode(false)
     end)
@@ -122,11 +126,19 @@ function PTButtonEditor:New()
         end
         if arg1 > 0 then
             if not obj:ContainsButton("MOUSEWHEELUP") then
-                obj:AddButtonLine("MOUSEWHEELUP", "MOUSEWHEELUP")
+                if not obj:AreBindingsFull() then
+                    obj:AddButtonLine("MOUSEWHEELUP", "MOUSEWHEELUP")
+                else
+                    DEFAULT_CHAT_FRAME:AddMessage("You cannot add any more non-mouse buttons!")
+                end
             end
         elseif arg1 < 0 then
             if not obj:ContainsButton("MOUSEWHEELDOWN") then
-                obj:AddButtonLine("MOUSEWHEELDOWN", "MOUSEWHEELDOWN")
+                if not obj:AreBindingsFull() then
+                    obj:AddButtonLine("MOUSEWHEELDOWN", "MOUSEWHEELDOWN")
+                else
+                    DEFAULT_CHAT_FRAME:AddMessage("You cannot add any more non-mouse buttons!")
+                end
             end
         end
         obj:SetAddMode(false)
@@ -167,6 +179,21 @@ end
 
 function PTButtonEditor:ContainsButton(button)
     return self.LineMap[button] ~= nil
+end
+
+function PTButtonEditor:GetNumUsedBindings()
+    local nonBindingButtons = util.GetAllButtons()
+    local used = 0
+    for button, _ in pairs(self.LineMap) do
+        if not util.ArrayContains(nonBindingButtons, button) then
+            used = used + 1
+        end
+    end
+    return used
+end
+
+function PTButtonEditor:AreBindingsFull()
+    return self:GetNumUsedBindings() >= 24
 end
 
 function PTButtonEditor:SwapIndexes(index1, index2)
