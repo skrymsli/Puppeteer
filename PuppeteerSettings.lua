@@ -391,6 +391,36 @@ end
 
 BakeTrackedAuras()
 
+function AddTrackedBuffs(...)
+    for _, buff in ipairs(arg) do
+        table.insert(DefaultTrackedBuffs, buff)
+    end
+    BakeTrackedAuras()
+end
+
+function RemoveTrackedBuffs(...)
+    for _, buff in ipairs(arg) do
+        util.RemoveElement(DefaultTrackedBuffs, buff)
+        util.RemoveElement(DefaultClassTrackedBuffs[playerClass], buff)
+    end
+    BakeTrackedAuras()
+end
+
+function AddTrackedDebuffs(...)
+    for _, debuff in ipairs(arg) do
+        table.insert(DefaultTrackedDebuffs, debuff)
+    end
+    BakeTrackedAuras()
+end
+
+function RemoveTrackedDebuffs(...)
+    for _, debuff in ipairs(arg) do
+        util.RemoveElement(DefaultTrackedDebuffs, debuff)
+        util.RemoveElement(DefaultClassTrackedDebuffs[playerClass], debuff)
+    end
+    BakeTrackedAuras()
+end
+
 DebuffTypeColors = {
     ["Magic"] = {0.35, 0.35, 1},
     ["Curse"] = {0.5, 0, 1},
