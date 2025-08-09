@@ -22,7 +22,7 @@ function PTMultiEditor:New()
     local yPos = -30
 
     local titleTooltip = {"The title of the Multi-menu, leave blank for no title", 
-        "If there's no custom tooltip text set, this title will be", "used in the bindings tooltip"}
+        "If there's no custom tooltip text set, this title will be", "used in the spells tooltip"}
     local titleLabel = PTGuiLib.GetText(frame, "Menu Title")
         :SetPoint("RIGHT", frame, "TOPLEFT", margin, yPos)
         :ApplyTooltip(titleTooltip)

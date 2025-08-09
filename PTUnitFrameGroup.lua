@@ -35,7 +35,8 @@ ContextMenu:SetDynamicOptions(function(addOption, level, args)
             self.checked = PuppeteerSettings.IsFrameLocked(gui.FrameGroup.name)
         end)
 
-    addOption("notCheckable", true)
+    addOption("notCheckable", true,
+        "disabled", true)
 
     addOption("text", "Open Settings",
         "notCheckable", true,

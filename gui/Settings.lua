@@ -556,7 +556,7 @@ function CreateTab_Options_Mods(panel)
 
     local TEXT_WIDTH = 370
 
-    local generalInfo = CreateLabel(container, "Some client mods can enhance your experience with Puppeteer by unlocking additional functionality.")
+    local generalInfo = CreateLabel(container, "Some client mods enhance your experience with Puppeteer by enabling additional functionality.")
         :SetWidth(TEXT_WIDTH)
         :SetPoint("TOP", container, "TOP", 0, -10)
 
@@ -576,11 +576,11 @@ function CreateTab_Options_Mods(panel)
         :SetFontSize(10)
         :SetFontFlags("OUTLINE")
     local superWowInfo = CreateLabel(container, "SuperWoW provides the following enhancements:\n\n"..
-        "- Enables tracking of many class buff and debuff timers\n"..
-        "- Enhances spell casting by directly casting on targets rather than split-second switching tricks\n"..
-        "- Allows you to see accurate distance to other friendly players and NPCs\n"..
-        "- Mousing over unit frames properly sets your mouseover target\n"..
-        "- Shows incoming healing from players that do not have HealComm and predicts more accurate numbers")
+        "• Enables tracking of many class buff and debuff timers\n"..
+        "• Enhances spell casting by directly casting on targets rather than split-second target switching tricks\n"..
+        "• Allows you to see accurate distance to other friendly players and NPCs\n"..
+        "• Mousing over unit frames properly sets your mouseover target\n"..
+        "• Shows incoming healing from players that do not have HealComm and predicts more accurate numbers")
         :SetJustifyH("LEFT")
         :SetWidth(TEXT_WIDTH)
         :SetPoint("TOP", superWowDetectedLabel, "BOTTOM", 0, -10)
@@ -609,8 +609,8 @@ function CreateTab_Options_Mods(panel)
         :SetFontFlags("OUTLINE")
     
     local unitXPInfo = CreateLabel(container, "UnitXP SP3 provides the following enhancements:\n\n"..
-        "- Allows you to see more accurate distance than SuperWoW and also see distance to enemies\n"..
-        "- Displays when units are out of line-of-sight")
+        "• Displays when units are out of line-of-sight\n"..
+        "• Allows you to see more accurate distance than SuperWoW and also see distance to enemies")
         :SetJustifyH("LEFT")
         :SetWidth(TEXT_WIDTH)
         :SetPoint("TOP", unitXPDetectedLabel, "BOTTOM", 0, -10)
@@ -631,7 +631,7 @@ function CreateTab_Options_Mods(panel)
         :SetFontFlags("OUTLINE")
     
     local nampowerInfo = CreateLabel(container, "Nampower provides the following enhancements:\n\n"..
-        "- Allows you to queue spell casts like in modern versions of WoW, drastically increasing casting efficiency")
+        "• Allows you to queue spell casts like in modern versions of WoW, drastically increasing casting efficiency")
         :SetJustifyH("LEFT")
         :SetWidth(TEXT_WIDTH)
         :SetPoint("TOP", nampowerDetectedLabel, "BOTTOM", 0, -10)

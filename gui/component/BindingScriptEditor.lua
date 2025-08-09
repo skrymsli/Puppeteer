@@ -23,12 +23,14 @@ function PTBindingScriptEditor:New()
     local margin = 130
     local yPos = -30
 
-    local customTextTooltip = ""
-    local name = PTGuiLib.GetText(frame, "Custom Text")
+    local customTextTooltip = "The text shown in the spells tooltip for this binding"
+    local name = PTGuiLib.GetText(frame, "Custom Tooltip Text")
         :SetPoint("RIGHT", frame, "TOPLEFT", margin, yPos)
+        :ApplyTooltip(customTextTooltip)
     local nameEditbox = PTGuiLib.Get("editbox", frame)
         :SetPoint("LEFT", name, "RIGHT", 5, 0)
         :SetSize(150, 20)
+        :ApplyTooltip(customTextTooltip)
         :SetScript("OnTextChanged", function(self)
             if not obj.Binding then
                 return

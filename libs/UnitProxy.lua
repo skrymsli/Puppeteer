@@ -33,7 +33,7 @@ GUIDCustomUnitMap = {} -- Key: GUID | Value: Array of custom units
 --UnitTypeGUIDUnitMap = {} -- Key: Unit type | Value: {Key: GUID | Value: Custom unit of type}
 CustomUnitGUIDMap = {} -- Key: Custom unit | Value: GUID
 
-DEFAULT_CUSTOM_UNITS = {["focus"] = 20}
+DEFAULT_CUSTOM_UNITS = {["focus"] = 40}
 
 UpdateListeners = {}
 
