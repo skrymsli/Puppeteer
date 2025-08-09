@@ -650,14 +650,25 @@ function CreateTab_Customize()
     local container = TabFrame:CreateTab("Customize")
     local layout = NewLabeledColumnLayout(container, {100, 340}, -40, 10)
 
+    local preferredFrameOrder = {"Party", "Pets", "Raid", "Raid Pets", "Target", "Focus"}
     local frameDropdown = CreateLabeledDropdown(container, "Select Frame", "The frame to edit the style of")
         :SetWidth(150)
         :SetDynamicOptions(function(addOption, level, args)
+            for _, name in ipairs(preferredFrameOrder) do
+                if Puppeteer.UnitFrameGroups[name] then
+                    addOption("text", name,
+                        "dropdownText", name,
+                        "initFunc", args.initFunc,
+                        "func", args.func)
+                end
+            end
             for name, group in pairs(Puppeteer.UnitFrameGroups) do
-                addOption("text", name,
-                    "dropdownText", name,
-                    "initFunc", args.initFunc,
-                    "func", args.func)
+                if not util.ArrayContains(preferredFrameOrder, name) then
+                    addOption("text", name,
+                        "dropdownText", name,
+                        "initFunc", args.initFunc,
+                        "func", args.func)
+                end
             end
         end, {
             initFunc = function(self, gui)
