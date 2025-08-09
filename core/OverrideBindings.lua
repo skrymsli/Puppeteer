@@ -159,7 +159,7 @@ function HandleKeyPress(index)
             FakeMouseWheelHold(button)
         end
         ReapplySpellsTooltip()
-        if PTOptions.CastWhen == "Mouse Down" then
+        if PTOptions.CastWhenKey == "Key Down" then
             UnitFrame_OnClick(button, Mouseover, MouseoverFrame)
         end
     else
@@ -167,7 +167,7 @@ function HandleKeyPress(index)
             CurrentlyHeldButton = nil
             ReapplySpellsTooltip()
         end
-        if PTOptions.CastWhen == "Mouse Up" then
+        if PTOptions.CastWhenKey == "Key Up" then
             UnitFrame_OnClick(button, Mouseover, MouseoverFrame)
         end
     end

@@ -130,6 +130,7 @@ function SetDefaults()
                 ["Long"] = 60 * 2 -- >2 min
             },
             ["CastWhen"] = "Mouse Up", -- Mouse Up, Mouse Down
+            ["CastWhenKey"] = "Key Down", -- Key Up, Key Down
             ["AutoResurrect"] = Puppeteer.ResurrectionSpells[util.GetClass("player")] ~= nil,
             ["UseHealPredictions"] = true,
             ["SetMouseover"] = true,
