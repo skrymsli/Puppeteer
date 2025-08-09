@@ -175,6 +175,135 @@ function GetBindingTooltipText(binding)
     end
 end
 
+function GenerateDefaultBindings()
+    _G.PTBindings = {}
+    PTBindings["SelectedLoadout"] = "Default"
+    local loadouts = {}
+    PTBindings["Loadouts"] = loadouts
+    loadouts["Default"] = CreateEmptyBindingsLoadout()
+
+    local friendlyOrHostile = "Friendly"
+    local modifier
+    local function setContext(a, b)
+        friendlyOrHostile = a
+        modifier = b
+    end
+    local function setBinding(button, binding)
+        local bindings = GetBindings()
+        local l1 = bindings.Bindings[friendlyOrHostile]
+        if not l1 then
+            l1 = {}
+            bindings.Bindings[friendlyOrHostile] = l1
+        end
+        local l2 = l1[modifier]
+        if not l2 then
+            l2 = {}
+            l1[modifier] = l2
+        end
+        l2[button] = binding
+    end
+    local function setSpell(button, spell)
+        setBinding(button, {Type = "SPELL", Data = spell})
+    end
+    local function setBestSpell(button, spells)
+        local selected
+        for _, spell in ipairs(spells) do
+            if util.GetSpellID(spell) then
+                selected = spell
+                break
+            end
+        end
+        if not selected then
+            return
+        end
+        setSpell(button, selected)
+    end
+    local function setMulti(button, tooltip, spells)
+        local bindings = {}
+        for i, spell in ipairs(spells) do
+            bindings[i] = {Type = "SPELL", Data = spell}
+        end
+        setBinding(button, {
+            Type = "MULTI",
+            Tooltip = {
+                Type = "CUSTOM",
+                Data = tooltip
+            },
+            Data = {
+                Bindings = bindings
+            }
+        })
+    end
+    local function setAction(button, action)
+        setBinding(button, {Type = "ACTION", Data = action})
+    end
+    local function addHealerControls()
+        setContext("Friendly", "Shift")
+        setAction("LeftButton", "Target")
+        setAction("MiddleButton", "Role")
+        setAction("RightButton", "Menu")
+    end
+
+    local class = GetClass("player")
+    if class == "PRIEST" then
+        setContext("Friendly", "None")
+        setSpell("LeftButton", "Power Word: Shield")
+        setSpell("MiddleButton", "Renew")
+        setBestSpell("RightButton", {"Greater Heal", "Heal", "Lesser Heal"})
+
+        addHealerControls()
+
+        setContext("Friendly", "Control")
+        setMulti("LeftButton", "Buffs", {"Power Word: Fortitude", "Divine Spirit", "Shadow Protection"})
+        setBinding("RightButton", "Dispel Magic")
+
+        setContext("Hostile", "None")
+        setSpell("RightButton", "Dispel Magic")
+        
+        setContext("Hostile", "Control")
+        setSpell("RightButton", "Dispel Magic")
+    elseif class == "DRUID" then
+        setContext("Friendly", "None")
+        setSpell("LeftButton", "Rejuvenation")
+        setSpell("RightButton", "Healing Touch")
+
+        addHealerControls()
+
+        setContext("Friendly", "Control")
+        setMulti("LeftButton", "Buffs", {"Mark of the Wild", "Thorns"})
+        setSpell("RightButton", "Remove Curse")
+    elseif class == "PALADIN" then
+        setContext("Friendly", "None")
+        setSpell("LeftButton", "Flash of Light")
+        setSpell("RightButton", "Holy Light")
+
+        addHealerControls()
+
+        setContext("Friendly", "Control")
+        setMulti("LeftButton", "Blessings", {"Blessing of Might", "Blessing of Wisdom", "Blessing of Salvation", "Blessing of Kings"})
+        setBestSpell("RightButton", {"Cleanse", "Purify"})
+    elseif class == "SHAMAN" then
+        setContext("Friendly", "None")
+        setBestSpell("LeftButton", {"Healing Wave", "Lesser Healing Wave"})
+        setSpell("RightButton", "Chain Heal")
+
+        addHealerControls()
+
+        setContext("Friendly", "Control")
+        setSpell("RightButton", "Cure Disease")
+    else
+        -- Non-healer classes can use this addon like traditional raid frames
+        setContext("Friendly", "None")
+        setAction("LeftButton", "Target")
+        setAction("MiddleButton", "Role")
+        setAction("RightButton", "Menu")
+
+        setContext("Hostile", "None")
+        setAction("LeftButton", "Target")
+        setAction("RightButton", "Menu")
+    end
+end
+
 local Sound_Disabled = function() end
 
 function RunTargetedAction(binding, unit, actionFunc, mustTempTarget)

@@ -60,6 +60,20 @@ function UpdateTrackedDebuffTypes()
     TrackedDebuffTypes = trackedDebuffTypes
 end
 
+function LetsCrashOut()
+    local dialog
+    dialog = PTGuiLib.Get("simple_dialog", UIParent)
+        :SetPoint("CENTER")
+        :SetTitle("Puppeteer")
+        :SetText("You are using a newer settings version with an older version of Puppeteer! Either update the addon or "..
+            "manually delete its data.")
+        :AddButton("Okay", function()
+            dialog:Dispose()
+        end)
+    Puppeteer.UnregisterEventHandlers()
+    SeeYaImCrashingOut() -- im crashing out
+end
+
 function SetDefaults()
     if not PTOptions then
         _G.PTOptions = {}
@@ -68,7 +82,11 @@ function SetDefaults()
     local OPTIONS_VERSION = 3
 
     if PTOptions.OptionsVersion and (PTOptions.OptionsVersion > OPTIONS_VERSION) then
-        -- TODO: Shut down addon
+        LetsCrashOut()
+    end
+
+    if PTGlobalOptions.OptionsVersion and (PTGlobalOptions.OptionsVersion > OPTIONS_VERSION) then
+        LetsCrashOut()
     end
 
     local isHealer = util.IsHealerClass("player")
@@ -262,9 +280,6 @@ function SetDefaults()
         _G.PTGlobalOptions = {}
     end
 
-    if PTGlobalOptions.OptionsVersion and (PTGlobalOptions.OptionsVersion > OPTIONS_VERSION) then
-        -- TODO: Shut down addon
-    end
     do
         local defaults = {
             ["ShowLoadMessage"] = true,
@@ -333,7 +348,7 @@ DefaultClassTrackedBuffs = {
     ["PRIEST"] = {"Prayer of Fortitude", "Power Word: Fortitude", "Prayer of Spirit", "Divine Spirit", 
         "Prayer of Shadow Protection", "Shadow Protection", "Holy Champion", "Champion's Grace", "Empower Champion", 
         "Fear Ward", "Inner Fire", "Renew", "Greater Heal", "Lightwell Renew", "Inspiration", 
-        "Fade", "Spirit Tap", "Enlighten"},
+        "Fade", "Spirit Tap", "Enlighten", "Enlightened"},
     ["WARRIOR"] = {"Battle Shout"},
     ["DRUID"] = {"Gift of the Wild", "Mark of the Wild", "Thorns", "Rejuvenation", "Regrowth"},
     ["SHAMAN"] = {"Water Walking", "Healing Way", "Ancestral Fortitude"},

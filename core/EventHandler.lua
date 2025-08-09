@@ -2,6 +2,7 @@ PTUtil.SetEnvironment(Puppeteer)
 local _G = getfenv(0)
 local util = PTUtil
 
+EventHandlerFrames = {}
 local function RegisterEventHandler(events, handler)
     if type(events) == "string" then
         events = {events}
@@ -11,6 +12,13 @@ local function RegisterEventHandler(events, handler)
         frame:RegisterEvent(event)
     end
     frame:SetScript("OnEvent", handler)
+    table.insert(EventHandlerFrames, frame)
+end
+
+function UnregisterEventHandlers()
+    for _, frame in ipairs(EventHandlerFrames) do
+        frame:UnregisterAllEvents()
+    end
 end
 
 RegisterEventHandler("ADDON_LOADED", function()
