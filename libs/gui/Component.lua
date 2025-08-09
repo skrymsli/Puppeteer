@@ -416,4 +416,4 @@ end
 
 
 PTGuiComponent:Import(true, "ClearAllPoints", "SetAllPoints", "SetWidth", "SetHeight", "Show", "Hide", "SetFrameLevel")
-PTGuiComponent:Import(false, "GetWidth", "GetHeight", "GetName", "HasScript", "GetScript", "GetParent", "GetFrameLevel")
+PTGuiComponent:Import(false, "GetWidth", "GetHeight", "GetName", "HasScript", "GetScript", "GetParent", "GetFrameLevel", "IsVisible", "IsShown")

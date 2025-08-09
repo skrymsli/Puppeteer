@@ -28,6 +28,9 @@ function PTGuiColorSelect:New()
     frame:SetScript("OnMouseUp", function()
         ColorPickerFrame.func = function()
             obj:SetColorRGB(ColorPickerFrame:GetColorRGB())
+            if not obj:IsVisible() then
+                return
+            end
             if obj.ColorSelectHandler then
                 obj.ColorSelectHandler(obj)
             end

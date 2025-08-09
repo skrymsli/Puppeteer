@@ -130,6 +130,10 @@ function PTBindingScriptEditor:OnAcquire()
     self:SetSize(375, 400)
 end
 
+function PTBindingScriptEditor:OnDispose()
+    self.super.OnDispose(self)
+end
+
 PTBindingScriptEditor:CreateGetter("Editbox")
 PTBindingScriptEditor:CreateGetter("TooltipTextEditbox")
 PTBindingScriptEditor:CreateGetter("TooltipColorCheckbox")
