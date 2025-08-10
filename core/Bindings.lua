@@ -177,10 +177,20 @@ end
 
 function GenerateDefaultBindings()
     _G.PTBindings = {}
-    PTBindings["SelectedLoadout"] = "Default"
+    PTBindings["SelectedLoadout"] = "Primary"
     local loadouts = {}
     PTBindings["Loadouts"] = loadouts
-    loadouts["Default"] = CreateEmptyBindingsLoadout()
+    loadouts["Primary"] = CreateEmptyBindingsLoadout()
+
+    local queuedBestSpellTasks = {}
+    local frame = CreateFrame("Frame")
+    frame:RegisterEvent("SPELLS_CHANGED")
+    frame:SetScript("OnEvent", function()
+        frame:UnregisterAllEvents()
+        for _, task in ipairs(queuedBestSpellTasks) do
+            task()
+        end
+    end)
 
     local friendlyOrHostile = "Friendly"
     local modifier
@@ -206,17 +216,18 @@ function GenerateDefaultBindings()
         setBinding(button, {Type = "SPELL", Data = spell})
     end
     local function setBestSpell(button, spells)
-        local selected
-        for _, spell in ipairs(spells) do
-            if util.GetSpellID(spell) then
-                selected = spell
-                break
+        local friendlyOrHostile = friendlyOrHostile
+        local modifier = modifier
+        table.insert(queuedBestSpellTasks, function()
+            for _, spell in ipairs(spells) do
+                if util.GetSpellID(spell) then
+                    setContext(friendlyOrHostile, modifier)
+                    setSpell(button, spell)
+                    SetSelectedBindingsLoadout(GetSelectedBindingsLoadoutName())
+                    return
+                end
             end
-        end
-        if not selected then
-            return
-        end
-        setSpell(button, selected)
+        end)
     end
     local function setMulti(button, tooltip, spells)
         local bindings = {}
@@ -255,7 +266,7 @@ function GenerateDefaultBindings()
 
         setContext("Friendly", "Control")
         setMulti("LeftButton", "Buffs", {"Power Word: Fortitude", "Divine Spirit", "Shadow Protection"})
-        setBinding("RightButton", "Dispel Magic")
+        setSpell("RightButton", "Dispel Magic")
 
         setContext("Hostile", "None")
         setSpell("RightButton", "Dispel Magic")
@@ -482,7 +493,6 @@ local function RunMultiBindingElement(self)
 end
 
 function RunBinding_Multi(binding, unit, unitFrame)
-    StartTiming("MultiInit")
     if MultiMenu.Options ~= nil then
         compost:Reclaim(MultiMenu.Options, 1)
     end
@@ -502,9 +512,7 @@ function RunBinding_Multi(binding, unit, unitFrame)
     for _, subBinding in ipairs(list) do
         local subBinding = subBinding
         local display = compost:GetTable()
-        StartTiming("MultiInitDisplay")
         _UpdateBindingDisplay(subBinding, display)
-        EndTiming("MultiInitDisplay")
         table.insert(options, compost:AcquireHash(
             "text", display.Normal,
             "notCheckable", true,
@@ -536,7 +544,6 @@ function RunBinding_Multi(binding, unit, unitFrame)
     MultiMenu:SetToggleState(true, container, container:GetWidth(), container:GetHeight())
     MultiMenu:SetKeepOpen(true)
     PlaySound("GAMESPELLBUTTONMOUSEDOWN")
-    EndTiming("MultiInit")
 end
 
 function RunBinding(binding, unit, unitFrame)

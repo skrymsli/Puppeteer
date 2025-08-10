@@ -244,10 +244,10 @@ function SetDefaults()
                     if options["Scripts"] then
                         local guard = "-- Auto-generated guard to prevent errors in new addon version, remove if you're sure "..
                             "your script won't produce errors\nif true then return end\n\n"
-                        if options["Scripts"]["OnLoad"] ~= nil or options["Scripts"]["OnLoad"] ~= "" then
+                        if options["Scripts"]["OnLoad"] ~= nil and options["Scripts"]["OnLoad"] ~= "" then
                             upgraded["Scripts"]["OnLoad"] = guard..options["Scripts"]["OnLoad"]
                         end
-                        if options["Scripts"]["OnPostLoad"] ~= nil or options["Scripts"]["OnPostLoad"] ~= "" then
+                        if options["Scripts"]["OnPostLoad"] ~= nil and options["Scripts"]["OnPostLoad"] ~= "" then
                             upgraded["Scripts"]["OnPostLoad"] = guard..options["Scripts"]["OnPostLoad"]
                         end
                     end

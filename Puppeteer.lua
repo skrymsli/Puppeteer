@@ -221,8 +221,6 @@ local function initUnitFrames()
 end
 
 function OnAddonLoaded()
-    StartTiming("OnLoad")
-
     PuppeteerSettings.SetDefaults()
 
     if PTBindings == nil then
@@ -437,7 +435,9 @@ function OnAddonLoaded()
             end
         end
     end
+end
 
+function PromptHealersMateImport()
     if IsAddOnLoaded("HealersMate") and HealersMate and PTOptions["ImportedFromHM"] == nil then
         local dialog = PTGuiLib.Get("simple_dialog", UIParent)
             :SetWidth(350)
@@ -472,8 +472,6 @@ function OnAddonLoaded()
             dialog:Dispose()
         end)
     end
-
-    EndTiming("OnLoad")
 end
 
 function ImportHealersMateSettings()
@@ -489,7 +487,7 @@ function ImportHealersMateSettings()
 
     if _G.PTGlobalOptions["ImportedFromHM"] == nil then
         -- Import global fields if HealersMate has a larger heal cache
-        if util.GetTableSize(_G.PTHealCache) < util.GetTableSize(_G.HMHealCache) then
+        if _G.PTHealCache and (util.GetTableSize(_G.PTHealCache) < util.GetTableSize(_G.HMHealCache)) then
             _G.PTHealCache = _G.HMHealCache
             _G.PTPlayerHealCache = _G.HMPlayerHealCache
             _G.PTRoleCache = _G.HMRoleCache
@@ -697,7 +695,7 @@ end
 
 -- Reevaluates what UI frames should be shown and updates the roster if using SuperWoW
 function CheckGroup()
-    StartTiming("CheckGroup")
+    --StartTiming("CheckGroup")
     if GetNumRaidMembers() > 0 then
         if not CurrentlyInRaid then
             CurrentlyInRaid = true
@@ -747,7 +745,7 @@ function CheckGroup()
         PTHealPredict.SetRelevantGUIDs(GuidRoster.GetTrackedGuids())
     end
     RunTrackingScan()
-    EndTiming("CheckGroup")
+    --EndTiming("CheckGroup")
 end
 
 function CheckTarget()

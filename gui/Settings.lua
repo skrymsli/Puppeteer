@@ -14,7 +14,7 @@ function Init()
         :SetSimpleBackground(PTGuiComponent.BACKGROUND_DIALOG)
         :SetSpecial()
 
-    if PTOptions.Debug then
+    if PTOptions.Debug2 then
         TabFrame:Show()
     end
 

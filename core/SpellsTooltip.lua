@@ -265,7 +265,7 @@ function ApplySpellsTooltip(attachTo, unit, owner)
     if not PTOptions.SpellsTooltip.Enabled then
         return
     end
-    StartTiming("SpellsTooltip")
+    --StartTiming("SpellsTooltip")
     SetTooltipKeyListenerEnabled(true)
     SpellsTooltipOwner = owner
     SpellsTooltipAttach = attachTo
@@ -314,9 +314,9 @@ function ApplySpellsTooltip(attachTo, unit, owner)
         resEntry = UpdateBindingDisplay(SpecialSpellBindings[ResurrectionSpells[selfClass]], compost:GetTable())
     end
     
-    StartTiming("BindingDisplays")
+    --StartTiming("BindingDisplays")
     local entries = UpdateBindingDisplays(friendly and "Friendly" or "Hostile", GetKeyModifier())
-    EndTiming("BindingDisplays")
+    --EndTiming("BindingDisplays")
     for _, button in ipairs(PTOptions.Buttons) do
         local focused = not CurrentlyHeldButton or button == CurrentlyHeldButton
         local displayCache = entries[button]
@@ -342,7 +342,7 @@ function ApplySpellsTooltip(attachTo, unit, owner)
         compost:Reclaim(resEntry)
     end
     SpellsTooltip:Show()
-    EndTiming("SpellsTooltip")
+    --EndTiming("SpellsTooltip")
 end
 
 function HideSpellsTooltip()
