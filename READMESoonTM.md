@@ -76,5 +76,5 @@ While not required, the mods listed below will massively improve your experience
 
 - [i2ichardt](https://github.com/i2ichardt) - Original HealersMate Author
 - Turtle WoW Community - Answers to addon development questions
-- [Shagu](https://shagu.org/) - Utility function, providing a wealth of research material, and general inspiration
+- [Shagu](https://shagu.org/) - Utility functions, providing a wealth of research material, and general inspiration
 - @blondieart (Discord) - Created the art at the top of this page
