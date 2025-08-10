@@ -4,8 +4,8 @@
 Puppeteer, formerly HealersMate, is a unit frames addon for World of Warcraft Vanilla 1.12 that strives to be an alternative to modern WoW's VuhDo, Cell, or Healbot. Its features are tailored for healers, but can be a viable unit frames addon for any class and spec.
 
 ### Features
-- See health, power, marks, incoming healing, mob aggro, and relevant buffs & debuffs of your party or raid and target
-- Bind mouse clicks, mouse wheel, and keys to spells
+- See health, power, marks, incoming healing, mob aggro, and relevant buffs & debuffs of your party, raid, pets, and targets
+- Bind mouse clicks, the mouse wheel, and keys to spells
 - See your bound spells, their cost, and available mana while hovering over frames
 - Assign roles to players
 - Choose from a variety of preset frame styles, with some customization, eventually to be fully customizable
@@ -59,7 +59,7 @@ While not required, the mods listed below will massively improve your experience
 
 - [ ] Fully customizable unit frames
 - [ ] Customizable buff/debuff tracking
-- [ ] Localization
+- [ ] Support for non-English clients
 
 ### FAQ & Known Issues
 
@@ -76,5 +76,5 @@ While not required, the mods listed below will massively improve your experience
 
 - [i2ichardt](https://github.com/i2ichardt) - Original HealersMate Author
 - Turtle WoW Community - Answers to addon development questions
-- [Shagu](https://shagu.org/) - Providing a wealth of research material & general inspiration
+- [Shagu](https://shagu.org/) - Utility function, providing a wealth of research material, and general inspiration
 - @blondieart (Discord) - Created the art at the top of this page
