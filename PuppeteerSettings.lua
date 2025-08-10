@@ -78,6 +78,10 @@ function SetDefaults()
     if not PTOptions then
         _G.PTOptions = {}
     end
+
+    if not PTGlobalOptions then
+        _G.PTGlobalOptions = {}
+    end
     
     local OPTIONS_VERSION = 3
 
@@ -275,10 +279,6 @@ function SetDefaults()
         if not PTOptions["ButtonInfo"] then
             PTOptions["ButtonInfo"] = util.CloneTable(specialDefaults["ButtonInfo"])
         end
-    end
-
-    if not PTGlobalOptions then
-        _G.PTGlobalOptions = {}
     end
 
     do
