@@ -1279,6 +1279,12 @@ function PTUnitFrame:Initialize()
         end
         PT.Mouseover = nil
         PT.MouseoverFrame = nil
+        if PT.CurrentlyHeldButton and not util.GetAllButtonsSet()[PT.CurrentlyHeldButton] then
+            self.pressed = false
+            self:AdjustHealthPosition()
+            PT.CurrentlyHeldButton = nil
+            PT.ReapplySpellsTooltip()
+        end
         PT.RemoveOverrideBindings()
     end)
     button:EnableMouse(true)

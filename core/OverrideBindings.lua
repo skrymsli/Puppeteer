@@ -33,7 +33,7 @@ function InitOverrideBindingsMapping()
     util.ClearTable(KeybindIndexMap)
     local index = 1
     for _, button in ipairs(PTOptions.Buttons) do
-        if not util.ArrayContains(util.GetAllButtons(), button) then
+        if not util.GetAllButtonsSet()[button] then
             for _, prefix in ipairs(BindingPrefixes) do
                 KeybindIndexMap[prefix..button] = index
             end
@@ -158,6 +158,8 @@ function HandleKeyPress(index)
     local button = IndexButtonMap[index]
     if keystate == "down" then
         CurrentlyHeldButton = button
+        MouseoverFrame.pressed = true
+        MouseoverFrame:AdjustHealthPosition()
         if button == "MOUSEWHEELUP" or button == "MOUSEWHEELDOWN" then
             FakeMouseWheelHold(button)
         end
@@ -168,6 +170,8 @@ function HandleKeyPress(index)
     else
         if button ~= "MOUSEWHEELUP" and button ~= "MOUSEWHEELDOWN" then
             CurrentlyHeldButton = nil
+            MouseoverFrame.pressed = false
+            MouseoverFrame:AdjustHealthPosition()
             ReapplySpellsTooltip()
         end
         if PTOptions.CastWhenKey == "Key Up" then
@@ -185,6 +189,10 @@ local MouseWheelHeldFaker_OnUpdate = function()
         MouseWheelHeldFaker:SetScript("OnUpdate", nil)
         if CurrentlyHeldButton == unholdButton then
             CurrentlyHeldButton = nil
+            if MouseoverFrame then
+                MouseoverFrame.pressed = false
+                MouseoverFrame:AdjustHealthPosition()
+            end
             ReapplySpellsTooltip()
         end
     end

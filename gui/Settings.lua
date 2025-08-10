@@ -744,8 +744,7 @@ function CreateTab_Customize()
             if not PTOptions.FrameOptions[frameName] then
                 PTOptions.FrameOptions[frameName] = {}
             end
-            local options = PTOptions.FrameOptions[frameName]
-            options.Hidden = self:GetChecked() == 1
+            PuppeteerSettings.SetFrameHidden(frameName, self:GetChecked() == 1)
             Puppeteer.CheckGroup()
         end)
     layout:column(2):levelAt(1):layoutComponent(hideFrameCheckbox)

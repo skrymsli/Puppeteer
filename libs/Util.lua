@@ -1005,6 +1005,11 @@ function GetAllButtons()
     return buttons
 end
 
+local buttonsSet = ToSet(buttons, true)
+function GetAllButtonsSet()
+    return buttonsSet
+end
+
 local upButtons = {}
 for _, button in ipairs(buttons) do
     table.insert(upButtons, button.."Up")

@@ -460,6 +460,13 @@ function IsFrameHidden(frameName)
     return PTOptions.FrameOptions[frameName] and PTOptions.FrameOptions[frameName].Hidden
 end
 
+function SetFrameHidden(frameName, hidden)
+    if not PTOptions.FrameOptions[frameName] then
+        PTOptions.FrameOptions[frameName] = {}
+    end
+    PTOptions.FrameOptions[frameName].Hidden = hidden
+end
+
 function IsFrameLocked(frameName)
     return PTOptions.FrameOptions[frameName] and PTOptions.FrameOptions[frameName].Locked
 end

@@ -182,10 +182,10 @@ function PTButtonEditor:ContainsButton(button)
 end
 
 function PTButtonEditor:GetNumUsedBindings()
-    local nonBindingButtons = util.GetAllButtons()
+    local nonBindingButtons = util.GetAllButtonsSet()
     local used = 0
     for button, _ in pairs(self.LineMap) do
-        if not util.ArrayContains(nonBindingButtons, button) then
+        if not nonBindingButtons[button] then
             used = used + 1
         end
     end
