@@ -3,26 +3,25 @@
 <img align="right" width="40%" src="https://i.imgur.com/hKjSAd5.jpeg">
 Puppeteer, formerly HealersMate, is a unit frames addon for World of Warcraft Vanilla 1.12 that strives to be an alternative to modern WoW's VuhDo, Cell, or Healbot. Its features are tailored for healers, but can be a viable unit frames addon for any class and spec.
 
-### Base Features
+### Features
 - See health, power, marks, incoming healing, mob aggro, and relevant buffs & debuffs of your party or raid and target
 - Bind mouse clicks, mouse wheel, and keys to spells
 - See your bound spells, their cost, and available mana while hovering over frames
 - Assign roles to players
 - Choose from a variety of preset frame styles, with some customization, eventually to be fully customizable
-### Mod-Enabled Features
 - See the distance between you and other players (**[SuperWoW or UnitXP SP3 Required](#client-mods-that-enhance-puppeteer)**, otherwise only can check 28 yds)
 - See when players/enemies are out of your line-of-sight (**[UnitXP SP3 Required](#client-mods-that-enhance-puppeteer)**)
 - See the remaining duration of buffs and HoTs on other players (**[SuperWoW Required](#client-mods-that-enhance-puppeteer)**)
 - Add players/enemies to a separate Focus group, even if they're not in your party or raid (**[SuperWoW Required](#client-mods-that-enhance-puppeteer)**)
 
-<p align="center">
-  <img src="https://github.com/OldManAlpha/HealersMate/raw/main/Screenshots/Party-Example.PNG" alt="Party Example" width=20%>
-  <img src="https://github.com/OldManAlpha/HealersMate/raw/main/Screenshots/Raid-Example.PNG" alt="Raid Example" width=75%>
+<p align="left">
+  <img src="https://github.com/OldManAlpha/HealersMate/raw/main/Screenshots/Party-Example.PNG" alt="Party Example" width=15%>
+  <img src="https://i.imgur.com/nXSCc8F.png" alt="Raid Example" width=31%>
 </p>
 <br clear="all">
-<img align="right" width="36%" src="https://i.imgur.com/KoFygXv.png">
 
-### Simple Yet Advanced Bindings
+### Simple, Yet Advanced Bindings
+<img align="right" width="36%" src="https://i.imgur.com/KoFygXv.png">
 
 Puppeteer boasts the ability to bind mouse clicks, the mouse wheel, and keys to any combination of Ctrl/Shift/Alt modifiers. You can bind spells, macros, items, custom Lua scripts, and menus which contain multiple bindings.
 <p align="left">
@@ -40,7 +39,7 @@ Puppeteer boasts the ability to bind mouse clicks, the mouse wheel, and keys to 
 
 ### View Spells at a Glance
 
-When hovering over a player, a tooltip is displayed showing you what spells you have bound, their power cost, and how many times you can cast them.
+When hovering over a player, a tooltip is displayed showing you your current power, what spells you have bound, and their power cost.
 
 <p align="left">
   <img src="https://i.imgur.com/ZfChKaQ.png" width=40% align="top">
