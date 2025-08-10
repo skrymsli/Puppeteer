@@ -586,18 +586,18 @@ function SetPartyFramesEnabled(enabled)
     end
 end
 
-function _G.PT_ToggleFocusUnit(unit)
+function ToggleFocusUnit(unit)
     if PTUnitProxy.IsUnitUnitType(unit, "focus") then
         if not PTUnitProxy.CustomUnitsSetMap["focus"][unit] then
             return -- Do not toggle focus if user is clicking on a UI that isn't the focus UI
         end
-        PT_UnfocusUnit(unit)
+        UnfocusUnit(unit)
     else
-        PT_FocusUnit(unit)
+        FocusUnit(unit)
     end
 end
 
-function _G.PT_FocusUnit(unit)
+function FocusUnit(unit)
     local guid = PTGuidRoster.ResolveUnitGuid(unit)
     if not guid or PTUnitProxy.IsGuidUnitType(guid, "focus") then
         return
@@ -607,7 +607,7 @@ function _G.PT_FocusUnit(unit)
     PlaySound("GAMETARGETHOSTILEUNIT")
 end
 
-function _G.PT_UnfocusUnit(unit)
+function UnfocusUnit(unit)
     local guid = PTGuidRoster.ResolveUnitGuid(unit)
     if not guid then
         return
@@ -620,7 +620,7 @@ function _G.PT_UnfocusUnit(unit)
     PlaySound("INTERFACESOUND_LOSTTARGETUNIT")
 end
 
-function _G.PT_PromoteFocus(unit)
+function PromoteFocus(unit)
     local guid = PTGuidRoster.ResolveUnitGuid(unit)
     if not guid then
         return

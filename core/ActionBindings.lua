@@ -127,7 +127,7 @@ RegisterActionBind({
             return
         end
 
-        PT_ToggleFocusUnit(unit)
+        ToggleFocusUnit(unit)
     end
 })
 RegisterActionBind({
@@ -139,7 +139,7 @@ RegisterActionBind({
             return
         end
 
-        PT_PromoteFocus(unit)
+        PromoteFocus(unit)
     end
 })
 --[[
