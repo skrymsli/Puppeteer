@@ -65,9 +65,11 @@ function AddUpdateBindingsFunction(funcName)
     })
 end
 function AddUpdateBindingsFrame(frameName)
-    table.insert(updateBindingsFrames, {
-        frame = _G[frameName]
-    })
+    if _G[frameName] then
+        table.insert(updateBindingsFrames, {
+            frame = _G[frameName]
+        })
+    end
 end
 -- Alternative method
 function HookUpdateBindingsFrame(frameName)
@@ -89,6 +91,7 @@ AddUpdateBindingsFrame("MainMenuMicroButton")
 AddUpdateBindingsFrame("QuestLogMicroButton")
 AddUpdateBindingsFrame("SocialsMicroButton")
 AddUpdateBindingsFrame("WorldMapMicroButton")
+AddUpdateBindingsFrame("pfActionBar") -- pfUI
 
 local function StopUpdateBindingsUpdates()
     if holdingFunctionsHostage then
