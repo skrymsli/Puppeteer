@@ -649,10 +649,20 @@ end
 
 function CreateTab_Customize()
     local container = TabFrame:CreateTab("Customize")
-    local layout = NewLabeledColumnLayout(container, {100, 340}, -40, 10)
+
+    local frameStyleContainer = PTGuiLib.Get("container", container)
+        :SetSimpleBackground()
+        :SetPoint("TOPLEFT", container, "TOPLEFT", 5, -26)
+        :SetPoint("BOTTOMRIGHT", container, "TOPRIGHT", -5, -120)
+    local layout = NewLabeledColumnLayout(frameStyleContainer, {100, 340}, -35, 10)
+
+    local frameSettingsText = CreateLabel(frameStyleContainer, "Frame Group Settings")
+        :SetPoint("TOP", frameStyleContainer, "TOP", 0, -5)
+        :SetFontSize(14)
+    
 
     local preferredFrameOrder = {"Party", "Pets", "Raid", "Raid Pets", "Target", "Focus"}
-    local frameDropdown = CreateLabeledDropdown(container, "Select Frame", "The frame to edit the style of")
+    local frameDropdown = CreateLabeledDropdown(frameStyleContainer, "Select Frame", "The frame to edit the attributes of")
         :SetWidth(150)
         :SetDynamicOptions(function(addOption, level, args)
             for _, name in ipairs(preferredFrameOrder) do
@@ -677,14 +687,14 @@ function CreateTab_Customize()
             end,
             func = function(self, gui)
                 StyleDropdown:UpdateText()
-                HideFrameCheckbox:SetChecked(PuppeteerSettings.IsFrameHidden(self.text))
+                UpdateFrameOptions()
             end
         })
         :SetText("Party")
     FrameDropdown = frameDropdown
     layout:layoutComponent(frameDropdown)
     local GetSelectedProfileName = PuppeteerSettings.GetSelectedProfileName
-    local styleDropdown = CreateLabeledDropdown(container, "Choose Style", "The style of the frame")
+    local styleDropdown = CreateLabeledDropdown(frameStyleContainer, "Choose Style", "The style of the frame")
         :SetWidth(150)
         :SetDynamicOptions(function(addOption, level, args)
             local profiles = PTProfileManager.GetProfileNames()
@@ -738,20 +748,28 @@ function CreateTab_Customize()
     StyleDropdown = styleDropdown
     layout:offset(0, 10):layoutComponent(styleDropdown)
 
-    local hideFrameCheckbox = CreateLabeledCheckbox(container, "Hide Frame", "If checked, this frame will not be visible")
+    local lockFrameCheckbox = CreateLabeledCheckbox(frameStyleContainer, "Lock Frame", {"If checked, this frame will not be movable", 
+        "Note: This setting is also accessible by right-clicking the group title bar"})
         :OnClick(function(self)
             local frameName = frameDropdown:GetText()
-            if not PTOptions.FrameOptions[frameName] then
-                PTOptions.FrameOptions[frameName] = {}
-            end
+            PuppeteerSettings.SetFrameLocked(frameName, self:GetChecked() == 1)
+        end)
+    layout:column(2):layoutComponent(lockFrameCheckbox)
+    LockFrameCheckbox = lockFrameCheckbox
+
+    local hideFrameCheckbox = CreateLabeledCheckbox(frameStyleContainer, "Hide Frame", "If checked, this frame will not be visible")
+        :OnClick(function(self)
+            local frameName = frameDropdown:GetText()
             PuppeteerSettings.SetFrameHidden(frameName, self:GetChecked() == 1)
             Puppeteer.CheckGroup()
         end)
-    layout:column(2):levelAt(1):layoutComponent(hideFrameCheckbox)
+    layout:layoutComponent(hideFrameCheckbox)
     HideFrameCheckbox = hideFrameCheckbox
 
+    UpdateFrameOptions()
+
     local overrideContainer = PTGuiLib.Get("scroll_frame", container)
-        :SetPoint("TOPLEFT", container, "TOPLEFT", 5, -100)
+        :SetPoint("TOPLEFT", frameStyleContainer, "BOTTOMLEFT", 0, -5)
         :SetPoint("BOTTOMRIGHT", container, "BOTTOMRIGHT", -5, 5)
         :SetSimpleBackground()
     StyleOverrideContainer = overrideContainer
@@ -823,6 +841,11 @@ function CreateTab_Customize()
     add(createDropdown("Min Units Y", "The minimum amount of unit space to take on the Y-axis", "MinUnitsY", {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10}))
     add(createDropdown("Horizontal Spacing", "The number of pixels between units", "HorizontalSpacing", {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10}))
     add(createDropdown("Vertical Spacing", "The number of pixels between units", "VerticalSpacing", {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10}))
+end
+
+function UpdateFrameOptions()
+    LockFrameCheckbox:SetChecked(PuppeteerSettings.IsFrameLocked(FrameDropdown:GetText()))
+    HideFrameCheckbox:SetChecked(PuppeteerSettings.IsFrameHidden(FrameDropdown:GetText()))
 end
 
 StyleOverrideComponents = {}

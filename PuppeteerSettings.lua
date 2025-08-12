@@ -465,6 +465,7 @@ function SetFrameHidden(frameName, hidden)
         PTOptions.FrameOptions[frameName] = {}
     end
     PTOptions.FrameOptions[frameName].Hidden = hidden
+    PTSettingsGui.UpdateFrameOptions()
 end
 
 function IsFrameLocked(frameName)
@@ -476,4 +477,9 @@ function SetFrameLocked(frameName, locked)
         PTOptions.FrameOptions[frameName] = {}
     end
     PTOptions.FrameOptions[frameName].Locked = locked
+    local group = Puppeteer.UnitFrameGroups[frameName]
+    if group then
+        group:UpdateHeaderColor()
+    end
+    PTSettingsGui.UpdateFrameOptions()
 end

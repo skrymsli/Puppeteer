@@ -29,7 +29,6 @@ ContextMenu:SetDynamicOptions(function(addOption, level, args)
     addOption("text", "Lock Position",
         "func", function(self, gui)
             PuppeteerSettings.SetFrameLocked(gui.FrameGroup.name, not self.checked)
-            gui.FrameGroup:UpdateHeaderColor()
         end,
         "initFunc", function(self, gui)
             self.checked = PuppeteerSettings.IsFrameLocked(gui.FrameGroup.name)
