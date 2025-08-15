@@ -323,7 +323,8 @@ function PTSpellLine:Update()
         self:SetEnabledContent("editbox")
         self:GetTypeDropdown():SetText("Macro")
         self:GetContentEditbox():SetText(binding.Data or "")
-        self:GetContentEditbox():ApplyTooltip("Enter the name of one of your macros")
+        self:GetContentEditbox():ApplyTooltip("Enter the name of one of your macros", 
+            "Note that macro binds won't target unless you enable", "\"Target While Casting\" in this binding's settings or globally")
         self:ApplySearchableEditbox("MACRO", SearchMacros, 1)
     elseif binding.Type == "ITEM" then
         self:SetEnabledContent("editbox")

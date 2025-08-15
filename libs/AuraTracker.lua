@@ -9,7 +9,7 @@ local turtle = PTUtil.IsTurtleWow()
 local trackedCastedAuras = {
     -- Druid
     ["Rejuvenation"] = 12,
-    ["Regrowth"] = 21,
+    ["Regrowth"] = turtle and 20 or 21,
     ["Mark of the Wild"] = 30 * 60,
     ["Gift of the Wild"] = 60 * 60,
     ["Thorns"] = 10 * 60,
@@ -33,6 +33,7 @@ local trackedCastedAuras = {
     ["Fear Ward"] = 10 * 60,
     ["Champion's Grace"] = 30 * 60,
     ["Empower Champion"] = 10 * 60,
+    ["Champion's Bond"] = 10 * 60,
     ["Spirit of Redemption"] = 10,
     ["Abolish Disease"] = 20,
     ["Inner Fire"] = 10 * 60,

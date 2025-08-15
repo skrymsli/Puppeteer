@@ -91,7 +91,10 @@ AddUpdateBindingsFrame("MainMenuMicroButton")
 AddUpdateBindingsFrame("QuestLogMicroButton")
 AddUpdateBindingsFrame("SocialsMicroButton")
 AddUpdateBindingsFrame("WorldMapMicroButton")
-AddUpdateBindingsFrame("pfActionBar") -- pfUI
+util.RunLater(function()
+    AddUpdateBindingsFrame("pfActionBar") -- pfUI
+    AddUpdateBindingsFrame("DFRL_HotkeyBinding") -- Dragonflight Reloaded
+end)
 
 local function StopUpdateBindingsUpdates()
     if holdingFunctionsHostage then

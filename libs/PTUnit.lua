@@ -304,12 +304,12 @@ function PTUnit:HasBuff(name)
     return self.BuffsMap[name] ~= nil
 end
 
--- SuperWoW only
+-- SuperWoW/Turtle WoW only
 function PTUnit:HasBuffID(id)
     return self.BuffsIDSet[id] ~= nil
 end
 
--- Looks for ID if SuperWoW is present, otherwise searches by name
+-- Looks for ID if SuperWoW/Turtle WoW is present, otherwise searches by name
 function PTUnit:HasBuffIDOrName(id, name)
     if superwow then
         return self:HasBuffID(id)
@@ -321,12 +321,12 @@ function PTUnit:HasDebuff(name)
     return self.DebuffsMap[name] ~= nil
 end
 
--- SuperWoW only
+-- SuperWoW/Turtle WoW only
 function PTUnit:HasDebuffID(id)
     return self.DebuffsIDSet[id] ~= nil
 end
 
--- Looks for ID if SuperWoW is present, otherwise searches by name
+-- Looks for ID if SuperWoW/Turtle WoW is present, otherwise searches by name
 function PTUnit:HasDebuffIDOrName(id, name)
     if superwow then
         return self:HasDebuffID(id)

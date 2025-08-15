@@ -35,7 +35,7 @@ if SUPERWOW_VERSION then
 end
 Nampower = QueueSpellByName ~= nil
 
-TurtleWow = true
+TurtleWow = TURTLE_WOW_VERSION ~= nil
 
 PowerColors = {
     ["mana"] = {0.1, 0.25, 1}, --{r = 0, g = 0, b = 0.882}, Not accurate, changed color to make brighter
