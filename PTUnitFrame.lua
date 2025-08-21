@@ -1191,9 +1191,9 @@ function PTUnitFrame:Initialize()
     self.nameText = name
     name:SetAlpha(profile.NameText:GetAlpha())
 
-    local bg = healthBar:CreateTexture(nil, "BACKGROUND")
+    local bg = container:CreateTexture(nil, "BACKGROUND")
     healthBar.background = bg
-    bg:SetAllPoints(true)
+    bg:SetAllPoints(healthBar)
     bg:SetTexture(0.5, 0.5, 0.5, 0.25)
 
     -- Incoming Text
