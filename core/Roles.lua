@@ -8,7 +8,7 @@ AssignedRoles = nil
 
 LFTAutoRoleFrame = CreateFrame("Frame", "PT_LFTAutoRoleFrame")
 function SetLFTAutoRoleEnabled(enabled)
-    if not LFT_ADDON_PREFIX then -- Must not be Turtle WoW, or LFT has changed
+    if not util.IsTurtleWow() then
         return
     end
 
@@ -48,11 +48,11 @@ function SetLFTAutoRoleEnabled(enabled)
     end
     LFTAutoRoleFrame:RegisterEvent("CHAT_MSG_ADDON")
     LFTAutoRoleFrame:SetScript("OnEvent", function()
-        if arg1 == LFT_ADDON_PREFIX then
+        if arg1 == (LFT_ADDON_PREFIX or "TW_LFG") then
             -- After an offer is complete, it is immediately followed by rolecheck info for the tank and healer
             if strfind(arg2, "S2C_ROLECHECK_INFO") then
                 if GetNumPartyMembers() == 4 then
-                    local params = util.SplitString(arg2, LFT_ADDON_FIELD_DELIMITER)
+                    local params = util.SplitString(arg2, ";")
                     local member = params[2]
                     params = util.SplitString(params[3], ":") -- get confirmed roles
                     if offerCompleteTime + 0.5 > GetTime() and table.getn(params) == 1 then
