@@ -92,7 +92,7 @@ function Get(unit)
     if superwow and AllUnitsSet[unit] then
         return PTUnit.Cached[PTGuidRoster.GetUnitGuid(unit)] or PTUnit
     end
-    return PTUnit.Cached[unit]
+    return PTUnit.Cached[unit] or PTUnit
 end
 
 function GetAllUnits()
@@ -107,6 +107,7 @@ function PTUnit:New(unit)
     obj:AllocateAuras()
     obj.AurasPopulated = true -- To force aura fields to generate
     obj.IsNew = true
+    obj.IsSelf = UnitIsUnit(unit, "player")
     if superwow then
         obj.AuraTimes = compost:GetTable()
     end
@@ -146,7 +147,7 @@ function PTUnit:UpdateDistance()
         return
     end
     local prevDist = self.Distance
-    self.Distance = util.GetDistanceTo(self.Unit)
+    self.Distance = self.IsSelf and 0 or util.GetDistanceTo(self.Unit)
 
     return self.Distance ~= prevDist
 end
@@ -161,7 +162,7 @@ function PTUnit:UpdateSight()
         return
     end
     local wasInSight = self.InSight
-    self.InSight = util.IsInSight(self.Unit)
+    self.InSight = self.IsSelf or util.IsInSight(self.Unit)
 
     return self.InSight ~= wasInSight
 end

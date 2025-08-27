@@ -1460,7 +1460,7 @@ function PTUnitFrame:UpdateComponent(component, props, xOffset, yOffset)
 end
 
 function PTUnitFrame:GetCache()
-    return PTUnit.Get(self.unit) or PTUnit
+    return PTUnit.Get(self.unit)
 end
 
 function PTUnitFrame:GetAfflictedDebuffTypes()
