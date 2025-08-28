@@ -10,6 +10,7 @@ local GetAuraInfo = util.GetAuraInfo
 local AllUnits = util.AllUnits
 local AllUnitsSet = util.AllUnitsSet
 local superwow = util.IsSuperWowPresent()
+local canGetAuraIDs = util.CanClientGetAuraIDs()
 
 local compost = AceLibrary("Compost-2.0")
 
@@ -208,20 +209,16 @@ function PTUnit:ClearAuras()
     end
     compost:Reclaim(self.Buffs, 1)
     compost:Reclaim(self.BuffsMap, 1)
-    compost:Reclaim(self.BuffsIDSet)
+    compost:Erase(self.BuffsIDSet)
     compost:Reclaim(self.Debuffs, 1)
     compost:Reclaim(self.DebuffsMap, 1)
-    compost:Reclaim(self.DebuffsIDSet)
-    compost:Reclaim(self.TypedDebuffs)
-    compost:Reclaim(self.AfflictedDebuffTypes)
+    compost:Erase(self.DebuffsIDSet)
+    compost:Erase(self.TypedDebuffs)
+    compost:Erase(self.AfflictedDebuffTypes)
     self.Buffs = compost:GetTable()
     self.BuffsMap = compost:GetTable()
-    self.BuffsIDSet = compost:GetTable()
     self.Debuffs = compost:GetTable()
     self.DebuffsMap = compost:GetTable()
-    self.DebuffsIDSet = compost:GetTable()
-    self.TypedDebuffs = compost:GetTable()
-    self.AfflictedDebuffTypes = compost:GetTable()
     self.HasHealingModifier = false
     self.AurasPopulated = false
 end
@@ -239,9 +236,6 @@ function PTUnit:UpdateAuras()
         return
     end
 
-    local PT = Puppeteer
-
-    -- Track player buffs
     local buffs = self.Buffs
     local buffsMap = self.BuffsMap
     local buffsIDSet = self.BuffsIDSet
@@ -250,7 +244,7 @@ function PTUnit:UpdateAuras()
         if not texture then
             break
         end
-        local name, type = GetAuraInfo(unit, "Buff", index)
+        local name, type = GetAuraInfo(unit, index, "Buff", id)
         if PuppeteerSettings.TrackedHealingBuffs[name] then
             self.HasHealingModifier = true
         end
@@ -266,7 +260,6 @@ function PTUnit:UpdateAuras()
     end
 
     local afflictedDebuffTypes = self.AfflictedDebuffTypes
-    -- Track player debuffs
     local debuffs = self.Debuffs
     local debuffsMap = self.DebuffsMap
     local debuffsIDSet = self.DebuffsIDSet
@@ -277,7 +270,7 @@ function PTUnit:UpdateAuras()
             break
         end
         type = type or ""
-        local name = GetAuraInfo(unit, "Debuff", index)
+        local name = GetAuraInfo(unit, index, "Debuff", id)
         if PuppeteerSettings.TrackedHealingDebuffs[name] then
             self.HasHealingModifier = true
         end
@@ -312,7 +305,7 @@ end
 
 -- Looks for ID if SuperWoW/Turtle WoW is present, otherwise searches by name
 function PTUnit:HasBuffIDOrName(id, name)
-    if superwow then
+    if canGetAuraIDs then
         return self:HasBuffID(id)
     end
     return self:HasBuff(name)
@@ -329,7 +322,7 @@ end
 
 -- Looks for ID if SuperWoW/Turtle WoW is present, otherwise searches by name
 function PTUnit:HasDebuffIDOrName(id, name)
-    if superwow then
+    if canGetAuraIDs then
         return self:HasDebuffID(id)
     end
     return self:HasDebuff(name)
@@ -364,6 +357,9 @@ function PTUnit:GetDebuffs(name)
 end
 
 function PTUnit:GetAuraTimeRemaining(name)
+    if not superwow then
+        return
+    end
     local auraTime = self.AuraTimes[name]
     if not auraTime then
         return

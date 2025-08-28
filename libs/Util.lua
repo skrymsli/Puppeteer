@@ -593,7 +593,7 @@ function GetResourceCost(spellName)
 end
 
 -- Returns the aura's name and its school type
-function GetAuraInfo(unit, type, index)
+function ScanAuraInfo(unit, index, type)
     -- Make these texts blank since they don't clear otherwise
     local leftText = _G["PTScanningTooltipTextLeft1"]
     leftText:SetText("")
@@ -605,6 +605,27 @@ function GetAuraInfo(unit, type, index)
         ScanningTooltip:SetUnitDebuff(unit, index)
     end
     return leftText:GetText() or "", rightText:GetText() or ""
+end
+
+if SuperWoW or TurtleWow then
+    local auraNameCache = {}
+    local auraTypeCache = {}
+
+    function GetAuraInfo(unit, index, type, id)
+        if not id then
+            id = type == "Buff" and UnitBuff(unit, index) or UnitDebuff(unit, index)
+        end
+        if not auraNameCache[id] then
+            auraNameCache[id], auraTypeCache[id] = ScanAuraInfo(unit, index, type)
+        end
+        return auraNameCache[id], auraTypeCache[id]
+    end
+
+    function GetCachedAuraInfo(id)
+        return auraNameCache[id], auraTypeCache[id]
+    end
+else
+    GetAuraInfo = ScanAuraInfo
 end
 
 -- Returns an array of the units in the party number or the unit's raid group
@@ -1149,6 +1170,10 @@ end
 
 function CanClientSightCheck()
     return UnitXPSP3
+end
+
+function CanClientGetAuraIDs()
+    return SuperWoW or TurtleWow
 end
 
 function IsSuperWowPresent()
