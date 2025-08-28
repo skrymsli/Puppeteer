@@ -204,7 +204,7 @@ function PTUnit:AllocateAuras()
 end
 
 function PTUnit:ClearAuras()
-    if not self.AurasPopulated or self.Buffs == PTUnit.Buffs then
+    if not self.AurasPopulated or self == PTUnit then
         return
     end
     compost:Reclaim(self.Buffs, 1)

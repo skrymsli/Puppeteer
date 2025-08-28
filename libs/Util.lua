@@ -498,14 +498,14 @@ function ExtractSpellRank(spellname)
 end
 
 -- Thanks again ChatGPT
-local tooltipResources = {"Mana", "Rage", "Energy"}
+local tooltipResources = {["Mana"] = "mana", ["Rage"] = "rage", ["Energy"] = "energy"}
 function ExtractResourceCost(costText)
 
     -- First extract resource type
     local resource
-    for _, r in ipairs(tooltipResources) do
-        if string.find(costText, r) then
-            resource = string.lower(r)
+    for tooltipName, lowerName in pairs(tooltipResources) do
+        if string.find(costText, tooltipName) then
+            resource = lowerName
             break
         end
     end
