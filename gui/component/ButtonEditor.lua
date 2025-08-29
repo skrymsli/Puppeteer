@@ -95,6 +95,7 @@ function PTButtonEditor:New()
         end
         if not obj:ContainsButton(arg1) then
             obj:AddButtonLine(arg1, arg1)
+            PlaySound("igSpellBookOpen")
         end
         obj:SetAddMode(false)
         local onClick = addButton:GetScript("OnClick")
@@ -114,6 +115,7 @@ function PTButtonEditor:New()
         if not obj:ContainsButton(arg1) then
             if not obj:AreBindingsFull() then
                 obj:AddButtonLine(arg1, arg1)
+                PlaySound("igSpellBookOpen")
             else
                 DEFAULT_CHAT_FRAME:AddMessage("You cannot add any more non-mouse buttons!")
             end
@@ -128,6 +130,7 @@ function PTButtonEditor:New()
             if not obj:ContainsButton("MOUSEWHEELUP") then
                 if not obj:AreBindingsFull() then
                     obj:AddButtonLine("MOUSEWHEELUP", "MOUSEWHEELUP")
+                    PlaySound("igSpellBookOpen")
                 else
                     DEFAULT_CHAT_FRAME:AddMessage("You cannot add any more non-mouse buttons!")
                 end
@@ -136,6 +139,7 @@ function PTButtonEditor:New()
             if not obj:ContainsButton("MOUSEWHEELDOWN") then
                 if not obj:AreBindingsFull() then
                     obj:AddButtonLine("MOUSEWHEELDOWN", "MOUSEWHEELDOWN")
+                    PlaySound("igSpellBookOpen")
                 else
                     DEFAULT_CHAT_FRAME:AddMessage("You cannot add any more non-mouse buttons!")
                 end
