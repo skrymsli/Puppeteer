@@ -436,7 +436,7 @@ function CreateTab_Options_SpellsTooltip(panel)
     layout:offset(0, 10)
     factory:dropdown("Anchor", "Where the tooltip should be anchored", "SpellsTooltip.Anchor", 
         {"Top Left", "Top Right", "Bottom Left", "Bottom Right"})
-    factory:checkbox("Show Item Count", {"Show the amount of your bound items", colorize("Warning: This causes lag!", 1, 0.2, 0.2)}, 
+    factory:checkbox("Show Item Count", {"Show the amount of your bound items", colorize("Warning: This causes lag!", 1, 0.4, 0.4)}, 
         "SpellsTooltip.ShowItemCount")
 end
 
@@ -477,22 +477,26 @@ function CreateTab_Options_Other(panel)
         "UseHealPredictions", function() Puppeteer.UpdateAllIncomingHealing() end)
 
     factory:checkbox("(TWoW) LFT Auto Role", {"Automatically assign roles when joining LFT groups", 
-            "This functionality was created for 1.17.2 and may break in future updates"}, "LFTAutoRole",
+            "This functionality was tested for 1.18.0 and may break in future updates"}, "LFTAutoRole",
             function() Puppeteer.SetLFTAutoRoleEnabled(PTOptions.LFTAutoRole) end)
 end
 
 function CreateTab_Options_Advanced(panel)
     local container = panel:CreateTab("Advanced")
-    local layout = NewLabeledColumnLayout(container, {150, 220, 300}, -20, 10)
+    local layout = NewLabeledColumnLayout(container, {150, 220, 300}, 0, 10)
     local factory = NewComponentFactory(container, layout)
     container.factory = factory
 
     local TEXT_WIDTH = 370
 
+    local scriptsLabel = CreateLabel(container, "Load & Postload Scripts")
+        :SetPoint("TOP", container, "TOP", 0, -10)
+        :SetFontSize(14)
+
     local loadScriptInfo = CreateLabel(container, "The Load Script runs after profiles are initialized, but before UIs are created, "..
             "making it good for editing profile attributes. GetProfile and CreateProfile are defined locals.")
         :SetWidth(TEXT_WIDTH)
-        :SetPoint("TOP", container, "TOP", 0, -10)
+        :SetPoint("TOP", scriptsLabel, "BOTTOM", 0, -10)
     local loadScriptButton = PTGuiLib.Get("button", container)
         :SetPoint("TOP", loadScriptInfo, "BOTTOM", 0, -5)
         :SetSize(150, 20)
@@ -547,6 +551,14 @@ function CreateTab_Options_Advanced(panel)
         :OnClick(function()
             ReloadUI()
         end)
+
+    local experimentsLabel = CreateLabel(container, "Experiments")
+        :SetPoint("TOP", reloadButton, "BOTTOM", 0, -20)
+        :SetFontSize(14)
+    layout:offset(0, -260)
+    factory:checkbox("(TWoW) Auto Role", {"If enabled, the Role Action menu shows auto role detection options",
+        colorize("Using this functionality WILL cause errors and other unexpected behavior", 1, 0.4, 0.4)}, "Experiments.AutoRole",
+        Puppeteer.InitRoleDropdown)
 end
 
 function CreateTab_Options_Mods(panel)

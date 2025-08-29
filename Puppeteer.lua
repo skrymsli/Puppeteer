@@ -354,6 +354,8 @@ function OnAddonLoaded()
             end
         end)
     end
+
+    InitRoleDropdown()
     
     SetLFTAutoRoleEnabled(PTOptions.LFTAutoRole)
 

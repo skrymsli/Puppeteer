@@ -3,6 +3,7 @@ local _G = getfenv(0)
 local util = PTUtil
 local colorize = util.Colorize
 local GetColoredRoleText = util.GetColoredRoleText
+local SplitString = util.SplitString
 
 AssignedRoles = nil
 
@@ -120,15 +121,117 @@ function PruneAssignedRoles()
     end
 end
 
+function SetRoleAndUpdate(name, role)
+    SetAssignedRole(name, role)
+    UpdateUnitFrameGroups()
+end
+
 function SetUnitRoleAndUpdate(unit, role)
     if not SetUnitAssignedRole(unit, role) then
         UpdateUnitFrameGroups()
     end
 end
 
+-- Players will be considered as the role in the index if they have the highest talent points in said index.
+-- Clases not listed have only DPS specs and are not bothered to be scanned.
+TalentCountRoleMap = {
+    PRIEST = {
+        "Healer", "Healer", "Damage"
+    },
+    PALADIN = {
+        "Healer", "Tank", "Damage"
+    },
+    WARRIOR = {
+        "Damage", "Damage", "Tank"
+    },
+    SHAMAN = {
+        "Damage", "Damage", "Healer"
+    },
+    DRUID = { -- Spec #2(Feral) will be swapped to Tank if Thick Hide talent is found
+        "Damage", "Damage", "Healer"
+    }
+}
+
+local PlayerTalentData = {}
+local talentScanner = CreateFrame("Frame", "PTTalentScanner")
+talentScanner:RegisterEvent("CHAT_MSG_ADDON")
+talentScanner:SetScript("OnEvent", function()
+    if arg1 == "TW_CHAT_MSG_WHISPER" then
+        local message = arg2
+		local sender = arg4
+
+        if not PlayerTalentData[sender] then
+            return
+        end
+
+        if string.find(message, "INSTalentTabInfo;", 1, true) then
+            -- This is sent right before receiving info for individual talents in the tree
+            local split = SplitString(message, ';')
+            local index = tonumber(split[2])
+            local pointsSpent = tonumber(split[4])
+
+            PlayerTalentData[sender].trees[index] = {points = pointsSpent, talents = {}}
+        elseif string.find(message, "INSTalentInfo;", 1, true) then
+            local split = SplitString(message, ';')
+
+            local tree = tonumber(split[2])
+            local tier = tonumber(split[5])
+            local column = tonumber(split[6])
+            local currRank = tonumber(split[7])
+
+            local cache = PlayerTalentData[sender]
+            local talents = cache.trees[tree].talents
+            talents[tier.."-"..column] = currRank
+        elseif string.find(message, "INSTalentEND;", 1, true) then
+            local data = PlayerTalentData[sender]
+            local trees = data.trees
+            local mostPoints = 0
+            local mostIndex = 1
+            for i = 1, 3 do
+                if trees[i].points > mostPoints then
+                    mostPoints = trees[i].points
+                    mostIndex = i
+                end
+            end
+            local class = data.class
+            -- Check for Druid Thick Hide talent, set as tank if they have it
+            if class == "DRUID" and (trees[2].talents["2-3"] or 0) > 0 then
+                SetRoleAndUpdate(sender, "Tank")
+            else
+                SetRoleAndUpdate(sender, mostPoints > 0 and TalentCountRoleMap[class][mostIndex] or "Damage")
+            end
+            PlayerTalentData[sender] = nil
+        end
+    end
+end)
+
+local function requestTalents(name)
+    SendAddonMessage("TW_CHAT_MSG_WHISPER<"..name..">", "INSShowTalents", "GUILD")
+end
+
+function AutoRole(unit)
+    local class = util.GetClass(unit)
+    if not TalentCountRoleMap[class] then
+        SetUnitRoleAndUpdate(unit, "Damage")
+        return
+    end
+    if not UnitIsConnected(unit) then -- Can't request offline player's talents
+        return
+    end
+    PlayerTalentData[UnitName(unit)] = {class = class, trees = {}}
+    requestTalents(UnitName(unit))
+end
+
+function AutoRoleByNameClass(name, class)
+    PlayerTalentData[name] = {class = class, trees = {}}
+    requestTalents(name)
+end
+
 RoleAssignInfo = {}
 
-do
+RoleDropdown = PTGuiLib.Get("dropdown", UIParent)
+
+function InitRoleDropdown()
     local initFunc = function(self)
         self.checked = (GetAssignedRole(RoleAssignInfo.Name) or "No Role") == self.role
     end
@@ -165,7 +268,6 @@ do
         }
     end
 
-    RoleDropdown = PTGuiLib.Get("dropdown", UIParent)
     local options = {
         {
             initFunc = function(self)
@@ -178,7 +280,7 @@ do
         genRole("Tank"),
         genRole("Healer"),
         genRole("Damage"),
-        genRole("No Role"), 
+        genRole("No Role"),
         {
             notCheckable = true,
             disabled = true
@@ -202,5 +304,39 @@ do
             func = massRoleFunc
         }
     }
+    if PTOptions.Experiments.AutoRole then
+        table.insert(options, 6, {
+            text = colorize("Auto Detect", 1, 0.6, 0),
+            func = function()
+                if not RoleAssignInfo.FrameGroup then
+                    return
+                end
+                AutoRoleByNameClass(RoleAssignInfo.Name, RoleAssignInfo.Class)
+            end
+        })
+        local lastMassRole = 0
+        table.insert(options, 9, {
+            text = "Auto Detect Unassigned",
+            tooltipTitle = "Auto Detect Unassigned",
+            tooltipText = "Automatically detect the roles of unassigned players. Only applies to players contained in this UI group.",
+            notCheckable = true,
+            textHeight = 11,
+            func = function()
+                if not RoleAssignInfo.FrameGroup then
+                    return
+                end
+                if lastMassRole + 6 > GetTime() then
+                    DEFAULT_CHAT_FRAME:AddMessage("Please wait a moment before requesting roles again")
+                    return
+                end
+                lastMassRole = GetTime()
+                for _, ui in pairs(RoleAssignInfo.FrameGroup.uis) do
+                    if UnitIsPlayer(ui:GetUnit()) and not GetUnitAssignedRole(ui:GetUnit()) then
+                        AutoRole(ui:GetUnit())
+                    end
+                end
+            end
+        })
+    end
     RoleDropdown:SetOptions(options)
 end

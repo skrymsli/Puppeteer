@@ -81,6 +81,7 @@ RegisterActionBind({
             return
         end
         RoleAssignInfo.Name = UnitName(unit)
+        RoleAssignInfo.Class = util.GetClass(unit)
         RoleAssignInfo.ClassColor = util.GetClassColor(util.GetClass(unit), true)
         RoleAssignInfo.FrameGroup = unitFrame.owningGroup
         local frame = unitFrame:GetRootContainer()

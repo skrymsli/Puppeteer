@@ -133,6 +133,9 @@ function SetDefaults()
                 ["Medium"] = 10, -- <=2 min
                 ["Long"] = 60 * 2 -- >2 min
             },
+            ["Experiments"] = {
+                ["AutoRole"] = false
+            },
             ["CastWhen"] = "Mouse Up", -- Mouse Up, Mouse Down
             ["CastWhenKey"] = "Key Up", -- Key Up, Key Down
             ["AutoResurrect"] = Puppeteer.ResurrectionSpells[util.GetClass("player")] ~= nil,
