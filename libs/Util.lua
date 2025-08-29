@@ -613,7 +613,13 @@ if SuperWoW or TurtleWow then
 
     function GetAuraInfo(unit, index, type, id)
         if not id then
-            id = type == "Buff" and UnitBuff(unit, index) or UnitDebuff(unit, index)
+            if type == "Buff" then
+                local _, _, i = UnitBuff(unit, index)
+                id = i
+            else
+                local _, _, _, i = UnitDebuff(unit, index)
+                id = i
+            end
         end
         if not auraNameCache[id] then
             auraNameCache[id], auraTypeCache[id] = ScanAuraInfo(unit, index, type)
