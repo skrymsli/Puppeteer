@@ -562,8 +562,23 @@ function GetSpellID(spellname)
     return foundID
 end
 
+local costCache = {}
+local costTypeCache = {}
+local costCacheDirty = false
+function MarkSpellCostCacheDirty()
+    costCacheDirty = true
+end
 -- Returns the numerical cost and the resource name; "unknown" if the spell is unknown; 0 if the spell is free
 function GetResourceCost(spellName)
+    if costCacheDirty then
+        ClearTable(costCache)
+        ClearTable(costTypeCache)
+        costCacheDirty = false
+    end
+    if costCache[spellName] then
+        return costCache[spellName], costTypeCache[spellName]
+    end
+
     ScanningTooltip:SetOwner(UIParent, "ANCHOR_NONE");
 
     local spellID, bookType
@@ -587,8 +602,10 @@ function GetResourceCost(spellName)
     local leftText = _G["PTScanningTooltipTextLeft2"]
 
     if leftText:GetText() then
-        return ExtractResourceCost(leftText:GetText())
+        costCache[spellName], costTypeCache[spellName] = ExtractResourceCost(leftText:GetText())
+        return costCache[spellName], costTypeCache[spellName]
     end
+    costCache[spellName] = 0
     return 0
 end
 
