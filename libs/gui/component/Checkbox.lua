@@ -23,4 +23,21 @@ function PTGuiCheckbox:OnDispose()
     self:SetChecked(false)
 end
 
+function PTGuiCheckbox:SetScript(scriptName, script, noSelf)
+    if scriptName ~= "OnClick" then
+        return self.super.SetScript(self, scriptName, script, noSelf)
+    end
+    self:GetHandle():SetScript(scriptName, function()
+        if self:GetChecked() then
+            PlaySound("igMainMenuOptionCheckBoxOn")
+        else
+            PlaySound("igMainMenuOptionCheckBoxOff")
+        end
+        if script then
+            script(self)
+        end
+    end)
+    return self
+end
+
 PTGuiLib.RegisterComponent(PTGuiCheckbox)

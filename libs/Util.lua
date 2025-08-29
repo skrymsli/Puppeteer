@@ -498,14 +498,14 @@ function ExtractSpellRank(spellname)
 end
 
 -- Thanks again ChatGPT
-local tooltipResources = {"Mana", "Rage", "Energy"}
+local tooltipResources = {["Mana"] = "mana", ["Rage"] = "rage", ["Energy"] = "energy"}
 function ExtractResourceCost(costText)
 
     -- First extract resource type
     local resource
-    for _, r in ipairs(tooltipResources) do
-        if string.find(costText, r) then
-            resource = string.lower(r)
+    for tooltipName, lowerName in pairs(tooltipResources) do
+        if string.find(costText, tooltipName) then
+            resource = lowerName
             break
         end
     end
@@ -562,8 +562,23 @@ function GetSpellID(spellname)
     return foundID
 end
 
+local costCache = {}
+local costTypeCache = {}
+local costCacheDirty = false
+function MarkSpellCostCacheDirty()
+    costCacheDirty = true
+end
 -- Returns the numerical cost and the resource name; "unknown" if the spell is unknown; 0 if the spell is free
 function GetResourceCost(spellName)
+    if costCacheDirty then
+        ClearTable(costCache)
+        ClearTable(costTypeCache)
+        costCacheDirty = false
+    end
+    if costCache[spellName] then
+        return costCache[spellName], costTypeCache[spellName]
+    end
+
     ScanningTooltip:SetOwner(UIParent, "ANCHOR_NONE");
 
     local spellID, bookType
@@ -587,13 +602,15 @@ function GetResourceCost(spellName)
     local leftText = _G["PTScanningTooltipTextLeft2"]
 
     if leftText:GetText() then
-        return ExtractResourceCost(leftText:GetText())
+        costCache[spellName], costTypeCache[spellName] = ExtractResourceCost(leftText:GetText())
+        return costCache[spellName], costTypeCache[spellName]
     end
+    costCache[spellName] = 0
     return 0
 end
 
 -- Returns the aura's name and its school type
-function GetAuraInfo(unit, type, index)
+function ScanAuraInfo(unit, index, type)
     -- Make these texts blank since they don't clear otherwise
     local leftText = _G["PTScanningTooltipTextLeft1"]
     leftText:SetText("")
@@ -605,6 +622,33 @@ function GetAuraInfo(unit, type, index)
         ScanningTooltip:SetUnitDebuff(unit, index)
     end
     return leftText:GetText() or "", rightText:GetText() or ""
+end
+
+if SuperWoW or TurtleWow then
+    local auraNameCache = {}
+    local auraTypeCache = {}
+
+    function GetAuraInfo(unit, index, type, id)
+        if not id then
+            if type == "Buff" then
+                local _, _, i = UnitBuff(unit, index)
+                id = i
+            else
+                local _, _, _, i = UnitDebuff(unit, index)
+                id = i
+            end
+        end
+        if not auraNameCache[id] then
+            auraNameCache[id], auraTypeCache[id] = ScanAuraInfo(unit, index, type)
+        end
+        return auraNameCache[id], auraTypeCache[id]
+    end
+
+    function GetCachedAuraInfo(id)
+        return auraNameCache[id], auraTypeCache[id]
+    end
+else
+    GetAuraInfo = ScanAuraInfo
 end
 
 -- Returns an array of the units in the party number or the unit's raid group
@@ -1149,6 +1193,10 @@ end
 
 function CanClientSightCheck()
     return UnitXPSP3
+end
+
+function CanClientGetAuraIDs()
+    return SuperWoW or TurtleWow
 end
 
 function IsSuperWowPresent()

@@ -10,6 +10,7 @@ local GetAuraInfo = util.GetAuraInfo
 local AllUnits = util.AllUnits
 local AllUnitsSet = util.AllUnitsSet
 local superwow = util.IsSuperWowPresent()
+local canGetAuraIDs = util.CanClientGetAuraIDs()
 
 local compost = AceLibrary("Compost-2.0")
 
@@ -92,7 +93,7 @@ function Get(unit)
     if superwow and AllUnitsSet[unit] then
         return PTUnit.Cached[PTGuidRoster.GetUnitGuid(unit)] or PTUnit
     end
-    return PTUnit.Cached[unit]
+    return PTUnit.Cached[unit] or PTUnit
 end
 
 function GetAllUnits()
@@ -107,6 +108,7 @@ function PTUnit:New(unit)
     obj:AllocateAuras()
     obj.AurasPopulated = true -- To force aura fields to generate
     obj.IsNew = true
+    obj.IsSelf = UnitIsUnit(unit, "player")
     if superwow then
         obj.AuraTimes = compost:GetTable()
     end
@@ -146,7 +148,7 @@ function PTUnit:UpdateDistance()
         return
     end
     local prevDist = self.Distance
-    self.Distance = util.GetDistanceTo(self.Unit)
+    self.Distance = self.IsSelf and 0 or util.GetDistanceTo(self.Unit)
 
     return self.Distance ~= prevDist
 end
@@ -161,7 +163,7 @@ function PTUnit:UpdateSight()
         return
     end
     local wasInSight = self.InSight
-    self.InSight = util.IsInSight(self.Unit)
+    self.InSight = self.IsSelf or util.IsInSight(self.Unit)
 
     return self.InSight ~= wasInSight
 end
@@ -202,25 +204,21 @@ function PTUnit:AllocateAuras()
 end
 
 function PTUnit:ClearAuras()
-    if not self.AurasPopulated or self.Buffs == PTUnit.Buffs then
+    if not self.AurasPopulated or self == PTUnit then
         return
     end
     compost:Reclaim(self.Buffs, 1)
     compost:Reclaim(self.BuffsMap, 1)
-    compost:Reclaim(self.BuffsIDSet)
+    compost:Erase(self.BuffsIDSet)
     compost:Reclaim(self.Debuffs, 1)
     compost:Reclaim(self.DebuffsMap, 1)
-    compost:Reclaim(self.DebuffsIDSet)
-    compost:Reclaim(self.TypedDebuffs)
-    compost:Reclaim(self.AfflictedDebuffTypes)
+    compost:Erase(self.DebuffsIDSet)
+    compost:Erase(self.TypedDebuffs)
+    compost:Erase(self.AfflictedDebuffTypes)
     self.Buffs = compost:GetTable()
     self.BuffsMap = compost:GetTable()
-    self.BuffsIDSet = compost:GetTable()
     self.Debuffs = compost:GetTable()
     self.DebuffsMap = compost:GetTable()
-    self.DebuffsIDSet = compost:GetTable()
-    self.TypedDebuffs = compost:GetTable()
-    self.AfflictedDebuffTypes = compost:GetTable()
     self.HasHealingModifier = false
     self.AurasPopulated = false
 end
@@ -238,9 +236,6 @@ function PTUnit:UpdateAuras()
         return
     end
 
-    local PT = Puppeteer
-
-    -- Track player buffs
     local buffs = self.Buffs
     local buffsMap = self.BuffsMap
     local buffsIDSet = self.BuffsIDSet
@@ -249,7 +244,7 @@ function PTUnit:UpdateAuras()
         if not texture then
             break
         end
-        local name, type = GetAuraInfo(unit, "Buff", index)
+        local name, type = GetAuraInfo(unit, index, "Buff", id)
         if PuppeteerSettings.TrackedHealingBuffs[name] then
             self.HasHealingModifier = true
         end
@@ -265,7 +260,6 @@ function PTUnit:UpdateAuras()
     end
 
     local afflictedDebuffTypes = self.AfflictedDebuffTypes
-    -- Track player debuffs
     local debuffs = self.Debuffs
     local debuffsMap = self.DebuffsMap
     local debuffsIDSet = self.DebuffsIDSet
@@ -276,7 +270,7 @@ function PTUnit:UpdateAuras()
             break
         end
         type = type or ""
-        local name = GetAuraInfo(unit, "Debuff", index)
+        local name = GetAuraInfo(unit, index, "Debuff", id)
         if PuppeteerSettings.TrackedHealingDebuffs[name] then
             self.HasHealingModifier = true
         end
@@ -311,7 +305,7 @@ end
 
 -- Looks for ID if SuperWoW/Turtle WoW is present, otherwise searches by name
 function PTUnit:HasBuffIDOrName(id, name)
-    if superwow then
+    if canGetAuraIDs then
         return self:HasBuffID(id)
     end
     return self:HasBuff(name)
@@ -328,7 +322,7 @@ end
 
 -- Looks for ID if SuperWoW/Turtle WoW is present, otherwise searches by name
 function PTUnit:HasDebuffIDOrName(id, name)
-    if superwow then
+    if canGetAuraIDs then
         return self:HasDebuffID(id)
     end
     return self:HasDebuff(name)
@@ -363,6 +357,9 @@ function PTUnit:GetDebuffs(name)
 end
 
 function PTUnit:GetAuraTimeRemaining(name)
+    if not superwow then
+        return
+    end
     local auraTime = self.AuraTimes[name]
     if not auraTime then
         return

@@ -23,8 +23,7 @@ function PTNewLoadout:New()
         :SetDynamicOptions(function(addOption, level, args)
             addOption("text", "<Blank>",
                 "dropdownText", "<Blank>",
-                "initFunc", args.initFunc,
-                "func", args.func)
+                "initFunc", args.initFunc)
             for _, name in ipairs(Puppeteer.GetBindingLoadoutNames()) do
                 addOption("text", name,
                     "dropdownText", name,
@@ -94,7 +93,6 @@ end
 
 function PTNewLoadout:OnDispose()
     self.super.OnDispose(self)
-
 end
 
 PTNewLoadout:CreateGetter("InheritDropdown")

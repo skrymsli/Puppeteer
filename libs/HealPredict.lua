@@ -303,6 +303,7 @@ function UpdateCacheHot(spellName, heal, targetGuid, targetName, casterGuid, cas
     if not hots[spellName] then
         return
     end
+    heal = tonumber(heal) or 0
     local hot = hots[spellName]
     if hot["heal"] ~= heal then
         local prevHeal = hot["heal"]

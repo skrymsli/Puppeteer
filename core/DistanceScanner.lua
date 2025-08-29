@@ -9,17 +9,10 @@ local TRACKING_MIN_DIST = 20
 local TRACKING_MAX_DIST = 60
 local SIGHT_MAX_DIST = 80
 
-local almostAllUnits = util.CloneTable(util.AllUnits) -- Everything except the player
-table.remove(almostAllUnits, util.IndexOf(almostAllUnits, "player"))
-if PTUnitProxy then
-    PTUnitProxy.RegisterUpdateListener(function()
-        almostAllUnits = util.CloneTable(util.AllUnits) -- Everything except the player
-        table.remove(almostAllUnits, util.IndexOf(almostAllUnits, "player"))
-    end)
-end
+local AllUnits = util.AllUnits
 
-local distanceTrackedUnits = util.CloneTable(almostAllUnits) -- Initially scan all units
-local sightTrackedUnits = util.CloneTable(almostAllUnits)
+local distanceTrackedUnits = util.CloneTable(AllUnits) -- Initially scan all units
+local sightTrackedUnits = util.CloneTable(AllUnits)
 local preciseDistance = util.CanClientGetPreciseDistance()
 local sightTrackingEnabled = util.CanClientSightCheck()
 local nextTrackingUpdate = GetTime() + 0.5
@@ -46,7 +39,7 @@ function RunTrackingScan()
                 EvaluateTracking(guid)
             end
         else
-            for _, unit in ipairs(almostAllUnits) do
+            for _, unit in ipairs(AllUnits) do
                 EvaluateTracking(unit)
             end
         end

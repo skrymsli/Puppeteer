@@ -347,6 +347,20 @@ function RunTargetedAction(binding, unit, actionFunc, mustTempTarget)
     end
 end
 
+local targetedSpell
+local targetedSpellUnit
+local function targetedCastFunc()
+    if util.IsSuperWowPresent() then
+        CastSpellByName(targetedSpell, targetedSpellUnit)
+    else
+        CastSpellByName(targetedSpell)
+    end
+end
+local function setupTargetedCast(spell, unit)
+    targetedSpell = spell
+    targetedSpellUnit = unit
+    return targetedCastFunc
+end
 function RunBinding_Spell(binding, unit)
     local spell = binding.Data
 
@@ -359,13 +373,7 @@ function RunBinding_Spell(binding, unit)
         end
     end
 
-    RunTargetedAction(binding, unit, function()
-        if util.IsSuperWowPresent() then
-            CastSpellByName(spell, unit)
-        else
-            CastSpellByName(spell)
-        end
-    end, not util.IsSuperWowPresent())
+    RunTargetedAction(binding, unit, setupTargetedCast(spell, unit), not util.IsSuperWowPresent())
 end
 
 function RunBinding_Action(binding, unit, unitFrame)
@@ -410,6 +418,18 @@ local preScript = "local unit = PTScriptUnit;"..
                 "local unitFrame = PTScriptUnitFrame;"
 BindingScriptCache = {}
 BindingEnvironment = setmetatable({_G = _G, api = BindingScriptAPI}, {__index = PTUnitProxy or _G})
+local targetedScript
+local function targetedScriptFunc()
+    local ok, result = pcall(targetedScript)
+    if not ok then
+        DEFAULT_CHAT_FRAME:AddMessage(colorize("[Puppeteer] Error occurred while running custom script binding:", 1, 0.5, 0.5))
+        DEFAULT_CHAT_FRAME:AddMessage(colorize(result, 1, 0.5, 0.5))
+    end
+end
+local function setupTargetedScript(script)
+    targetedScript = script
+    return targetedScriptFunc
+end
 function RunBinding_Script(binding, unit, unitFrame)
     local scriptString = binding.Data
     if not BindingScriptCache[scriptString] then
@@ -425,13 +445,7 @@ function RunBinding_Script(binding, unit, unitFrame)
     BindingEnvironment.PTScriptUnit = PTUnitProxy and PTUnitProxy.CustomUnitGUIDMap[unit] or unit
     BindingEnvironment.PTScriptUnitUnresolved = unit
     BindingEnvironment.PTScriptUnitFrame = unitFrame
-    RunTargetedAction(binding, unit, function()
-        local ok, result = pcall(BindingScriptCache[scriptString])
-        if not ok then
-            DEFAULT_CHAT_FRAME:AddMessage(colorize("[Puppeteer] Error occurred while running custom script binding:", 1, 0.5, 0.5))
-            DEFAULT_CHAT_FRAME:AddMessage(colorize(result, 1, 0.5, 0.5))
-        end
-    end)
+    RunTargetedAction(binding, unit, setupTargetedScript(BindingScriptCache[scriptString]))
 end
 
 MultiMenu = PTGuiLib.Get("dropdown", UIParent)

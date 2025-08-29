@@ -65,6 +65,9 @@ RegisterEventHandler("UNIT_AURA", function()
     if not IsRelevantUnit(unit) then
         return
     end
+    if unit == "player" then
+        util.MarkSpellCostCacheDirty()
+    end
     PTUnit.Get(unit):UpdateAuras()
     for ui in UnitFrames(unit) do
         ui:UpdateAuras()
@@ -107,6 +110,10 @@ RegisterEventHandler("PLAYER_TARGET_CHANGED", function()
 end)
 RegisterEventHandler("SPELLS_CHANGED", function()
     PuppeteerSettings.UpdateTrackedDebuffTypes()
+    util.MarkSpellCostCacheDirty()
+end)
+RegisterEventHandler("CHARACTER_POINTS_CHANGED", function()
+    util.MarkSpellCostCacheDirty()
 end)
 RegisterEventHandler("RAID_TARGET_UPDATE", function()
     for _, ui in ipairs(AllUnitFrames) do
