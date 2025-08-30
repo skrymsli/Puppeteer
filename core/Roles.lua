@@ -223,6 +223,10 @@ function AutoRole(unit)
 end
 
 function AutoRoleByNameClass(name, class)
+    if not TalentCountRoleMap[class] then
+        SetRoleAndUpdate(name, "Damage")
+        return
+    end
     PlayerTalentData[name] = {class = class, trees = {}}
     requestTalents(name)
 end
