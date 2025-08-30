@@ -637,6 +637,9 @@ if SuperWoW or TurtleWow then
                 local _, _, _, i = UnitDebuff(unit, index)
                 id = i
             end
+            if not id then -- Uh oh, Turtle lost the ID
+                return ScanAuraInfo(unit, index, type)
+            end
         end
         if not auraNameCache[id] then
             auraNameCache[id], auraTypeCache[id] = ScanAuraInfo(unit, index, type)
