@@ -24,9 +24,14 @@ function ResetRoster()
 end
 
 function PopulateRoster()
-    for _, unit in ipairs(util.AllUnits) do
+    for _, unit in ipairs(util.AllRealUnits) do
         local exists, guid = UnitExists(unit)
         if exists then
+            AddUnit(guid, unit)
+        end
+    end
+    for guid, units in pairs(PTUnitProxy.GUIDCustomUnitMap) do
+        for _, unit in ipairs(units) do
             AddUnit(guid, unit)
         end
     end

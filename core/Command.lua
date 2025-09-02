@@ -16,7 +16,7 @@ SlashCmdList["PUPPETEER"] = function(args)
     elseif args == "check" then
         Puppeteer.CheckGroup()
     elseif args == "update" then
-        for _, ui in pairs(Puppeteer.AllUnitFrames) do
+        for _, ui in ipairs(Puppeteer.AllUnitFrames) do
             ui:SizeElements()
             ui:UpdateAll()
         end
@@ -28,7 +28,7 @@ SlashCmdList["PUPPETEER"] = function(args)
         PTOptions.TestUI = not PTOptions.TestUI
         Puppeteer.TestUI = PTOptions.TestUI
         if PTOptions.TestUI then
-            for _, ui in pairs(Puppeteer.AllUnitFrames) do
+            for _, ui in ipairs(Puppeteer.AllUnitFrames) do
                 ui.fakeStats = ui.GenerateFakeStats()
                 ui:Show()
             end

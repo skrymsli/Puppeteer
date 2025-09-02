@@ -8,6 +8,7 @@ local _G = getfenv(0)
 local util = PTUtil
 local GetAuraInfo = util.GetAuraInfo
 local AllUnits = util.AllUnits
+local AllRealUnits = util.AllRealUnits
 local AllUnitsSet = util.AllUnitsSet
 local superwow = util.IsSuperWowPresent()
 local canGetAuraIDs = util.CanClientGetAuraIDs()
@@ -54,7 +55,7 @@ end
 function UpdateGuidCaches()
     local cached = PTUnit.Cached
     local prevCached = PTUtil.CloneTableCompost(cached)
-    for _, unit in ipairs(AllUnits) do
+    for _, unit in ipairs(AllRealUnits) do
         local exists, guid = UnitExists(unit)
         if exists then
             if not cached[guid] then
