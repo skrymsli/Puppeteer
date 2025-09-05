@@ -10,8 +10,8 @@ SlashCmdList["PUPPETEER"] = function(args)
             gc:ClearAllPoints()
             gc:SetPoint(PTUtil.GetCenterScreenPoint(gc:GetWidth(), gc:GetHeight()))
         end
-        PuppeteerSettings.HM_SettingsContainer:ClearAllPoints()
-        PuppeteerSettings.HM_SettingsContainer:SetPoint("CENTER", 0, 0)
+        PTSettingsGui.TabFrame:ClearAllPoints()
+        PTSettingsGui.TabFrame:SetPoint("CENTER", 0, 0)
         DEFAULT_CHAT_FRAME:AddMessage("Reset all frame positions.")
     elseif args == "check" then
         Puppeteer.CheckGroup()
