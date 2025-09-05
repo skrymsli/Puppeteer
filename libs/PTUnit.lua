@@ -37,6 +37,8 @@ PTUnit.HasHealingModifier = false
 -- Only used with SuperWoW, managed in AuraTracker.lua
 PTUnit.AuraTimes = {} -- Key: Aura Name | Value: {"startTime", "duration"}
 
+PTUnit.DisplayPVP = false -- This is not the real PVP status of the unit, this is affected by other conditions
+
 PTUnit.Distance = 0
 PTUnit.InSight = true
 PTUnit.IsNew = false
@@ -131,6 +133,7 @@ end
 
 function PTUnit:UpdateAll()
     self:UpdateAuras()
+    self:UpdatePVP()
     self:UpdateDistance()
     self:UpdateSight()
 end
@@ -141,6 +144,22 @@ function PTUnit:CheckNew()
         self.IsNew = false
         return true
     end
+end
+
+function PTUnit:UpdatePVP()
+    if not self.Unit then
+        return
+    end
+    local shouldDisplay = UnitIsPVP(self.Unit) and (not IsInInstance() or not UnitIsVisible(self.Unit))
+    if self.DisplayPVP ~= shouldDisplay then
+        self.DisplayPVP = shouldDisplay
+        return true
+    end
+    return false
+end
+
+function PTUnit:ShouldDisplayPVP()
+    return self.DisplayPVP
 end
 
 -- Returns true if the distance changed

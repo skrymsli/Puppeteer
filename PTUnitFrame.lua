@@ -180,6 +180,7 @@ function PTUnitFrame:UpdateAll()
     self:EvaluateTarget()
     self:UpdateOutline()
     self:UpdateRaidMark()
+    self:UpdatePVP()
 end
 
 function PTUnitFrame:GetShowDistanceThreshold()
@@ -320,6 +321,19 @@ function PTUnitFrame:UpdateRaidMark()
     end
     SetRaidTargetIconTexture(self.raidMarkIcon.icon, markIndex)
     self.raidMarkIcon.frame:Show()
+end
+
+function PTUnitFrame:UpdatePVP()
+    if UnitIsPVP(self.unit) and (not IsInInstance() or not UnitIsVisible(self.unit)) then
+        if UnitFactionGroup(self.unit) == "Alliance" then
+            self.pvpIcon.icon:SetTexture("Interface\\TargetingFrame\\UI-PVP-Alliance")
+        else
+            self.pvpIcon.icon:SetTexture("Interface\\TargetingFrame\\UI-PVP-Horde")
+        end
+        self.pvpIcon.frame:Show()
+    else
+        self.pvpIcon.frame:Hide()
+    end
 end
 
 function PTUnitFrame:Flash()
@@ -1186,6 +1200,17 @@ function PTUnitFrame:Initialize()
     raidMarkIcon:SetTexture("Interface\\TARGETINGFRAME\\UI-RaidTargetingIcons")
     raidMarkFrame:Hide()
 
+    -- PVP Icon
+
+    local pvpFrame = CreateFrame("Frame", nil, container)
+    pvpFrame:SetFrameLevel(container:GetFrameLevel() + 4)
+    local pvpIcon = pvpFrame:CreateTexture(nil, "OVERLAY")
+    self.pvpIcon = {frame = pvpFrame, icon = pvpIcon}
+    pvpIcon:SetAlpha(profile.PVPIcon:GetAlpha())
+    pvpIcon:SetTexture("Interface\\TargetingFrame\\UI-PVP-Alliance")
+    pvpIcon:SetTexCoord(3 / 64, 39 / 64, 2 / 64, 38 / 64)
+    pvpFrame:Hide()
+
     -- Health Bar Element
 
     local healthBar = CreateFrame("StatusBar", "$parentHealthBar", container)
@@ -1408,6 +1433,12 @@ function PTUnitFrame:SizeElements()
 
     local raidMarkIcon = self.raidMarkIcon.icon
     raidMarkIcon:SetAllPoints(raidMarkFrame)
+
+    local pvpFrame = self.pvpIcon.frame
+    self:UpdateComponent(pvpFrame, profile.PVPIcon)
+
+    local pvpIcon = self.pvpIcon.icon
+    pvpIcon:SetAllPoints(pvpFrame)
 
     local auraPanel = self.auraPanel
     self:UpdateComponent(auraPanel, profile.AuraTracker)

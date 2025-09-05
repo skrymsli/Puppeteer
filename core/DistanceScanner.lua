@@ -93,6 +93,11 @@ function EvaluateTracking(unit, update)
             end
         end
     end
+    if cache:UpdatePVP() then
+        for ui in UnitFrames(unit) do
+            ui:UpdatePVP()
+        end
+    end
     local isTarget = UnitIsUnit(unit, "target")
     if PTGuidRoster then
         unit = PTGuidRoster.ResolveUnitGuid(unit)

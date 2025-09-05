@@ -756,7 +756,7 @@ function CheckGroup()
     if not superwow then -- If SuperWoW isn't present, the units may have shifted and thus require a full scan
         PTUnit.UpdateAllUnits()
     end
-    for _, ui in pairs(AllUnitFrames) do
+    for _, ui in ipairs(AllUnitFrames) do
         if ui:IsShown() then
             ui:UpdateRange()
             ui:UpdateAuras()
