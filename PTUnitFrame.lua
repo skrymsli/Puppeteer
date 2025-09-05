@@ -786,7 +786,12 @@ function PTUnitFrame:AllocateAura()
     frame:SetScript("OnMouseUp", PTUnitFrame.Aura_OnMouseUp)
     frame:SetScript("OnMouseDown", PTUnitFrame.Aura_OnMouseDown)
     
-    local icon = frame:CreateTexture(nil, "OVERLAY")
+    local icon = frame:CreateTexture(nil, "ARTWORK")
+    local border = frame:CreateTexture(nil, "OVERLAY")
+    border:SetTexture("Interface\\Buttons\\UI-Debuff-Overlays")
+    border:SetTexCoord(0.296875, 0.5703125, 0, 0.515625)
+    border:SetPoint("TOPLEFT", icon, "TOPLEFT", -0.5, 0.5)
+    border:SetPoint("BOTTOMRIGHT", icon, "BOTTOMRIGHT", 0.5, -0.5)
     local stackText = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     stackText:SetTextColor(1, 1, 1)
 
@@ -850,10 +855,10 @@ function PTUnitFrame:AllocateAura()
                 this:SetSequenceTime(0, 0)
             end
         end)
-        return {["frame"] = frame, ["icon"] = icon, ["stackText"] = stackText, ["overlay"] = durationOverlayFrame, 
+        return {["frame"] = frame, ["icon"] = icon, ["border"] = border, ["stackText"] = stackText, ["overlay"] = durationOverlayFrame, 
             ["durationText"] = durationText, ["duration"] = duration, ["durationEnabled"] = true}
     end
-    return {["frame"] = frame, ["icon"] = icon, ["stackText"] = stackText}
+    return {["frame"] = frame, ["icon"] = icon, ["border"] = border, ["stackText"] = stackText}
 end
 
 -- Get an icon from the available pool. Automatically inserts into the used pool.
@@ -974,13 +979,13 @@ function PTUnitFrame:UpdateAuras()
     local yOffset = profile.TrackedAurasAlignment == "TOP" and 0 or origSize - auraSize
     for _, buff in ipairs(buffs) do
         local aura = self:GetUnusedAura()
-        self:CreateAura(aura, buff.name, buff.index, buff.texture, buff.stacks, xOffset, -yOffset, "Buff", auraSize)
+        self:CreateAura(aura, buff.name, buff.index, buff.texture, buff.stacks, buff.type, xOffset, -yOffset, "Buff", auraSize)
         xOffset = xOffset + auraSize + spacing
     end
     xOffset = 0
     for _, debuff in ipairs(debuffs) do
         local aura = self:GetUnusedAura()
-        self:CreateAura(aura, debuff.name, debuff.index, debuff.texture, debuff.stacks, xOffset, -yOffset, "Debuff", auraSize)
+        self:CreateAura(aura, debuff.name, debuff.index, debuff.texture, debuff.stacks, debuff.type, xOffset, -yOffset, "Debuff", auraSize)
         xOffset = xOffset - auraSize - spacing
     end
     compost:Reclaim(buffs)
@@ -1056,7 +1061,14 @@ do
     PTUnitFrame.Aura_OnMouseDown = wrapButtonScript("OnMouseDown")
 end
 
-function PTUnitFrame:CreateAura(aura, name, index, texturePath, stacks, xOffset, yOffset, type, size)
+local debuffTypeBorderColors = {
+    ["Magic"] = {0.2, 0.6, 1.0},
+    ["Curse"] = {0.6, 0.0, 1.0},
+    ["Disease"] = {0.6, 0.4, 0},
+    ["Poison"] = {0.0, 0.6, 0},
+    ["Other"] = {1, 0, 0}
+}
+function PTUnitFrame:CreateAura(aura, name, index, texturePath, stacks, auraType, xOffset, yOffset, type, size)
     local frame = aura.frame
     frame:SetWidth(size)
     frame:SetHeight(size)
@@ -1070,7 +1082,6 @@ function PTUnitFrame:CreateAura(aura, name, index, texturePath, stacks, xOffset,
     local icon = aura.icon
     icon:SetAllPoints(frame)
     icon:SetTexture(texturePath)
-    --icon:SetVertexColor(1, 0, 0)
 
     if aura.durationEnabled then
         local overlay = aura.overlay
@@ -1086,6 +1097,15 @@ function PTUnitFrame:CreateAura(aura, name, index, texturePath, stacks, xOffset,
         stackText:SetPoint("CENTER", frame, "CENTER", 0, 0)
         stackText:SetFont("Fonts\\FRIZQT__.TTF", math.ceil(size * (stacks < 10 and 0.75 or 0.6)))
         stackText:SetText(stacks)
+    end
+
+    if type == "Buff" then
+        aura.border:Hide()
+    else
+        local border = aura.border
+        border:Show()
+        local color = debuffTypeBorderColors[auraType] or debuffTypeBorderColors["Other"]
+        border:SetVertexColor(color[1], color[2], color[3])
     end
 
     if aura.durationEnabled then
