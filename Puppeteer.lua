@@ -384,7 +384,7 @@ function OnAddonLoaded()
     end
 
     initUnitFrames()
-    StartDistanceScanner()
+    StartUnitTracker()
 
     PuppeteerLib:RegisterEvent("Banzai_UnitGainedAggro", function(unit)
         if PTGuidRoster then
@@ -833,4 +833,8 @@ function EndTiming(name)
         return
     end
     pfDebug_EndTiming(name)
+end
+
+function PrintStack()
+    print(debugstack(2))
 end
