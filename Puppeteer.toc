@@ -51,7 +51,7 @@ libs\gui\frame\SimpleDialog.lua
 Puppeteer.lua
 core\SpellsTooltip.lua
 core\EventHandler.lua
-core\DistanceScanner.lua
+core\UnitTracker.lua
 core\Command.lua
 core\OverrideBindings.lua
 core\Bindings.lua
