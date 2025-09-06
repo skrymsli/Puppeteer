@@ -133,6 +133,14 @@ function SetDefaults()
                 ["Medium"] = 10, -- <=2 min
                 ["Long"] = 60 * 2 -- >2 min
             },
+            ["Tracking"] = {
+                ["EvaluateInterval"] = 1.25, -- How often everyone is fully scanned to determine if they should be closely tracked
+                ["DistanceUpdateInterval"] = 0.1, -- How often distance tracked units are updated
+                ["SightUpdateInterval"] = 0.1, -- How often sight tracked units are updated
+                ["MinDistanceTracking"] = 20, -- The minimum distance to start closely tracking distance
+                ["MaxDistanceTracking"] = 60, -- The maxmimum distance to start closely tracking distance
+                ["MaxSightTracking"] = 80 -- The maximum distance to closely track sight
+            },
             ["Experiments"] = {
                 ["AutoRole"] = false
             },
