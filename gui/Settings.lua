@@ -596,7 +596,8 @@ function CreateTab_Options_Mods(panel)
         "• Enhances spell casting by directly casting on targets rather than split-second target switching tricks\n"..
         "• Allows you to see accurate distance to other friendly players and NPCs\n"..
         "• Mousing over unit frames properly sets your mouseover target\n"..
-        "• Shows incoming healing from players that do not have HealComm and predicts more accurate numbers")
+        "• Shows incoming healing from players that do not have HealComm and predicts more accurate numbers\n"..
+        "• Add players/mobs to a separate Focus frame (By using the Focus action bind)")
         :SetJustifyH("LEFT")
         :SetWidth(TEXT_WIDTH)
         :SetPoint("TOP", superWowDetectedLabel, "BOTTOM", 0, -10)
@@ -630,7 +631,7 @@ function CreateTab_Options_Mods(panel)
         :SetJustifyH("LEFT")
         :SetWidth(TEXT_WIDTH)
         :SetPoint("TOP", unitXPDetectedLabel, "BOTTOM", 0, -10)
-    local unitXPLink = CreateLinkEditbox(container, "https://github.com/allfoxwy/UnitXP_SP3")
+    local unitXPLink = CreateLinkEditbox(container, "https://github.com/jrc13245/UnitXP_SP3")
         :SetPoint("TOP", unitXPInfo, "BOTTOM", 0, -5)
         :SetSize(300, 20)
     local unitXPLinkLabel = CreateLabel(container, "Link:")
