@@ -325,10 +325,13 @@ end
 
 function PTUnitFrame:UpdatePVP()
     if UnitIsPVP(self.unit) and (not IsInInstance() or not UnitIsVisible(self.unit)) then
-        if UnitFactionGroup(self.unit) == "Alliance" then
+        local faction = UnitFactionGroup(self.unit)
+        if faction == "Alliance" then
             self.pvpIcon.icon:SetTexture("Interface\\TargetingFrame\\UI-PVP-Alliance")
-        else
+        elseif faction == "Horde" then
             self.pvpIcon.icon:SetTexture("Interface\\TargetingFrame\\UI-PVP-Horde")
+        else
+            self.pvpIcon.icon:SetTexture("Interface\\TargetingFrame\\UI-PVP-FFA")
         end
         self.pvpIcon.frame:Show()
     else

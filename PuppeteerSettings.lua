@@ -140,6 +140,7 @@ function SetDefaults()
             ["CastWhenKey"] = "Key Up", -- Key Up, Key Down
             ["AutoResurrect"] = Puppeteer.ResurrectionSpells[util.GetClass("player")] ~= nil,
             ["UseHealPredictions"] = true,
+            ["PVPFlagProtection"] = true,
             ["SetMouseover"] = true,
             ["LFTAutoRole"] = true, -- Turtle WoW
             ["TestUI"] = false,

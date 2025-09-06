@@ -315,6 +315,55 @@ function GenerateDefaultBindings()
     end
 end
 
+PVPProtectOverrideTime = 0
+
+PVPProtectMenu = PTGuiLib.Get("dropdown", UIParent)
+PVPProtectMenu:SetOptions({
+    {
+        text = colorize("PVP Flag Protection", 0.3, 1, 0.3),
+        textHeight = 11,
+        notCheckable = true,
+        disabled = true
+    },
+    {
+        notCheckable = true,
+        disabled = true
+    },
+    {
+        text = colorize("Whoops, thanks for the save!", 0.8, 1, 0.8),
+        notCheckable = true,
+        func = function()
+            if UIErrorsFrame then
+                UIErrorsFrame:AddMessage(colorize("No problem, stay safe", 0.2, 1, 0.2))
+            end
+        end
+    },
+    {
+        notCheckable = true,
+        disabled = true
+    },
+    {
+        text = colorize("Disable protection for 5 min", 1, 0.8, 0.8),
+        notCheckable = true,
+        func = function()
+            PVPProtectOverrideTime = GetTime() + (5 * 60)
+            if UIErrorsFrame then
+                UIErrorsFrame:AddMessage(colorize("Protection disabled for 5 min", 1, 0, 0))
+            end
+        end
+    },
+    {
+        text = colorize("Disable protection this session", 1, 0.6, 0.6),
+        notCheckable = true,
+        func = function()
+            PVPProtectOverrideTime = GetTime() + (1000 * 60)
+            if UIErrorsFrame then
+                UIErrorsFrame:AddMessage(colorize("Protection disabled this session", 1, 0, 0))
+            end
+        end
+    }
+})
+
 local Sound_Disabled = function() end
 
 function RunTargetedAction(binding, unit, actionFunc, mustTempTarget)
@@ -568,6 +617,15 @@ function RunBinding(binding, unit, unitFrame)
     local bindingType = binding.Type
     if bindingType == "SPELL" then
         if targetCastable then
+            if PTOptions.PVPFlagProtection and not IsInInstance() and UnitIsPVP(unit) and UnitIsPlayer(unit) 
+                    and not UnitIsPVP("player") and PVPProtectOverrideTime < GetTime() then
+                PVPProtectMenu:SetToggleState(false)
+                local frame = unitFrame:GetRootContainer()
+                PVPProtectMenu:SetToggleState(true, frame, frame:GetWidth(), frame:GetHeight())
+                PVPProtectMenu:SetKeepOpen(true)
+                PlaySound("igMainMenuOpen")
+                return
+            end
             RunBinding_Spell(binding, unit)
         end
     elseif bindingType == "ACTION" then

@@ -393,6 +393,9 @@ function CreateTab_Options_Casting(panel)
     local autoResInfo = not resSpell and "This does nothing for your class" or {"Replaces your bound spells with "..resSpell..
         " when clicking on a dead ally", "All other types of binds, such as Actions, will not be replaced"}
     factory:checkbox("Auto Resurrect", autoResInfo, "AutoResurrect")
+    factory:checkbox("PVP Flag Protection", {"Stops you from casting spells on PVP flagged players if you're not flagged",
+        "Attempting to cast will prompt you to make an exception",
+        "Only stops you from using Spell bindings"}, "PVPFlagProtection")
     factory:checkbox("Target While Casting", {"Target the unit while most bindings run",
         "Note that these binding types override this rule:",
         "Spell - Always targets unless using SuperWoW",
