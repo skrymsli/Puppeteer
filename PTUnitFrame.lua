@@ -649,7 +649,7 @@ function PTUnitFrame:SetHealthBarValue(value)
                 incomingHealText:SetText("")
             end
         elseif profile.IncomingHealDisplay == "Heal" then
-            incomingHealText:SetText("+"..self.incomingHealing)
+            incomingHealText:SetText("+"..math.ceil(incomingHealing))
             local rgb = incomingDirectHealing > 0 and profile.IncomingHealText.Color or 
                     profile.IncomingHealText.IndirectColor
             if incomingDirectHealing > 0 then
