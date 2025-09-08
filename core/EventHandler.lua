@@ -130,6 +130,7 @@ RegisterEventHandler("UNIT_FACTION", function()
 end)
 RegisterEventHandler("PLAYER_LOGOUT", function()
     RemoveOverrideBindings()
+    PuppeteerSettings.SaveFramePositions()
 end)
 
 local GetKeyModifier = util.GetKeyModifier

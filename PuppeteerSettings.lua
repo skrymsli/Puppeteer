@@ -468,14 +468,18 @@ function GetSelectedProfile(frame)
     return PTProfileManager.GetProfile(GetSelectedProfileName(frame))
 end
 
+local function validateFrameOptionsExistence(frameName)
+    if not PTOptions.FrameOptions[frameName] then
+        PTOptions.FrameOptions[frameName] = {}
+    end
+end
+
 function IsFrameHidden(frameName)
     return PTOptions.FrameOptions[frameName] and PTOptions.FrameOptions[frameName].Hidden
 end
 
 function SetFrameHidden(frameName, hidden)
-    if not PTOptions.FrameOptions[frameName] then
-        PTOptions.FrameOptions[frameName] = {}
-    end
+    validateFrameOptionsExistence(frameName)
     PTOptions.FrameOptions[frameName].Hidden = hidden
     PTSettingsGui.UpdateFrameOptions()
 end
@@ -485,13 +489,42 @@ function IsFrameLocked(frameName)
 end
 
 function SetFrameLocked(frameName, locked)
-    if not PTOptions.FrameOptions[frameName] then
-        PTOptions.FrameOptions[frameName] = {}
-    end
+    validateFrameOptionsExistence(frameName)
     PTOptions.FrameOptions[frameName].Locked = locked
     local group = Puppeteer.UnitFrameGroups[frameName]
     if group then
         group:UpdateHeaderColor()
     end
     PTSettingsGui.UpdateFrameOptions()
+end
+
+function IsTitleHidden(frameName)
+    return PTOptions.FrameOptions[frameName] and PTOptions.FrameOptions[frameName].TitleHidden
+end
+
+function SetTitleHidden(frameName, hidden)
+    validateFrameOptionsExistence(frameName)
+    PTOptions.FrameOptions[frameName].TitleHidden = hidden
+    local group = Puppeteer.UnitFrameGroups[frameName]
+    if group then
+        group:UpdateUIPositions()
+    end
+    PTSettingsGui.UpdateFrameOptions()
+end
+
+function GetFramePosition(frameName)
+    if not (PTOptions.FrameOptions[frameName] and PTOptions.FrameOptions[frameName].Position) then
+        return "TOPLEFT", (GetScreenWidth() / 2), -(GetScreenHeight() / 2)
+    end
+    return unpack(PTOptions.FrameOptions[frameName].Position)
+end
+
+function SaveFramePositions()
+    for frameName, group in pairs(Puppeteer.UnitFrameGroups) do
+        if not PTOptions.FrameOptions[frameName] then
+            PTOptions.FrameOptions[frameName] = {}
+        end
+        local anchor, _, _, x, y = group:GetContainer():GetPoint(1)
+        PTOptions.FrameOptions[frameName].Position = {anchor, x, y}
+    end
 end

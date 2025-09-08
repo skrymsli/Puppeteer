@@ -669,8 +669,8 @@ function CreateTab_Customize()
     local frameStyleContainer = PTGuiLib.Get("container", container)
         :SetSimpleBackground()
         :SetPoint("TOPLEFT", container, "TOPLEFT", 5, -26)
-        :SetPoint("BOTTOMRIGHT", container, "TOPRIGHT", -5, -120)
-    local layout = NewLabeledColumnLayout(frameStyleContainer, {100, 340}, -35, 10)
+        :SetPoint("BOTTOMRIGHT", container, "TOPRIGHT", -5, -155)
+    local layout = NewLabeledColumnLayout(frameStyleContainer, {100, 340, 175}, -25, 5)
 
     local frameSettingsText = CreateLabel(frameStyleContainer, "Frame Group Settings")
         :SetPoint("TOP", frameStyleContainer, "TOP", 0, -5)
@@ -678,7 +678,7 @@ function CreateTab_Customize()
     
 
     local preferredFrameOrder = {"Party", "Pets", "Raid", "Raid Pets", "Target", "Focus"}
-    local frameDropdown = CreateLabeledDropdown(frameStyleContainer, "Select Frame", "The frame to edit the attributes of")
+    local frameDropdown = CreateLabeledDropdown(frameStyleContainer, "Configure Frame", "The frame to edit the attributes of")
         :SetWidth(150)
         :SetDynamicOptions(function(addOption, level, args)
             for _, name in ipairs(preferredFrameOrder) do
@@ -703,12 +703,13 @@ function CreateTab_Customize()
             end,
             func = function(self, gui)
                 StyleDropdown:UpdateText()
+                AnchorDropdown:UpdateText()
                 UpdateFrameOptions()
             end
         })
         :SetText("Party")
     FrameDropdown = frameDropdown
-    layout:layoutComponent(frameDropdown)
+    layout:column(3):layoutComponent(frameDropdown)
     local GetSelectedProfileName = PuppeteerSettings.GetSelectedProfileName
     local styleDropdown = CreateLabeledDropdown(frameStyleContainer, "Choose Style", "The style of the frame")
         :SetWidth(150)
@@ -762,7 +763,51 @@ function CreateTab_Customize()
             self:SetText(GetSelectedProfileName(frameDropdown:GetText()))
         end)
     StyleDropdown = styleDropdown
-    layout:offset(0, 10):layoutComponent(styleDropdown)
+    layout:column(1):offset(0, -30):layoutComponent(styleDropdown)
+
+    local anchors = {"TOPLEFT", "TOP", "TOPRIGHT", "LEFT", "CENTER", "RIGHT", "BOTTOMLEFT", "BOTTOM", "BOTTOMRIGHT"}
+    local readableAnchorMap = {
+        TOPLEFT = "Top Left",
+        TOP = "Top",
+        TOPRIGHT = "Top Right",
+        LEFT = "Left",
+        CENTER = "Center",
+        RIGHT = "Right",
+        BOTTOMLEFT = "Bottom Left",
+        BOTTOM = "Bottom",
+        BOTTOMRIGHT = "Bottom Right"
+    }
+    local anchorDropdown = CreateLabeledDropdown(frameStyleContainer, "Anchor", 
+            {"The point the frame is anchored to, affecting the direction it expands/retracts",
+            "Top Left: Expands right and down",
+            "Top: Expands equally left & right and down",
+            "Top Right: Expands left and down",
+            "Left: Expands right and equally up & down",
+            "Center: Expands equally in all directions",
+            "Right: Expands left and equally up & down",
+            "Bottom Left: Expands right and up",
+            "Bottom: Expands equally left & right and up",
+            "Bottom Right: Expands left and up",})
+        :SetWidth(150)
+        :SetSimpleOptions(anchors, function(option)
+            return {
+                initFunc = function(self)
+                    self.checked = PuppeteerSettings.GetFramePosition(frameDropdown:GetText()) == option
+                end,
+                func = function(self, gui)
+                    local group = Puppeteer.UnitFrameGroups[frameDropdown:GetText()]
+                    util.ConvertAnchor(group:GetContainer(), option)
+                    PuppeteerSettings.SaveFramePositions()
+                    gui:UpdateText()
+                end,
+                text = readableAnchorMap[option]
+            }
+        end)
+        :SetTextUpdater(function(self)
+            self:SetText(readableAnchorMap[PuppeteerSettings.GetFramePosition(frameDropdown:GetText())])
+        end)
+    layout:layoutComponent(anchorDropdown)
+    AnchorDropdown = anchorDropdown
 
     local lockFrameCheckbox = CreateLabeledCheckbox(frameStyleContainer, "Lock Frame", {"If checked, this frame will not be movable", 
         "Note: This setting is also accessible by right-clicking the group title bar"})
@@ -770,8 +815,17 @@ function CreateTab_Customize()
             local frameName = frameDropdown:GetText()
             PuppeteerSettings.SetFrameLocked(frameName, self:GetChecked() == 1)
         end)
-    layout:column(2):layoutComponent(lockFrameCheckbox)
+    layout:column(2):offset(0, -30):layoutComponent(lockFrameCheckbox)
     LockFrameCheckbox = lockFrameCheckbox
+
+    local hideTitleCheckbox = CreateLabeledCheckbox(frameStyleContainer, "Hide Title", {"If checked, the title of this frame will be hidden", 
+        colorize("Note: When you want to move the frame, you need to enable the title!", 1, 0.4, 0.4)})
+        :OnClick(function(self)
+            local frameName = frameDropdown:GetText()
+            PuppeteerSettings.SetTitleHidden(frameName, self:GetChecked() == 1)
+        end)
+    layout:layoutComponent(hideTitleCheckbox)
+    HideTitleCheckbox = hideTitleCheckbox
 
     local hideFrameCheckbox = CreateLabeledCheckbox(frameStyleContainer, "Hide Frame", "If checked, this frame will not be visible")
         :OnClick(function(self)
@@ -850,7 +904,7 @@ function CreateTab_Customize()
     add(createDropdown("Name Text Color", "'Default' is default Blizzard yellow text", "NameText.Color", {"Class", "Default"}))
     add(createDropdown("Show Debuff Colors On", nil, "ShowDebuffColorsOn", {"Health Bar", "Name", "Health", "Hidden"}))
     add(createDropdown("Sort Units By", "The sorting algorithm for units in a group", "SortUnitsBy", {"ID", "Name", "Class Name"}))
-    add(createDropdown("Growth Direction", "Vertical grows units down, Horizontal grows units right", "Orientation", {"Vertical", "Horizontal"}))
+    add(createDropdown("Growth Orientation", "Vertical grows units up and down, Horizontal grows units left and right", "Orientation", {"Vertical", "Horizontal"}))
     add(createDropdown("Border Style", "The border of the group", "BorderStyle", {"Tooltip", "Dialog Box", "Borderless"}))
     add(createDropdown("Max Units In Axis", "The maximum number of units in the growth axis until it must shift down", "MaxUnitsInAxis", {1, 2, 3, 4, 5, 6, 7, 8, 9, 10}))
     add(createDropdown("Min Units X", "The minimum amount of unit space to take on the X-axis", "MinUnitsX", {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10}))
@@ -861,6 +915,7 @@ end
 
 function UpdateFrameOptions()
     LockFrameCheckbox:SetChecked(PuppeteerSettings.IsFrameLocked(FrameDropdown:GetText()))
+    HideTitleCheckbox:SetChecked(PuppeteerSettings.IsTitleHidden(FrameDropdown:GetText()))
     HideFrameCheckbox:SetChecked(PuppeteerSettings.IsFrameHidden(FrameDropdown:GetText()))
 end
 
