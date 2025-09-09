@@ -141,9 +141,6 @@ function SetDefaults()
                 ["MaxDistanceTracking"] = 60, -- The maxmimum distance to start closely tracking distance
                 ["MaxSightTracking"] = 80 -- The maximum distance to closely track sight
             },
-            ["Experiments"] = {
-                ["AutoRole"] = false
-            },
             ["CastWhen"] = "Mouse Up", -- Mouse Up, Mouse Down
             ["CastWhenKey"] = "Key Up", -- Key Up, Key Down
             ["AutoResurrect"] = Puppeteer.ResurrectionSpells[util.GetClass("player")] ~= nil,
@@ -296,6 +293,9 @@ function SetDefaults()
     do
         local defaults = {
             ["ShowLoadMessage"] = true,
+            ["Experiments"] = {
+                ["AutoRole"] = false
+            },
             ["OptionsVersion"] = OPTIONS_VERSION
         }
         ApplyDefaults(PTGlobalOptions, defaults)
@@ -316,6 +316,10 @@ end
 function TraverseOptions(location)
     local path = util.SplitString(location, ".")
     local currentTable = PTOptions
+    if path[1] == "Global" then
+        currentTable = PTGlobalOptions
+        table.remove(path, 1)
+    end
     for i = 1, table.getn(path) - 1 do
         currentTable = currentTable[path[i]]
     end

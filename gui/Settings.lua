@@ -492,8 +492,19 @@ function CreateTab_Options_Advanced(panel)
 
     local TEXT_WIDTH = 370
 
+    local experimentsLabel = CreateLabel(container, "Experiments")
+        :SetPoint("TOP", container, "TOP", 0, -20)
+        :SetFontSize(14)
+    local experimentsInfo = CreateLabel(container, "Features which are not complete and/or need more testing. Use at your own risk.")
+        :SetWidth(TEXT_WIDTH)
+        :SetPoint("TOP", experimentsLabel, "BOTTOM", 0, -5)
+    layout:offset(0, -70)
+    factory:checkbox("(TWoW) Auto Role", {"If enabled, the Role Action menu shows auto role detection options",
+        colorize("Using this functionality WILL cause errors and other unexpected behavior", 1, 0.4, 0.4)}, "Global.Experiments.AutoRole",
+        Puppeteer.InitRoleDropdown)
+
     local scriptsLabel = CreateLabel(container, "Load & Postload Scripts")
-        :SetPoint("TOP", container, "TOP", 0, -10)
+        :SetPoint("TOP", container, "TOP", 0, -105)
         :SetFontSize(14)
 
     local loadScriptInfo = CreateLabel(container, "The Load Script runs after profiles are initialized, but before UIs are created, "..
@@ -544,7 +555,7 @@ function CreateTab_Options_Advanced(panel)
             editor:GetEditbox():SetFocus()
             AddOverlayFrame(editor)
         end)
-    local reloadInfo = CreateLabel(container, "A reload or relog is required for any changes to take effect.")
+    local reloadInfo = CreateLabel(container, "A reload or relog is required for any script changes to take effect.")
         :SetWidth(TEXT_WIDTH)
         :SetPoint("TOP", postLoadScriptButton, "BOTTOM", 0, -20)
     local reloadButton = PTGuiLib.Get("button", container)
@@ -554,14 +565,6 @@ function CreateTab_Options_Advanced(panel)
         :OnClick(function()
             ReloadUI()
         end)
-
-    local experimentsLabel = CreateLabel(container, "Experiments")
-        :SetPoint("TOP", reloadButton, "BOTTOM", 0, -20)
-        :SetFontSize(14)
-    layout:offset(0, -260)
-    factory:checkbox("(TWoW) Auto Role", {"If enabled, the Role Action menu shows auto role detection options",
-        colorize("Using this functionality WILL cause errors and other unexpected behavior", 1, 0.4, 0.4)}, "Experiments.AutoRole",
-        Puppeteer.InitRoleDropdown)
 end
 
 function CreateTab_Options_Mods(panel)
