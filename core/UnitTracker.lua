@@ -1,7 +1,7 @@
 PTUtil.SetEnvironment(Puppeteer)
 local _G = getfenv(0)
 
-DistanceScannerFrame = CreateFrame("Frame", "PTUnitTrackerFrame", UIParent)
+UnitTrackerFrame = CreateFrame("Frame", "PTUnitTrackerFrame", UIParent)
 
 local util = PTUtil
 local GetTime = GetTime
@@ -138,5 +138,5 @@ end
 
 function StartUnitTracker()
     LoadTrackingOptions()
-    DistanceScannerFrame:SetScript("OnUpdate", RunTrackingScan)
+    UnitTrackerFrame:SetScript("OnUpdate", RunTrackingScan)
 end
