@@ -4,7 +4,7 @@
 Puppeteer, formerly HealersMate, is a unit frames addon for World of Warcraft Vanilla 1.12 that strives to be an alternative to modern WoW's VuhDo, Cell, or Healbot. Its features are tailored for healers, but can be a viable unit frames addon for any class and spec.
 
 ### Features
-- See health, power, marks, incoming healing, mob aggro, and relevant buffs & debuffs of your party, raid, pets, and targets
+- See health, power, marks, incoming healing, mob aggro, PvP status, and relevant buffs & debuffs of your party, raid, pets, and targets
 - Bind mouse clicks, the mouse wheel, and keys to spells
 - See your bound spells, their cost, and available mana while hovering over frames
 - Assign roles to players
@@ -23,7 +23,7 @@ Puppeteer, formerly HealersMate, is a unit frames addon for World of Warcraft Va
 ### Simple, Yet Advanced Bindings
 <img align="right" width="36%" src="https://i.imgur.com/KoFygXv.png">
 
-Puppeteer boasts the ability to bind mouse clicks, the mouse wheel, and keys to any combination of Ctrl/Shift/Alt modifiers. You can bind spells, macros, items, custom Lua scripts, and menus which contain multiple bindings.
+Puppeteer boasts the ability to bind mouse clicks, the mouse wheel, and keys to any combination of Shift/Ctrl/Alt modifiers. You can bind spells, macros, items, custom Lua scripts, and menus which contain multiple bindings. **Use the `/pt` command to open the configuration menu.**
 <p align="left">
   <img src="https://i.imgur.com/iglcV7z.png" width=30% align="top">
   <img src="https://i.imgur.com/7iIQTkk.png" width=30% align="top">
@@ -52,14 +52,21 @@ While not required, the mods listed below will massively improve your experience
 | Mod | Enhancement |
 | - | - |
 | SuperWoW ([GitHub](https://github.com/balakethelock/SuperWoW)) | - Shows more accurate incoming healing, and shows incoming healing from players that do not have HealComm<br>- Track the remaining duration of many buffs and HoTs on other players<br>- Allows casting on players without doing split-second target switching<br>- Lets you see accurate distance to friendly players/NPCs<br>- Lets you set units you're hovering over as your mouseover target |
-| UnitXP SP3 ([GitHub](https://github.com/allfoxwy/UnitXP_SP3)) | Allows Puppeteer to show very accurate distance to both friendly players and enemies, and show if they're out of line-of-sight |
+| UnitXP SP3 ([GitHub](https://github.com/jrc13245/UnitXP_SP3)) | Allows Puppeteer to show very accurate distance to both friendly players and enemies, and show if they're out of line-of-sight |
 | Nampower ([GitHub](https://github.com/pepopo978/nampower)) | Drastically decreases the amount of time in between casting consecutive spells  |
 
-### Planned Features
+### Roadmap of Major Planned Features
 
-- [ ] Fully customizable unit frames
-- [ ] Customizable buff/debuff tracking
-- [ ] Support for non-English clients
+Tentative, this could change at any time.
+- [X] ~~1.0.0~~
+  - ~~Overhaul bindings~~
+  - ~~Lay out groundwork for GUI development~~
+- [ ] 1.1.0
+  - Support non-English clients
+  - Add Enemy frames (SuperWoW Required)
+- [ ] 1.2.0 and/or 1.3.0
+  - Cell-like unit frame customization
+  - Customizable buff/debuff tracking
 
 ### FAQ & Known Issues
 
