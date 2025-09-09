@@ -846,16 +846,18 @@ function PTUnitFrame:AllocateAura()
             end
             duration:SetScript("OnUpdate", nil)
         end
+        local SetSequenceTime = duration.SetSequenceTime
+        local GetTime = GetTime
         duration:SetScript("OnUpdateModel", function()
-            if this.stopping == 0 then
-                this:SetAlpha(0.8)
+            if duration.stopping == 0 then
+                duration:SetAlpha(0.8)
                 local time = GetTime()
-                local progress = (time - this.start) / this.duration
+                local progress = (time - duration.start) / duration.duration
                 if progress < 1.0 then
-                    this:SetSequenceTime(0, 1000 - (progress * 1000))
-                    local secondsPrecise = this.start - time + this.duration
+                    SetSequenceTime(duration, 0, 1000 - (progress * 1000))
+                    local secondsPrecise = duration.start - time + duration.duration
                     local seconds = math.floor(secondsPrecise)
-                    if seconds <= (this.displayAt and this.displayAt or AURA_DURATION_TEXT_FLASH_THRESHOLD) then
+                    if seconds <= (duration.displayAt or AURA_DURATION_TEXT_FLASH_THRESHOLD) then
                         if durationText.seconds ~= seconds or seconds <= AURA_DURATION_TEXT_FLASH_THRESHOLD then
                             -- You don't want to know why it's gotta be done like this..
                             -- (If you're insane and you do, it's because otherwise the text will disappear for one frame otherwise)
@@ -869,7 +871,7 @@ function PTUnitFrame:AllocateAura()
                     return
                 end
                 durationText:SetSeconds(nil)
-                this:SetSequenceTime(0, 0)
+                SetSequenceTime(duration, 0, 0)
             end
         end)
         return {["frame"] = frame, ["icon"] = icon, ["border"] = border, ["stackText"] = stackText, ["overlay"] = durationOverlayFrame, 
