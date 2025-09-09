@@ -10,13 +10,13 @@ SlashCmdList["PUPPETEER"] = function(args)
             gc:ClearAllPoints()
             gc:SetPoint(PTUtil.GetCenterScreenPoint(gc:GetWidth(), gc:GetHeight()))
         end
-        PuppeteerSettings.HM_SettingsContainer:ClearAllPoints()
-        PuppeteerSettings.HM_SettingsContainer:SetPoint("CENTER", 0, 0)
+        PTSettingsGui.TabFrame:ClearAllPoints()
+        PTSettingsGui.TabFrame:SetPoint("CENTER", 0, 0)
         DEFAULT_CHAT_FRAME:AddMessage("Reset all frame positions.")
     elseif args == "check" then
         Puppeteer.CheckGroup()
     elseif args == "update" then
-        for _, ui in pairs(Puppeteer.AllUnitFrames) do
+        for _, ui in ipairs(Puppeteer.AllUnitFrames) do
             ui:SizeElements()
             ui:UpdateAll()
         end
@@ -28,7 +28,7 @@ SlashCmdList["PUPPETEER"] = function(args)
         PTOptions.TestUI = not PTOptions.TestUI
         Puppeteer.TestUI = PTOptions.TestUI
         if PTOptions.TestUI then
-            for _, ui in pairs(Puppeteer.AllUnitFrames) do
+            for _, ui in ipairs(Puppeteer.AllUnitFrames) do
                 ui.fakeStats = ui.GenerateFakeStats()
                 ui:Show()
             end

@@ -75,6 +75,8 @@ function InitializeDefaultProfiles()
         profile.RoleIcon.PaddingV = 0
         profile.RoleIcon.OffsetY = 5
         profile.RoleIcon.OffsetX = -5
+
+        profile.PVPIcon.OffsetY = -5
     end
 
 
@@ -107,6 +109,8 @@ function InitializeDefaultProfiles()
         profile.RoleIcon.PaddingV = 0
         profile.RoleIcon.OffsetY = 5
         profile.RoleIcon.OffsetX = -4
+
+        profile.PVPIcon.OffsetY = -5
     end
 
     do
@@ -136,6 +140,8 @@ function InitializeDefaultProfiles()
         profile.RoleIcon.PaddingV = 0
         profile.RoleIcon.OffsetY = 6
         profile.RoleIcon.OffsetX = -5
+
+        profile.PVPIcon.OffsetY = -5
     end
 
     do
@@ -247,6 +253,9 @@ function InitializeDefaultProfiles()
         profile.PowerDisplay = "Hidden"
         profile.PowerText.FontSize = 8
         profile.Orientation = "Vertical"
+
+        profile.PVPIcon.Width = 12
+        profile.PVPIcon.Height = 12
     end
 
     do
@@ -399,6 +408,8 @@ function InitializeDefaultProfiles()
         profile.RaidMarkIcon.OffsetX = -18
         profile.RaidMarkIcon.Width = 16
         profile.RaidMarkIcon.Height = 16
+
+        profile.PVPIcon.OffsetY = -4
 
         profile.BorderStyle = "Hidden"
     end

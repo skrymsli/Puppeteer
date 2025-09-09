@@ -132,14 +132,15 @@ end
 function PTUnitFrameGroup:Initialize()
     local container = CreateFrame("Frame", "PTUnitFrameGroupContainer_"..self.name, UIParent)
     self.container = container
-    self:ApplyToplevel()
-    if container:GetNumPoints() == 0 then
-        container:SetPoint(util.GetCenterScreenPoint(0, 0))
-    end
-    container:SetBackdrop({bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background"})
-    container:SetBackdropColor(0, 0, 0, 0.5)
     container:EnableMouse(true)
     container:SetMovable(true)
+    container:SetUserPlaced(false)
+    self:ApplyToplevel()
+    container:ClearAllPoints()
+    local anchor, x, y = PuppeteerSettings.GetFramePosition(self.name)
+    container:SetPoint(anchor or "TOPLEFT", UIParent, "TOPLEFT", x or 100, y or -100)
+    container:SetBackdrop({bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background"})
+    container:SetBackdropColor(0, 0, 0, 0.5)
 
     container:SetScript("OnMouseDown", function()
         local button = arg1
@@ -156,6 +157,7 @@ function PTUnitFrameGroup:Initialize()
 
         if (util.GetKeyModifier() == PTOptions.FrameDrag.AltMoveKey) == PTOptions.FrameDrag.MoveAll then
             container:StartMoving()
+            container:SetUserPlaced(false) -- StartMoving sets this and needs to be reverted
             self:RemoveToplevel()
             return
         end
@@ -187,7 +189,7 @@ function PTUnitFrameGroup:Initialize()
     container:SetScript("OnMouseUp", function()
         local button = arg1
 
-        if button == "RightButton" and MouseIsOver(self.header) then
+        if button == "RightButton" and MouseIsOver(self.header) and self.header:IsVisible() then
             ContextMenu.FrameGroup = self
             ContextMenu:SetToggleState(false)
             ContextMenu:SetToggleState(true, container, container:GetWidth(), container:GetHeight())
@@ -204,6 +206,7 @@ function PTUnitFrameGroup:Initialize()
         if not container.bulkMovement then
             container:StopMovingOrSizing()
             self:ApplyToplevel()
+            util.ConvertAnchor(container, PuppeteerSettings.GetFramePosition(self.name))
             return
         end
 
@@ -214,10 +217,7 @@ function PTUnitFrameGroup:Initialize()
         for _, group in pairs(moveContainer.groups) do
             group:ApplyToplevel()
             local gc = group:GetContainer()
-            local xOffset = gc:GetLeft()
-            local yOffset = gc:GetTop() - GetScreenHeight()
-            gc:ClearAllPoints()
-            gc:SetPoint("TOPLEFT", UIParent, "TOPLEFT", xOffset, yOffset)
+            util.ConvertAnchor(gc, PuppeteerSettings.GetFramePosition(group.name))
         end
         -- Prevent container from potentially blocking mouse by setting it back to 0 size
         moveContainer:SetWidth(0)
@@ -240,14 +240,14 @@ function PTUnitFrameGroup:Initialize()
     header:SetBackdrop({bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background"})
     self:UpdateHeaderColor()
 
-    local borderFrame = CreateFrame("Frame", "$parentBorder", container)
-    self.borderFrame = borderFrame
-    borderFrame:SetPoint("CENTER", container, 0, 0)
-
     local label = header:CreateFontString(header, "OVERLAY", "GameFontNormal")
     self.label = label
     label:SetPoint("CENTER", header, "CENTER", 0, 0)
     label:SetText(self.name)
+
+    local borderFrame = CreateFrame("Frame", "$parentBorder", container)
+    self.borderFrame = borderFrame
+    borderFrame:SetPoint("CENTER", container, 0, 0)
 
     self:ApplyProfile()
 
@@ -275,6 +275,8 @@ function PTUnitFrameGroup:UpdateUIPositions()
     local profileHeight = profile:GetHeight()
     local maxUnitsInAxis = profile.MaxUnitsInAxis
     local orientation = profile.Orientation
+    local headerEnabled = not PuppeteerSettings.IsTitleHidden(self.name)
+    local headerHeight = headerEnabled and 20 or 0
 
     local sortedUIs = self:GetSortedUIs()
     local splitSortedUIs = {}
@@ -308,7 +310,7 @@ function PTUnitFrameGroup:UpdateUIPositions()
             local container = ui:GetRootContainer()
             local x = orientation == "Vertical" and ((profileWidth + xSpacing) * (columnIndex - 1)) or ((profileWidth + xSpacing) * (i - 1))
             local y = orientation == "Vertical" and ((profileHeight + ySpacing) * (i - 1)) or ((profileHeight + ySpacing) * (columnIndex - 1))
-            container:SetPoint("TOPLEFT", self.container, "TOPLEFT", x, -y - 20)
+            container:SetPoint("TOPLEFT", self.container, "TOPLEFT", x, -y - headerHeight)
         end
     end
 
@@ -321,13 +323,18 @@ function PTUnitFrameGroup:UpdateUIPositions()
     local width = orientation == "Vertical" and (profileWidth * largestRow + (xSpacing * (largestRow - 1))) or (profileWidth * largestColumn + (xSpacing * (largestColumn - 1)))
     width = math.max(width, profileWidth) -- Prevent width from being 0
     local height = orientation == "Vertical" and (profileHeight * largestColumn + (ySpacing * (largestColumn - 1))) or (profileHeight * largestRow + (ySpacing * (largestRow - 1)))
-    height = height + 20
+    height = height + headerHeight
     self.container:SetWidth(width)
     self.container:SetHeight(height)
 
     local header = self.header
-    header:SetWidth(width)
-    header:SetHeight(20)
+    if headerEnabled then
+        header:Show()
+        header:SetWidth(width)
+        header:SetHeight(headerHeight)
+    else
+        header:Hide()
+    end
 
     local borderPadding = 0
     if profile.BorderStyle == "Tooltip" then

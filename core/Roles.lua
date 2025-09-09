@@ -308,7 +308,7 @@ function InitRoleDropdown()
             func = massRoleFunc
         }
     }
-    if PTOptions.Experiments.AutoRole then
+    if PTGlobalOptions.Experiments.AutoRole then
         table.insert(options, 6, {
             text = colorize("Auto Detect", 1, 0.6, 0),
             func = function()

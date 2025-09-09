@@ -206,6 +206,19 @@ function PTUIProfile.SetDefaults()
         ["Opacity"] = 100
     })
 
+    profile.PVPIcon = createSizedObject({
+        ["Width"] = 14,
+        ["Height"] = 14,
+        ["AlignmentH"] = "LEFT",
+        ["AlignmentV"] = "TOP",
+        ["PaddingH"] = 0,
+        ["OffsetX"] = -6,
+        ["PaddingV"] = 0,
+        ["OffsetY"] = 2,
+        ["Anchor"] = "Container",
+        ["Opacity"] = 100
+    })
+
     profile.TrackAuras = true
     profile.AuraTracker = createSizedObject({
         ["Height"] = 20,

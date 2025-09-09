@@ -180,6 +180,7 @@ function PTUnitFrame:UpdateAll()
     self:EvaluateTarget()
     self:UpdateOutline()
     self:UpdateRaidMark()
+    self:UpdatePVP()
 end
 
 function PTUnitFrame:GetShowDistanceThreshold()
@@ -320,6 +321,22 @@ function PTUnitFrame:UpdateRaidMark()
     end
     SetRaidTargetIconTexture(self.raidMarkIcon.icon, markIndex)
     self.raidMarkIcon.frame:Show()
+end
+
+function PTUnitFrame:UpdatePVP()
+    if UnitIsPVP(self.unit) and (not IsInInstance() or not UnitIsVisible(self.unit)) then
+        local faction = UnitFactionGroup(self.unit)
+        if faction == "Alliance" then
+            self.pvpIcon.icon:SetTexture("Interface\\TargetingFrame\\UI-PVP-Alliance")
+        elseif faction == "Horde" then
+            self.pvpIcon.icon:SetTexture("Interface\\TargetingFrame\\UI-PVP-Horde")
+        else
+            self.pvpIcon.icon:SetTexture("Interface\\TargetingFrame\\UI-PVP-FFA")
+        end
+        self.pvpIcon.frame:Show()
+    else
+        self.pvpIcon.frame:Hide()
+    end
 end
 
 function PTUnitFrame:Flash()
@@ -632,7 +649,7 @@ function PTUnitFrame:SetHealthBarValue(value)
                 incomingHealText:SetText("")
             end
         elseif profile.IncomingHealDisplay == "Heal" then
-            incomingHealText:SetText("+"..self.incomingHealing)
+            incomingHealText:SetText("+"..math.ceil(incomingHealing))
             local rgb = incomingDirectHealing > 0 and profile.IncomingHealText.Color or 
                     profile.IncomingHealText.IndirectColor
             if incomingDirectHealing > 0 then
@@ -786,7 +803,12 @@ function PTUnitFrame:AllocateAura()
     frame:SetScript("OnMouseUp", PTUnitFrame.Aura_OnMouseUp)
     frame:SetScript("OnMouseDown", PTUnitFrame.Aura_OnMouseDown)
     
-    local icon = frame:CreateTexture(nil, "OVERLAY")
+    local icon = frame:CreateTexture(nil, "ARTWORK")
+    local border = frame:CreateTexture(nil, "OVERLAY")
+    border:SetTexture("Interface\\Buttons\\UI-Debuff-Overlays")
+    border:SetTexCoord(0.296875, 0.5703125, 0, 0.515625)
+    border:SetPoint("TOPLEFT", icon, "TOPLEFT", -0.5, 0.5)
+    border:SetPoint("BOTTOMRIGHT", icon, "BOTTOMRIGHT", 0.5, -0.5)
     local stackText = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     stackText:SetTextColor(1, 1, 1)
 
@@ -824,16 +846,18 @@ function PTUnitFrame:AllocateAura()
             end
             duration:SetScript("OnUpdate", nil)
         end
+        local SetSequenceTime = duration.SetSequenceTime
+        local GetTime = GetTime
         duration:SetScript("OnUpdateModel", function()
-            if this.stopping == 0 then
-                this:SetAlpha(0.8)
+            if duration.stopping == 0 then
+                duration:SetAlpha(0.8)
                 local time = GetTime()
-                local progress = (time - this.start) / this.duration
+                local progress = (time - duration.start) / duration.duration
                 if progress < 1.0 then
-                    this:SetSequenceTime(0, 1000 - (progress * 1000))
-                    local secondsPrecise = this.start - time + this.duration
+                    SetSequenceTime(duration, 0, 1000 - (progress * 1000))
+                    local secondsPrecise = duration.start - time + duration.duration
                     local seconds = math.floor(secondsPrecise)
-                    if seconds <= (this.displayAt and this.displayAt or AURA_DURATION_TEXT_FLASH_THRESHOLD) then
+                    if seconds <= (duration.displayAt or AURA_DURATION_TEXT_FLASH_THRESHOLD) then
                         if durationText.seconds ~= seconds or seconds <= AURA_DURATION_TEXT_FLASH_THRESHOLD then
                             -- You don't want to know why it's gotta be done like this..
                             -- (If you're insane and you do, it's because otherwise the text will disappear for one frame otherwise)
@@ -847,13 +871,13 @@ function PTUnitFrame:AllocateAura()
                     return
                 end
                 durationText:SetSeconds(nil)
-                this:SetSequenceTime(0, 0)
+                SetSequenceTime(duration, 0, 0)
             end
         end)
-        return {["frame"] = frame, ["icon"] = icon, ["stackText"] = stackText, ["overlay"] = durationOverlayFrame, 
+        return {["frame"] = frame, ["icon"] = icon, ["border"] = border, ["stackText"] = stackText, ["overlay"] = durationOverlayFrame, 
             ["durationText"] = durationText, ["duration"] = duration, ["durationEnabled"] = true}
     end
-    return {["frame"] = frame, ["icon"] = icon, ["stackText"] = stackText}
+    return {["frame"] = frame, ["icon"] = icon, ["border"] = border, ["stackText"] = stackText}
 end
 
 -- Get an icon from the available pool. Automatically inserts into the used pool.
@@ -974,13 +998,13 @@ function PTUnitFrame:UpdateAuras()
     local yOffset = profile.TrackedAurasAlignment == "TOP" and 0 or origSize - auraSize
     for _, buff in ipairs(buffs) do
         local aura = self:GetUnusedAura()
-        self:CreateAura(aura, buff.name, buff.index, buff.texture, buff.stacks, xOffset, -yOffset, "Buff", auraSize)
+        self:CreateAura(aura, buff.name, buff.index, buff.texture, buff.stacks, buff.type, xOffset, -yOffset, "Buff", auraSize)
         xOffset = xOffset + auraSize + spacing
     end
     xOffset = 0
     for _, debuff in ipairs(debuffs) do
         local aura = self:GetUnusedAura()
-        self:CreateAura(aura, debuff.name, debuff.index, debuff.texture, debuff.stacks, xOffset, -yOffset, "Debuff", auraSize)
+        self:CreateAura(aura, debuff.name, debuff.index, debuff.texture, debuff.stacks, debuff.type, xOffset, -yOffset, "Debuff", auraSize)
         xOffset = xOffset - auraSize - spacing
     end
     compost:Reclaim(buffs)
@@ -1056,7 +1080,14 @@ do
     PTUnitFrame.Aura_OnMouseDown = wrapButtonScript("OnMouseDown")
 end
 
-function PTUnitFrame:CreateAura(aura, name, index, texturePath, stacks, xOffset, yOffset, type, size)
+local debuffTypeBorderColors = {
+    ["Magic"] = {0.2, 0.6, 1.0},
+    ["Curse"] = {0.6, 0.0, 1.0},
+    ["Disease"] = {0.6, 0.4, 0},
+    ["Poison"] = {0.0, 0.6, 0},
+    ["Other"] = {1, 0, 0}
+}
+function PTUnitFrame:CreateAura(aura, name, index, texturePath, stacks, auraType, xOffset, yOffset, type, size)
     local frame = aura.frame
     frame:SetWidth(size)
     frame:SetHeight(size)
@@ -1070,7 +1101,6 @@ function PTUnitFrame:CreateAura(aura, name, index, texturePath, stacks, xOffset,
     local icon = aura.icon
     icon:SetAllPoints(frame)
     icon:SetTexture(texturePath)
-    --icon:SetVertexColor(1, 0, 0)
 
     if aura.durationEnabled then
         local overlay = aura.overlay
@@ -1086,6 +1116,15 @@ function PTUnitFrame:CreateAura(aura, name, index, texturePath, stacks, xOffset,
         stackText:SetPoint("CENTER", frame, "CENTER", 0, 0)
         stackText:SetFont("Fonts\\FRIZQT__.TTF", math.ceil(size * (stacks < 10 and 0.75 or 0.6)))
         stackText:SetText(stacks)
+    end
+
+    if type == "Buff" then
+        aura.border:Hide()
+    else
+        local border = aura.border
+        border:Show()
+        local color = debuffTypeBorderColors[auraType] or debuffTypeBorderColors["Other"]
+        border:SetVertexColor(color[1], color[2], color[3])
     end
 
     if aura.durationEnabled then
@@ -1165,6 +1204,17 @@ function PTUnitFrame:Initialize()
     raidMarkIcon:SetAlpha(profile.RaidMarkIcon:GetAlpha())
     raidMarkIcon:SetTexture("Interface\\TARGETINGFRAME\\UI-RaidTargetingIcons")
     raidMarkFrame:Hide()
+
+    -- PVP Icon
+
+    local pvpFrame = CreateFrame("Frame", nil, container)
+    pvpFrame:SetFrameLevel(container:GetFrameLevel() + 4)
+    local pvpIcon = pvpFrame:CreateTexture(nil, "OVERLAY")
+    self.pvpIcon = {frame = pvpFrame, icon = pvpIcon}
+    pvpIcon:SetAlpha(profile.PVPIcon:GetAlpha())
+    pvpIcon:SetTexture("Interface\\TargetingFrame\\UI-PVP-Alliance")
+    pvpIcon:SetTexCoord(3 / 64, 39 / 64, 2 / 64, 38 / 64)
+    pvpFrame:Hide()
 
     -- Health Bar Element
 
@@ -1388,6 +1438,12 @@ function PTUnitFrame:SizeElements()
 
     local raidMarkIcon = self.raidMarkIcon.icon
     raidMarkIcon:SetAllPoints(raidMarkFrame)
+
+    local pvpFrame = self.pvpIcon.frame
+    self:UpdateComponent(pvpFrame, profile.PVPIcon)
+
+    local pvpIcon = self.pvpIcon.icon
+    pvpIcon:SetAllPoints(pvpFrame)
 
     local auraPanel = self.auraPanel
     self:UpdateComponent(auraPanel, profile.AuraTracker)

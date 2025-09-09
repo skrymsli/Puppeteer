@@ -120,8 +120,17 @@ RegisterEventHandler("RAID_TARGET_UPDATE", function()
         ui:UpdateRaidMark()
     end
 end)
+RegisterEventHandler("UNIT_FACTION", function()
+    if not IsRelevantUnit(arg1) then
+        return
+    end
+    for ui in UnitFrames(arg1) do
+        ui:UpdatePVP()
+    end
+end)
 RegisterEventHandler("PLAYER_LOGOUT", function()
     RemoveOverrideBindings()
+    PuppeteerSettings.SaveFramePositions()
 end)
 
 local GetKeyModifier = util.GetKeyModifier

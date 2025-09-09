@@ -133,13 +133,19 @@ function SetDefaults()
                 ["Medium"] = 10, -- <=2 min
                 ["Long"] = 60 * 2 -- >2 min
             },
-            ["Experiments"] = {
-                ["AutoRole"] = false
+            ["Tracking"] = {
+                ["EvaluateInterval"] = 1.25, -- How often everyone is fully scanned to determine if they should be closely tracked
+                ["DistanceUpdateInterval"] = 0.1, -- How often distance tracked units are updated
+                ["SightUpdateInterval"] = 0.1, -- How often sight tracked units are updated
+                ["MinDistanceTracking"] = 20, -- The minimum distance to start closely tracking distance
+                ["MaxDistanceTracking"] = 60, -- The maxmimum distance to start closely tracking distance
+                ["MaxSightTracking"] = 80 -- The maximum distance to closely track sight
             },
             ["CastWhen"] = "Mouse Up", -- Mouse Up, Mouse Down
             ["CastWhenKey"] = "Key Up", -- Key Up, Key Down
             ["AutoResurrect"] = Puppeteer.ResurrectionSpells[util.GetClass("player")] ~= nil,
             ["UseHealPredictions"] = true,
+            ["PVPFlagProtection"] = true,
             ["SetMouseover"] = true,
             ["LFTAutoRole"] = true, -- Turtle WoW
             ["TestUI"] = false,
@@ -287,6 +293,9 @@ function SetDefaults()
     do
         local defaults = {
             ["ShowLoadMessage"] = true,
+            ["Experiments"] = {
+                ["AutoRole"] = false
+            },
             ["OptionsVersion"] = OPTIONS_VERSION
         }
         ApplyDefaults(PTGlobalOptions, defaults)
@@ -307,6 +316,10 @@ end
 function TraverseOptions(location)
     local path = util.SplitString(location, ".")
     local currentTable = PTOptions
+    if path[1] == "Global" then
+        currentTable = PTGlobalOptions
+        table.remove(path, 1)
+    end
     for i = 1, table.getn(path) - 1 do
         currentTable = currentTable[path[i]]
     end
@@ -459,14 +472,18 @@ function GetSelectedProfile(frame)
     return PTProfileManager.GetProfile(GetSelectedProfileName(frame))
 end
 
+local function validateFrameOptionsExistence(frameName)
+    if not PTOptions.FrameOptions[frameName] then
+        PTOptions.FrameOptions[frameName] = {}
+    end
+end
+
 function IsFrameHidden(frameName)
     return PTOptions.FrameOptions[frameName] and PTOptions.FrameOptions[frameName].Hidden
 end
 
 function SetFrameHidden(frameName, hidden)
-    if not PTOptions.FrameOptions[frameName] then
-        PTOptions.FrameOptions[frameName] = {}
-    end
+    validateFrameOptionsExistence(frameName)
     PTOptions.FrameOptions[frameName].Hidden = hidden
     PTSettingsGui.UpdateFrameOptions()
 end
@@ -476,13 +493,42 @@ function IsFrameLocked(frameName)
 end
 
 function SetFrameLocked(frameName, locked)
-    if not PTOptions.FrameOptions[frameName] then
-        PTOptions.FrameOptions[frameName] = {}
-    end
+    validateFrameOptionsExistence(frameName)
     PTOptions.FrameOptions[frameName].Locked = locked
     local group = Puppeteer.UnitFrameGroups[frameName]
     if group then
         group:UpdateHeaderColor()
     end
     PTSettingsGui.UpdateFrameOptions()
+end
+
+function IsTitleHidden(frameName)
+    return PTOptions.FrameOptions[frameName] and PTOptions.FrameOptions[frameName].TitleHidden
+end
+
+function SetTitleHidden(frameName, hidden)
+    validateFrameOptionsExistence(frameName)
+    PTOptions.FrameOptions[frameName].TitleHidden = hidden
+    local group = Puppeteer.UnitFrameGroups[frameName]
+    if group then
+        group:UpdateUIPositions()
+    end
+    PTSettingsGui.UpdateFrameOptions()
+end
+
+function GetFramePosition(frameName)
+    if not (PTOptions.FrameOptions[frameName] and PTOptions.FrameOptions[frameName].Position) then
+        return "TOPLEFT", (GetScreenWidth() / 2), -(GetScreenHeight() / 2)
+    end
+    return unpack(PTOptions.FrameOptions[frameName].Position)
+end
+
+function SaveFramePositions()
+    for frameName, group in pairs(Puppeteer.UnitFrameGroups) do
+        if not PTOptions.FrameOptions[frameName] then
+            PTOptions.FrameOptions[frameName] = {}
+        end
+        local anchor, _, _, x, y = group:GetContainer():GetPoint(1)
+        PTOptions.FrameOptions[frameName].Position = {anchor, x, y}
+    end
 end

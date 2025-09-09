@@ -8,6 +8,7 @@ local _G = getfenv(0)
 local util = PTUtil
 local GetAuraInfo = util.GetAuraInfo
 local AllUnits = util.AllUnits
+local AllRealUnits = util.AllRealUnits
 local AllUnitsSet = util.AllUnitsSet
 local superwow = util.IsSuperWowPresent()
 local canGetAuraIDs = util.CanClientGetAuraIDs()
@@ -36,6 +37,8 @@ PTUnit.HasHealingModifier = false
 -- Only used with SuperWoW, managed in AuraTracker.lua
 PTUnit.AuraTimes = {} -- Key: Aura Name | Value: {"startTime", "duration"}
 
+PTUnit.DisplayPVP = false -- This is not the real PVP status of the unit, this is affected by other conditions
+
 PTUnit.Distance = 0
 PTUnit.InSight = true
 PTUnit.IsNew = false
@@ -54,7 +57,7 @@ end
 function UpdateGuidCaches()
     local cached = PTUnit.Cached
     local prevCached = PTUtil.CloneTableCompost(cached)
-    for _, unit in ipairs(AllUnits) do
+    for _, unit in ipairs(AllRealUnits) do
         local exists, guid = UnitExists(unit)
         if exists then
             if not cached[guid] then
@@ -130,6 +133,7 @@ end
 
 function PTUnit:UpdateAll()
     self:UpdateAuras()
+    self:UpdatePVP()
     self:UpdateDistance()
     self:UpdateSight()
 end
@@ -140,6 +144,22 @@ function PTUnit:CheckNew()
         self.IsNew = false
         return true
     end
+end
+
+function PTUnit:UpdatePVP()
+    if not self.Unit then
+        return
+    end
+    local shouldDisplay = UnitIsPVP(self.Unit) and (not IsInInstance() or not UnitIsVisible(self.Unit))
+    if self.DisplayPVP ~= shouldDisplay then
+        self.DisplayPVP = shouldDisplay
+        return true
+    end
+    return false
+end
+
+function PTUnit:ShouldDisplayPVP()
+    return self.DisplayPVP
 end
 
 -- Returns true if the distance changed

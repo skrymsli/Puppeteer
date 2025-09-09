@@ -393,6 +393,9 @@ function CreateTab_Options_Casting(panel)
     local autoResInfo = not resSpell and "This does nothing for your class" or {"Replaces your bound spells with "..resSpell..
         " when clicking on a dead ally", "All other types of binds, such as Actions, will not be replaced"}
     factory:checkbox("Auto Resurrect", autoResInfo, "AutoResurrect")
+    factory:checkbox("PVP Flag Protection", {"Stops you from casting spells on PVP flagged players if you're not flagged",
+        "Attempting to cast will prompt you to make an exception",
+        "Only stops you from using Spell bindings"}, "PVPFlagProtection")
     factory:checkbox("Target While Casting", {"Target the unit while most bindings run",
         "Note that these binding types override this rule:",
         "Spell - Always targets unless using SuperWoW",
@@ -489,8 +492,19 @@ function CreateTab_Options_Advanced(panel)
 
     local TEXT_WIDTH = 370
 
+    local experimentsLabel = CreateLabel(container, "Experiments")
+        :SetPoint("TOP", container, "TOP", 0, -20)
+        :SetFontSize(14)
+    local experimentsInfo = CreateLabel(container, "Features which are not complete and/or need more testing. Use at your own risk.")
+        :SetWidth(TEXT_WIDTH)
+        :SetPoint("TOP", experimentsLabel, "BOTTOM", 0, -5)
+    layout:offset(0, -70)
+    factory:checkbox("(TWoW) Auto Role", {"If enabled, the Role Action menu shows auto role detection options",
+        colorize("Using this functionality WILL cause errors and other unexpected behavior", 1, 0.4, 0.4)}, "Global.Experiments.AutoRole",
+        Puppeteer.InitRoleDropdown)
+
     local scriptsLabel = CreateLabel(container, "Load & Postload Scripts")
-        :SetPoint("TOP", container, "TOP", 0, -10)
+        :SetPoint("TOP", container, "TOP", 0, -105)
         :SetFontSize(14)
 
     local loadScriptInfo = CreateLabel(container, "The Load Script runs after profiles are initialized, but before UIs are created, "..
@@ -541,7 +555,7 @@ function CreateTab_Options_Advanced(panel)
             editor:GetEditbox():SetFocus()
             AddOverlayFrame(editor)
         end)
-    local reloadInfo = CreateLabel(container, "A reload or relog is required for any changes to take effect.")
+    local reloadInfo = CreateLabel(container, "A reload or relog is required for any script changes to take effect.")
         :SetWidth(TEXT_WIDTH)
         :SetPoint("TOP", postLoadScriptButton, "BOTTOM", 0, -20)
     local reloadButton = PTGuiLib.Get("button", container)
@@ -551,14 +565,6 @@ function CreateTab_Options_Advanced(panel)
         :OnClick(function()
             ReloadUI()
         end)
-
-    local experimentsLabel = CreateLabel(container, "Experiments")
-        :SetPoint("TOP", reloadButton, "BOTTOM", 0, -20)
-        :SetFontSize(14)
-    layout:offset(0, -260)
-    factory:checkbox("(TWoW) Auto Role", {"If enabled, the Role Action menu shows auto role detection options",
-        colorize("Using this functionality WILL cause errors and other unexpected behavior", 1, 0.4, 0.4)}, "Experiments.AutoRole",
-        Puppeteer.InitRoleDropdown)
 end
 
 function CreateTab_Options_Mods(panel)
@@ -593,7 +599,8 @@ function CreateTab_Options_Mods(panel)
         "• Enhances spell casting by directly casting on targets rather than split-second target switching tricks\n"..
         "• Allows you to see accurate distance to other friendly players and NPCs\n"..
         "• Mousing over unit frames properly sets your mouseover target\n"..
-        "• Shows incoming healing from players that do not have HealComm and predicts more accurate numbers")
+        "• Shows incoming healing from players that do not have HealComm and predicts more accurate numbers\n"..
+        "• Add players/mobs to a separate Focus frame (By using the Focus action bind)")
         :SetJustifyH("LEFT")
         :SetWidth(TEXT_WIDTH)
         :SetPoint("TOP", superWowDetectedLabel, "BOTTOM", 0, -10)
@@ -627,7 +634,7 @@ function CreateTab_Options_Mods(panel)
         :SetJustifyH("LEFT")
         :SetWidth(TEXT_WIDTH)
         :SetPoint("TOP", unitXPDetectedLabel, "BOTTOM", 0, -10)
-    local unitXPLink = CreateLinkEditbox(container, "https://github.com/allfoxwy/UnitXP_SP3")
+    local unitXPLink = CreateLinkEditbox(container, "https://github.com/jrc13245/UnitXP_SP3")
         :SetPoint("TOP", unitXPInfo, "BOTTOM", 0, -5)
         :SetSize(300, 20)
     local unitXPLinkLabel = CreateLabel(container, "Link:")
@@ -665,8 +672,8 @@ function CreateTab_Customize()
     local frameStyleContainer = PTGuiLib.Get("container", container)
         :SetSimpleBackground()
         :SetPoint("TOPLEFT", container, "TOPLEFT", 5, -26)
-        :SetPoint("BOTTOMRIGHT", container, "TOPRIGHT", -5, -120)
-    local layout = NewLabeledColumnLayout(frameStyleContainer, {100, 340}, -35, 10)
+        :SetPoint("BOTTOMRIGHT", container, "TOPRIGHT", -5, -155)
+    local layout = NewLabeledColumnLayout(frameStyleContainer, {100, 340, 175}, -25, 5)
 
     local frameSettingsText = CreateLabel(frameStyleContainer, "Frame Group Settings")
         :SetPoint("TOP", frameStyleContainer, "TOP", 0, -5)
@@ -674,7 +681,7 @@ function CreateTab_Customize()
     
 
     local preferredFrameOrder = {"Party", "Pets", "Raid", "Raid Pets", "Target", "Focus"}
-    local frameDropdown = CreateLabeledDropdown(frameStyleContainer, "Select Frame", "The frame to edit the attributes of")
+    local frameDropdown = CreateLabeledDropdown(frameStyleContainer, "Configure Frame", "The frame to edit the attributes of")
         :SetWidth(150)
         :SetDynamicOptions(function(addOption, level, args)
             for _, name in ipairs(preferredFrameOrder) do
@@ -699,12 +706,13 @@ function CreateTab_Customize()
             end,
             func = function(self, gui)
                 StyleDropdown:UpdateText()
+                AnchorDropdown:UpdateText()
                 UpdateFrameOptions()
             end
         })
         :SetText("Party")
     FrameDropdown = frameDropdown
-    layout:layoutComponent(frameDropdown)
+    layout:column(3):layoutComponent(frameDropdown)
     local GetSelectedProfileName = PuppeteerSettings.GetSelectedProfileName
     local styleDropdown = CreateLabeledDropdown(frameStyleContainer, "Choose Style", "The style of the frame")
         :SetWidth(150)
@@ -758,7 +766,51 @@ function CreateTab_Customize()
             self:SetText(GetSelectedProfileName(frameDropdown:GetText()))
         end)
     StyleDropdown = styleDropdown
-    layout:offset(0, 10):layoutComponent(styleDropdown)
+    layout:column(1):offset(0, -30):layoutComponent(styleDropdown)
+
+    local anchors = {"TOPLEFT", "TOP", "TOPRIGHT", "LEFT", "CENTER", "RIGHT", "BOTTOMLEFT", "BOTTOM", "BOTTOMRIGHT"}
+    local readableAnchorMap = {
+        TOPLEFT = "Top Left",
+        TOP = "Top",
+        TOPRIGHT = "Top Right",
+        LEFT = "Left",
+        CENTER = "Center",
+        RIGHT = "Right",
+        BOTTOMLEFT = "Bottom Left",
+        BOTTOM = "Bottom",
+        BOTTOMRIGHT = "Bottom Right"
+    }
+    local anchorDropdown = CreateLabeledDropdown(frameStyleContainer, "Anchor", 
+            {"The point the frame is anchored to, affecting the direction it expands/retracts",
+            "Top Left: Expands right and down",
+            "Top: Expands equally left & right and down",
+            "Top Right: Expands left and down",
+            "Left: Expands right and equally up & down",
+            "Center: Expands equally in all directions",
+            "Right: Expands left and equally up & down",
+            "Bottom Left: Expands right and up",
+            "Bottom: Expands equally left & right and up",
+            "Bottom Right: Expands left and up",})
+        :SetWidth(150)
+        :SetSimpleOptions(anchors, function(option)
+            return {
+                initFunc = function(self)
+                    self.checked = PuppeteerSettings.GetFramePosition(frameDropdown:GetText()) == option
+                end,
+                func = function(self, gui)
+                    local group = Puppeteer.UnitFrameGroups[frameDropdown:GetText()]
+                    util.ConvertAnchor(group:GetContainer(), option)
+                    PuppeteerSettings.SaveFramePositions()
+                    gui:UpdateText()
+                end,
+                text = readableAnchorMap[option]
+            }
+        end)
+        :SetTextUpdater(function(self)
+            self:SetText(readableAnchorMap[PuppeteerSettings.GetFramePosition(frameDropdown:GetText())])
+        end)
+    layout:layoutComponent(anchorDropdown)
+    AnchorDropdown = anchorDropdown
 
     local lockFrameCheckbox = CreateLabeledCheckbox(frameStyleContainer, "Lock Frame", {"If checked, this frame will not be movable", 
         "Note: This setting is also accessible by right-clicking the group title bar"})
@@ -766,8 +818,17 @@ function CreateTab_Customize()
             local frameName = frameDropdown:GetText()
             PuppeteerSettings.SetFrameLocked(frameName, self:GetChecked() == 1)
         end)
-    layout:column(2):layoutComponent(lockFrameCheckbox)
+    layout:column(2):offset(0, -30):layoutComponent(lockFrameCheckbox)
     LockFrameCheckbox = lockFrameCheckbox
+
+    local hideTitleCheckbox = CreateLabeledCheckbox(frameStyleContainer, "Hide Title", {"If checked, the title of this frame will be hidden", 
+        colorize("Note: When you want to move the frame, you need to enable the title!", 1, 0.4, 0.4)})
+        :OnClick(function(self)
+            local frameName = frameDropdown:GetText()
+            PuppeteerSettings.SetTitleHidden(frameName, self:GetChecked() == 1)
+        end)
+    layout:layoutComponent(hideTitleCheckbox)
+    HideTitleCheckbox = hideTitleCheckbox
 
     local hideFrameCheckbox = CreateLabeledCheckbox(frameStyleContainer, "Hide Frame", "If checked, this frame will not be visible")
         :OnClick(function(self)
@@ -840,23 +901,26 @@ function CreateTab_Customize()
     add(createDropdown("Health Bar Color", nil, "HealthBarColor", {"Green To Red", "Green", "Class"}), -10)
     add(createDropdown("Health Bar Texture", nil, "HealthBarStyle", barStyles))
     add(createDropdown("Health Display", "What kind of text is displayed as health", "HealthDisplay", {"Health", "Health/Max Health", "% Health", "Hidden"}))
-    add(createDropdown("Missing Health Display", "What kind of text is displayed as missing health", "MissingHealthDisplay", {"Hidden", "-Health", "-% Health"}))
+    add(createDropdown("Missing Health Display", "What kind of text is displayed as missing health", "MissingHealthDisplay", {"-Health", "-% Health", "Hidden"}))
+    add(createDropdown("Incoming Heal Display", nil, "IncomingHealDisplay", {"Overheal", "Heal", "Hidden"}))
     add(createDropdown("Power Bar Texture", nil, "PowerBarStyle", barStyles))
     add(createDropdown("Power Display", "What kind of text is displayed as power", "PowerDisplay", {"Power", "Power/Max Power", "% Power", "Hidden"}))
     add(createDropdown("Name Text Color", "'Default' is default Blizzard yellow text", "NameText.Color", {"Class", "Default"}))
     add(createDropdown("Show Debuff Colors On", nil, "ShowDebuffColorsOn", {"Health Bar", "Name", "Health", "Hidden"}))
     add(createDropdown("Sort Units By", "The sorting algorithm for units in a group", "SortUnitsBy", {"ID", "Name", "Class Name"}))
-    add(createDropdown("Growth Direction", "Vertical grows units down, Horizontal grows units right", "Orientation", {"Vertical", "Horizontal"}))
+    add(createDropdown("Growth Orientation", "Vertical grows units up and down, Horizontal grows units left and right", "Orientation", {"Vertical", "Horizontal"}))
     add(createDropdown("Border Style", "The border of the group", "BorderStyle", {"Tooltip", "Dialog Box", "Borderless"}))
     add(createDropdown("Max Units In Axis", "The maximum number of units in the growth axis until it must shift down", "MaxUnitsInAxis", {1, 2, 3, 4, 5, 6, 7, 8, 9, 10}))
     add(createDropdown("Min Units X", "The minimum amount of unit space to take on the X-axis", "MinUnitsX", {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10}))
     add(createDropdown("Min Units Y", "The minimum amount of unit space to take on the Y-axis", "MinUnitsY", {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10}))
     add(createDropdown("Horizontal Spacing", "The number of pixels between units", "HorizontalSpacing", {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10}))
     add(createDropdown("Vertical Spacing", "The number of pixels between units", "VerticalSpacing", {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10}))
+    add(createDropdown("Out of Range Opacity", "How opaque out of range players appear in %", "OutOfRangeOpacity", {0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100}))
 end
 
 function UpdateFrameOptions()
     LockFrameCheckbox:SetChecked(PuppeteerSettings.IsFrameLocked(FrameDropdown:GetText()))
+    HideTitleCheckbox:SetChecked(PuppeteerSettings.IsTitleHidden(FrameDropdown:GetText()))
     HideFrameCheckbox:SetChecked(PuppeteerSettings.IsFrameHidden(FrameDropdown:GetText()))
 end
 

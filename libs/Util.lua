@@ -1077,6 +1077,34 @@ function GetCenterScreenPoint(componentWidth, componentHeight)
     return "TOPLEFT", (GetScreenWidth() / 2) - (componentWidth / 2), -((GetScreenHeight() / 2) - (componentHeight / 2))
 end
 
+-- Keeps the frame at the current position, while modifying the anchor point
+function ConvertAnchor(frame, anchor)
+    local leftX, rightX, topY, bottomY = frame:GetLeft(), frame:GetRight(), frame:GetTop(), frame:GetBottom()
+    local centerX, centerY = frame:GetCenter()
+    local x, y
+    if anchor == "TOPLEFT" then
+        x, y = leftX, topY
+    elseif anchor == "TOPRIGHT" then
+        x, y = rightX, topY
+    elseif anchor == "BOTTOMLEFT" then
+        x, y = leftX, bottomY
+    elseif anchor == "BOTTOMRIGHT" then
+        x, y = rightX, bottomY
+    elseif anchor == "TOP" then
+        x, y = centerX, topY
+    elseif anchor == "BOTTOM" then
+        x, y = centerX, bottomY
+    elseif anchor == "LEFT" then
+        x, y = leftX, centerY
+    elseif anchor == "RIGHT" then
+        x, y = rightX, centerY
+    elseif anchor == "CENTER" then
+        x, y = centerX, centerY
+    end
+    frame:ClearAllPoints()
+    frame:SetPoint(anchor, UIParent, "TOPLEFT", x, y - GetScreenHeight())
+end
+
 function GetPowerType(unit)
     return PowerTypeMap[UnitPowerType(unit)]
 end

@@ -262,18 +262,36 @@ function OnAddonLoaded()
         -- Older versions of SuperWoW had an issue where units that aren't part of normal units wouldn't receive events,
         -- so updates are done manually
         local needsManualUpdates = util.SuperWoWFeatureLevel < util.SuperWoW_v1_4
+        local existing = {}
+        local nextCleanup = GetTime() + 10
         customUnitUpdater:SetScript("OnUpdate", function()
             if GetTime() > nextUpdate then
                 nextUpdate = GetTime() + 0.25
 
-                for unit, guid in pairs(CustomUnitGUIDMap) do
-                    if needsManualUpdates or not UnitExists(guid) then
-                        PTUnit.Get(unit):UpdateAuras()
-                        for ui in UnitFrames(unit) do
-                            ui:UpdateHealth()
-                            ui:UpdatePower()
-                            ui:UpdateAuras()
-                            ui:UpdateIncomingHealing()
+                for guid, units in pairs(GUIDCustomUnitMap) do
+                    local exists = UnitExists(guid) == 1
+                    local needsUpdate = false
+                    if (existing[guid] ~= nil) ~= exists then
+                        existing[guid] = exists or nil
+                        needsUpdate = true
+                    end
+
+                    if needsManualUpdates or needsUpdate then
+                        PTUnit.Get(guid):UpdateAuras()
+                        for _, unit in ipairs(units) do
+                            for ui in UnitFrames(unit) do
+                                ui:UpdateAll()
+                                ui:UpdateIncomingHealing()
+                            end
+                        end
+                    end
+                end
+
+                if GetTime() > nextCleanup then
+                    nextCleanup = GetTime() + 10
+                    for guid in pairs(existing) do
+                        if not GUIDCustomUnitMap[guid] then
+                            existing[guid] = nil
                         end
                     end
                 end
@@ -366,7 +384,7 @@ function OnAddonLoaded()
     end
 
     initUnitFrames()
-    StartDistanceScanner()
+    StartUnitTracker()
 
     PuppeteerLib:RegisterEvent("Banzai_UnitGainedAggro", function(unit)
         if PTGuidRoster then
@@ -738,7 +756,7 @@ function CheckGroup()
     if not superwow then -- If SuperWoW isn't present, the units may have shifted and thus require a full scan
         PTUnit.UpdateAllUnits()
     end
-    for _, ui in pairs(AllUnitFrames) do
+    for _, ui in ipairs(AllUnitFrames) do
         if ui:IsShown() then
             ui:UpdateRange()
             ui:UpdateAuras()
@@ -815,4 +833,8 @@ function EndTiming(name)
         return
     end
     pfDebug_EndTiming(name)
+end
+
+function PrintStack()
+    print(debugstack(2))
 end

@@ -297,8 +297,10 @@ function ApplySpellsTooltip(attachTo, unit, owner)
         powerText = colorize(powerText, powerColor)
     end
 
-    local modifier = util.GetKeyModifierTypeByID(1 + (options.AbbreviatedKeys and 2 or 0) + (options.ColoredKeys and 1 or 0))
-    SpellsTooltip:AddDoubleLine(modifier, showPowerBar and "                 " or powerText, 1, 1, 1)
+    local modifier = GetKeyModifier()
+    local displayModifier = modifier ~= "None" and 
+        util.GetKeyModifierTypeByID(1 + (options.AbbreviatedKeys and 2 or 0) + (options.ColoredKeys and 1 or 0)) or " "
+    SpellsTooltip:AddDoubleLine(displayModifier, showPowerBar and "                 " or powerText, 1, 1, 1)
 
     local friendly = not UnitCanAttack("player", unit)
     
@@ -315,7 +317,7 @@ function ApplySpellsTooltip(attachTo, unit, owner)
     end
     
     --StartTiming("BindingDisplays")
-    local entries = UpdateBindingDisplays(friendly and "Friendly" or "Hostile", GetKeyModifier())
+    local entries = UpdateBindingDisplays(friendly and "Friendly" or "Hostile", modifier)
     --EndTiming("BindingDisplays")
     for _, button in ipairs(PTOptions.Buttons) do
         local focused = not CurrentlyHeldButton or button == CurrentlyHeldButton
