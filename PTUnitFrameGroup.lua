@@ -122,7 +122,6 @@ function PTUnitFrameGroup:UpdateRaidMana()
                 local mana = ui:GetCurrentPower()
                 local manaMax = ui:GetMaxPower()
                 local manaPct = manaMax > 0 and ((mana / manaMax) * 100) or 0
-                DEFAULT_CHAT_FRAME:AddMessage("Update raid mana" .. ui:GetUnit() .. ": " .. string.format("%d", manaPct) .. "%", 1, 0.1, 0.1);
                 totalManaPct = manaPct + totalManaPct
                 totalManaUnits = totalManaUnits + 1
             end
