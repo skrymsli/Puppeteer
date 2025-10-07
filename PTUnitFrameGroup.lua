@@ -113,6 +113,9 @@ function PTUnitFrameGroup:Show()
 end
 
 function PTUnitFrameGroup:UpdateRaidMana()
+    if self.name ~= "Raid" then
+        return
+    end
     local totalManaPct = 0
     local totalManaUnits = 0
     for _, ui in pairs(self.uis) do
@@ -132,6 +135,7 @@ function PTUnitFrameGroup:UpdateRaidMana()
     else
         self.raidmana = ""
     end
+
     self.manalabel:SetText(self.raidmana)
 end
 
@@ -269,18 +273,15 @@ function PTUnitFrameGroup:Initialize()
     local label = header:CreateFontString(header, "OVERLAY", "GameFontNormal")
     self.label = label
     label:SetPoint("CENTER", header, "CENTER", 0, 0)
-    if(self.name == "Raid") then
-        label:SetText("")
-    else
-        label:SetText(self.name)
-    end
+    
 
 
     local mana = header:CreateFontString(header, "OVERLAY", "GameFontNormal")
     self.manalabel = mana
     mana:SetPoint("CENTER", header, "CENTER", -.5, .5)
-    mana:SetText(self.raidmana)
     mana:SetTextColor(0, 0.7, 1, 1)
+
+    self:SetFrameTitle()
 
     local borderFrame = CreateFrame("Frame", "$parentBorder", container)
     self.borderFrame = borderFrame
@@ -289,6 +290,16 @@ function PTUnitFrameGroup:Initialize()
     self:ApplyProfile()
 
     self:UpdateUIPositions()
+end
+
+function PTUnitFrameGroup:SetFrameTitle()
+    if(self.name == "Raid") then
+        self.label:SetText("")
+        self.manalabel:SetText(self.raidmana)
+    else
+        self.label:SetText(self.name)
+        self.manalabel:SetText("")
+    end
 end
 
 function PTUnitFrameGroup:ApplyProfile()
