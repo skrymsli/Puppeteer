@@ -270,12 +270,16 @@ function PTUnitFrameGroup:Initialize()
     local label = header:CreateFontString(header, "OVERLAY", "GameFontNormal")
     self.label = label
     label:SetPoint("CENTER", header, "CENTER", 0, 0)
-    label:SetText("")
+    if(self.name == "Raid") then
+        label:SetText("")
+    else
+        label:SetText(self.name)
+    end
 
 
     local mana = header:CreateFontString(header, "OVERLAY", "GameFontNormal")
     self.manalabel = mana
-    mana:SetPoint("RIGHT", header, "RIGHT", -.5, .5)
+    mana:SetPoint("CENTER", header, "CENTER", -.5, .5)
     mana:SetText(self.raidmana)
     mana:SetTextColor(0, 0.7, 1, 1)
 
@@ -383,7 +387,7 @@ function PTUnitFrameGroup:UpdateUIPositions()
     label:SetPoint("CENTER", header, "CENTER", 0, 0)
 
     local manalabel = self.manalabel
-    manalabel:SetPoint("RIGHT", header, "RIGHT", 0, 0)
+    manalabel:SetPoint("CENTER", header, "CENTER", 0, 0)
 end
 
 -- Returns an array with the index being the group number, and the value being an array of units
