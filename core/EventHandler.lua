@@ -59,6 +59,11 @@ RegisterEventHandler({"UNIT_MANA", "UNIT_RAGE", "UNIT_ENERGY", "UNIT_FOCUS", "UN
     if unit == "player" then
         ReapplySpellsTooltip()
     end
+
+    local raidFrameGroup = UnitFrameGroups["Raid"]
+    if raidFrameGroup then
+        raidFrameGroup:UpdateRaidMana();
+    end
 end)
 RegisterEventHandler("UNIT_AURA", function()
     local unit = arg1

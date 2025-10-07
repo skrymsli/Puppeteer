@@ -6,6 +6,7 @@ local PT = Puppeteer
 local util = PTUtil
 
 PTUnitFrameGroup.name = "???"
+PTUnitFrameGroup.raidmana = "??"
 
 PTUnitFrameGroup.profile = nil
 
@@ -13,6 +14,7 @@ PTUnitFrameGroup.container = nil
 PTUnitFrameGroup.borderFrame = nil
 PTUnitFrameGroup.header = nil
 PTUnitFrameGroup.label = nil
+PTUnitFrameGroup.manalabel = nil
 PTUnitFrameGroup.uis = nil
 PTUnitFrameGroup.units = nil
 
@@ -107,6 +109,31 @@ function PTUnitFrameGroup:Show()
     for _, ui in pairs(self.uis) do
         ui:UpdateAll()
     end
+    self:UpdateRaidMana()
+end
+
+function PTUnitFrameGroup:UpdateRaidMana()
+    local totalManaPct = 0
+    local totalManaUnits = 0
+    for _, ui in pairs(self.uis) do
+        if ui:IsShown() and UnitIsConnected(ui:GetUnit()) then
+            local powerType, powerToken, altR, altG, altB = UnitPowerType(ui:GetUnit())
+            if powerType == 0 then -- Mana
+                local mana = ui:GetCurrentPower()
+                local manaMax = ui:GetMaxPower()
+                local manaPct = manaMax > 0 and ((mana / manaMax) * 100) or 0
+                DEFAULT_CHAT_FRAME:AddMessage("Update raid mana" .. ui:GetUnit() .. ": " .. string.format("%d", manaPct) .. "%", 1, 0.1, 0.1);
+                totalManaPct = manaPct + totalManaPct
+                totalManaUnits = totalManaUnits + 1
+            end
+        end
+    end
+    if totalManaUnits > 0 then
+        self.raidmana = string.format("%d%%", math.floor((totalManaPct / totalManaUnits)))
+    else
+        self.raidmana = ""
+    end
+    self.manalabel:SetText(self.raidmana)
 end
 
 function PTUnitFrameGroup:Hide()
@@ -243,7 +270,14 @@ function PTUnitFrameGroup:Initialize()
     local label = header:CreateFontString(header, "OVERLAY", "GameFontNormal")
     self.label = label
     label:SetPoint("CENTER", header, "CENTER", 0, 0)
-    label:SetText(self.name)
+    label:SetText("")
+
+
+    local mana = header:CreateFontString(header, "OVERLAY", "GameFontNormal")
+    self.manalabel = mana
+    mana:SetPoint("RIGHT", header, "RIGHT", -.5, .5)
+    mana:SetText(self.raidmana)
+    mana:SetTextColor(0, 0.7, 1, 1)
 
     local borderFrame = CreateFrame("Frame", "$parentBorder", container)
     self.borderFrame = borderFrame
@@ -347,6 +381,9 @@ function PTUnitFrameGroup:UpdateUIPositions()
 
     local label = self.label
     label:SetPoint("CENTER", header, "CENTER", 0, 0)
+
+    local manalabel = self.manalabel
+    manalabel:SetPoint("RIGHT", header, "RIGHT", 0, 0)
 end
 
 -- Returns an array with the index being the group number, and the value being an array of units
