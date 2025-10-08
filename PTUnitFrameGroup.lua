@@ -140,7 +140,7 @@ function PTUnitFrameGroup:UpdateRaidMana()
 end
 
 function PTUnitFrameGroup:ReportRaidMana()
-    if not UnitInRaid("player") or not IsRaidLeader() then
+    if not UnitInRaid("player") or not (IsRaidLeader() or IsRaidOfficer()) then
         return
     end
 

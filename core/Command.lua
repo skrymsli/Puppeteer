@@ -73,7 +73,7 @@ SlashCmdList["PUPPETEER"] = function(args)
     elseif args == "importhm" then
         Puppeteer.ImportHealersMateSettings()
     elseif args == "mana" then
-        if UnitInRaid("player") and IsRaidLeader() then
+        if UnitInRaid("player") and (IsRaidLeader() or IsRaidOfficer()) then
             local raidFrameGroup = Puppeteer.UnitFrameGroups["Raid"]
             raidFrameGroup:ReportRaidMana()
         else
