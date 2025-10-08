@@ -120,7 +120,7 @@ function PTUnitFrameGroup:UpdateRaidMana()
     local totalManaUnits = 0
     for _, ui in pairs(self.uis) do
         if ui:IsShown() and UnitIsConnected(ui:GetUnit()) then
-            local powerType, powerToken, altR, altG, altB = UnitPowerType(ui:GetUnit())
+            local powerType, _, _, _, _ = UnitPowerType(ui:GetUnit())
             if powerType == 0 then -- Mana
                 local mana = ui:GetCurrentPower()
                 local manaMax = ui:GetMaxPower()
@@ -137,6 +137,19 @@ function PTUnitFrameGroup:UpdateRaidMana()
     end
 
     self.manalabel:SetText(self.raidmana)
+end
+
+function PTUnitFrameGroup:ReportRaidMana()
+    if not UnitInRaid("player") or not IsRaidLeader() then
+        return
+    end
+
+    if self.raidmana == "" then
+        DEFAULT_CHAT_FRAME:AddMessage("No mana users in raid.")
+        return
+    end
+
+    SendChatMessage("Raid Mana: ".. self.raidmana, "RAID_WARNING", nil, nil);
 end
 
 function PTUnitFrameGroup:Hide()

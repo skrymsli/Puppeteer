@@ -69,8 +69,16 @@ SlashCmdList["PUPPETEER"] = function(args)
         DEFAULT_CHAT_FRAME:AddMessage(PTUtil.Colorize("/pt show", 0, 0.8, 0).." -- Shows the UI")
         DEFAULT_CHAT_FRAME:AddMessage(PTUtil.Colorize("/pt hide", 0, 0.8, 0).." -- Hides the UI")
         DEFAULT_CHAT_FRAME:AddMessage(PTUtil.Colorize("/pt silent", 0, 0.8, 0).." -- Turns off/on message when addon loads")
+        DEFAULT_CHAT_FRAME:AddMessage(PTUtil.Colorize("/pt mana", 0, 0.8, 0).." -- Reports raid mana when in a raid. You must be raid leader")
     elseif args == "importhm" then
         Puppeteer.ImportHealersMateSettings()
+    elseif args == "mana" then
+        if UnitInRaid("player") and IsRaidLeader() then
+            local raidFrameGroup = Puppeteer.UnitFrameGroups["Raid"]
+            raidFrameGroup:ReportRaidMana()
+        else
+            DEFAULT_CHAT_FRAME:AddMessage("You must be the raid leader to use this command.")
+        end
     elseif args == "" then
         PTSettingsGui.TabFrame:Show()
     else
