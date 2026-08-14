@@ -145,6 +145,7 @@ end
 
 function UpdateUnitFrameGroups()
     for _, group in pairs(UnitFrameGroups) do
+        group:UpdateRaidMana()
         group:UpdateUIPositions()
     end
 end
@@ -752,6 +753,7 @@ function CheckGroup()
     end
     for _, group in pairs(UnitFrameGroups) do
         group:EvaluateShown()
+        group:UpdateReportManaButton()
     end
     if not superwow then -- If SuperWoW isn't present, the units may have shifted and thus require a full scan
         PTUnit.UpdateAllUnits()

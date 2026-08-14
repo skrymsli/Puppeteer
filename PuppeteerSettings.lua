@@ -147,6 +147,7 @@ function SetDefaults()
             ["UseHealPredictions"] = true,
             ["PVPFlagProtection"] = true,
             ["SetMouseover"] = true,
+            ["ShowRaidMana"] = true,
             ["LFTAutoRole"] = true, -- Turtle WoW
             ["TestUI"] = false,
             ["Hidden"] = false,

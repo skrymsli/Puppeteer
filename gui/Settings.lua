@@ -482,6 +482,12 @@ function CreateTab_Options_Other(panel)
     factory:checkbox("(TWoW) LFT Auto Role", {"Automatically assign roles when joining LFT groups", 
             "This functionality was tested for 1.18.0 and may break in future updates"}, "LFTAutoRole",
             function() Puppeteer.SetLFTAutoRoleEnabled(PTOptions.LFTAutoRole) end)
+    factory:checkbox("Show Raid Mana", {"Show average raid and healer mana in the raid frame header",
+            "Healer mana is shown separately for members with the Healer role"}, "ShowRaidMana",
+            function()
+                local raidGroup = Puppeteer.UnitFrameGroups["Raid"]
+                if raidGroup then raidGroup:UpdateRaidMana() end
+            end)
 end
 
 function CreateTab_Options_Advanced(panel)

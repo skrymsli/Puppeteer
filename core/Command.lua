@@ -73,6 +73,10 @@ SlashCmdList["PUPPETEER"] = function(args)
     elseif args == "importhm" then
         Puppeteer.ImportHealersMateSettings()
     elseif args == "mana" then
+        if not PTOptions.ShowRaidMana then
+            DEFAULT_CHAT_FRAME:AddMessage("Raid mana is disabled. Enable it in Puppeteer -> Options -> Other -> Show Raid Mana")
+            return
+        end
         if UnitInRaid("player") and (IsRaidLeader() or IsRaidOfficer()) then
             local raidFrameGroup = Puppeteer.UnitFrameGroups["Raid"]
             raidFrameGroup:ReportRaidMana()

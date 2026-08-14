@@ -7,6 +7,7 @@ local util = PTUtil
 
 PTUnitFrameGroup.name = "???"
 PTUnitFrameGroup.raidmana = "??"
+PTUnitFrameGroup.healermana = "??"
 
 PTUnitFrameGroup.profile = nil
 
@@ -15,6 +16,8 @@ PTUnitFrameGroup.borderFrame = nil
 PTUnitFrameGroup.header = nil
 PTUnitFrameGroup.label = nil
 PTUnitFrameGroup.manalabel = nil
+PTUnitFrameGroup.healermanalabel = nil
+PTUnitFrameGroup.reportManaButton = nil
 PTUnitFrameGroup.uis = nil
 PTUnitFrameGroup.units = nil
 
@@ -109,6 +112,7 @@ function PTUnitFrameGroup:Show()
     for _, ui in pairs(self.uis) do
         ui:UpdateAll()
     end
+    self:UpdateReportManaButton()
     self:UpdateRaidMana()
 end
 
@@ -116,8 +120,17 @@ function PTUnitFrameGroup:UpdateRaidMana()
     if self.name ~= "Raid" then
         return
     end
+    if not PTOptions.ShowRaidMana then
+        self.raidmana = ""
+        self.healermana = ""
+        self:SetFrameTitle()
+        self:UpdateReportManaButton()
+        return
+    end
     local totalManaPct = 0
     local totalManaUnits = 0
+    local healerManaPct = 0
+    local healerManaUnits = 0
     for _, ui in pairs(self.uis) do
         if ui:IsShown() and UnitIsConnected(ui:GetUnit()) then
             local powerType, _, _, _, _ = UnitPowerType(ui:GetUnit())
@@ -127,6 +140,10 @@ function PTUnitFrameGroup:UpdateRaidMana()
                 local manaPct = manaMax > 0 and ((mana / manaMax) * 100) or 0
                 totalManaPct = manaPct + totalManaPct
                 totalManaUnits = totalManaUnits + 1
+                if ui:GetRole() == "Healer" then
+                    healerManaPct = manaPct + healerManaPct
+                    healerManaUnits = healerManaUnits + 1
+                end
             end
         end
     end
@@ -135,8 +152,14 @@ function PTUnitFrameGroup:UpdateRaidMana()
     else
         self.raidmana = ""
     end
+    if healerManaUnits > 0 then
+        self.healermana = string.format("%d%%", math.floor((healerManaPct / healerManaUnits)))
+    else
+        self.healermana = ""
+    end
 
-    self.manalabel:SetText(self.raidmana)
+    self:UpdateReportManaButton()
+    self:SetFrameTitle()
 end
 
 function PTUnitFrameGroup:ReportRaidMana()
@@ -149,7 +172,11 @@ function PTUnitFrameGroup:ReportRaidMana()
         return
     end
 
-    SendChatMessage("Raid Mana: ".. self.raidmana, "RAID_WARNING", nil, nil);
+    local msg = "Raid Mana: ".. self.raidmana
+    if self.healermana ~= "" then
+        msg = msg .. " || Healer Mana: " .. self.healermana
+    end
+    SendChatMessage(msg, "RAID_WARNING", nil, nil);
 end
 
 function PTUnitFrameGroup:Hide()
@@ -291,8 +318,32 @@ function PTUnitFrameGroup:Initialize()
 
     local mana = header:CreateFontString(header, "OVERLAY", "GameFontNormal")
     self.manalabel = mana
-    mana:SetPoint("CENTER", header, "CENTER", -.5, .5)
     mana:SetTextColor(0, 0.7, 1, 1)
+
+    local healerMana = header:CreateFontString(header, "OVERLAY", "GameFontNormal")
+    self.healermanalabel = healerMana
+    healerMana:SetTextColor(0.2, 1, 0.4, 1)
+
+    local reportBtn = CreateFrame("Button", "$parentReportMana", header)
+    self.reportManaButton = reportBtn
+    reportBtn:SetWidth(16)
+    reportBtn:SetHeight(16)
+    reportBtn:SetPoint("RIGHT", header, "RIGHT", -2, 0)
+    reportBtn:SetNormalTexture("Interface\\Buttons\\UI-GuildButton-PublicNote-Up")
+    reportBtn:SetHighlightTexture("Interface\\Buttons\\UI-GuildButton-PublicNote-Up")
+    reportBtn:GetHighlightTexture():SetAlpha(0.3)
+    reportBtn:SetScript("OnClick", function()
+        self:ReportRaidMana()
+    end)
+    reportBtn:SetScript("OnEnter", function()
+        GameTooltip:SetOwner(reportBtn, "ANCHOR_RIGHT")
+        GameTooltip:SetText("Report raid & healer mana")
+        GameTooltip:Show()
+    end)
+    reportBtn:SetScript("OnLeave", function()
+        GameTooltip:Hide()
+    end)
+    reportBtn:Hide()
 
     self:SetFrameTitle()
 
@@ -305,13 +356,106 @@ function PTUnitFrameGroup:Initialize()
     self:UpdateUIPositions()
 end
 
+function PTUnitFrameGroup:UpdateManaLabelLayout(headerWidth)
+    if self.name ~= "Raid" then
+        return
+    end
+    local hasButton = self.reportManaButton:IsShown()
+    local btnSpace = hasButton and 20 or 0
+    local totalWidth = headerWidth or self.header:GetWidth()
+    local availableWidth = totalWidth - btnSpace - 4
+    local fontSize = 12
+    if self.healermana ~= "" then
+        -- Two labels sharing space need more aggressive sizing
+        if availableWidth < 90 then
+            fontSize = 8
+        elseif availableWidth < 130 then
+            fontSize = 9
+        elseif availableWidth < 170 then
+            fontSize = 10
+        end
+    else
+        if availableWidth < 60 then
+            fontSize = 9
+        end
+    end
+    self.manalabel:SetFont("Fonts\\FRIZQT__.TTF", fontSize)
+    self.healermanalabel:SetFont("Fonts\\FRIZQT__.TTF", fontSize)
+
+    self.manalabel:ClearAllPoints()
+    self.healermanalabel:ClearAllPoints()
+    if self.healermana ~= "" then
+        local halfWidth = (availableWidth - 4) / 2
+        self.manalabel:SetWidth(halfWidth)
+        self.healermanalabel:SetWidth(halfWidth)
+        self.manalabel:SetPoint("LEFT", self.header, "LEFT", 2, 0)
+        self.healermanalabel:SetPoint("RIGHT", self.header, "RIGHT", -btnSpace - 2, 0)
+    else
+        self.manalabel:SetWidth(availableWidth)
+        self.manalabel:SetPoint("CENTER", self.header, "CENTER", -btnSpace / 2, 0)
+    end
+end
+
+function PTUnitFrameGroup:UpdateReportManaButton()
+    if self.name ~= "Raid" or not self.reportManaButton then
+        return
+    end
+    if UnitInRaid("player") and (IsRaidLeader() or IsRaidOfficer()) and PTOptions.ShowRaidMana then
+        self.reportManaButton:Show()
+    else
+        self.reportManaButton:Hide()
+    end
+end
+
+function PTUnitFrameGroup:UpdateManaLabels()
+    if self.name ~= "Raid" or not PTOptions.ShowRaidMana then
+        return
+    end
+    local hasButton = self.reportManaButton and self.reportManaButton:IsShown()
+    local btnSpace = hasButton and 20 or 0
+    local availableWidth = self.header:GetWidth() - btnSpace - 4
+    if self.healermana ~= "" then
+        if availableWidth >= 280 then
+            self.manalabel:SetText("Raid: "..self.raidmana)
+            self.healermanalabel:SetText("Heal: "..self.healermana)
+        elseif availableWidth >= 130 then
+            self.manalabel:SetText("R:"..self.raidmana)
+            self.healermanalabel:SetText("H:"..self.healermana)
+        elseif availableWidth >= 80 then
+            self.manalabel:SetText(self.raidmana)
+            self.healermanalabel:SetText(self.healermana)
+        else
+            -- Strip % to fit in very narrow headers
+            local r = string.gsub(self.raidmana, "%%", "")
+            local h = string.gsub(self.healermana, "%%", "")
+            self.manalabel:SetText(r)
+            self.healermanalabel:SetText(h)
+        end
+    else
+        if availableWidth >= 200 then
+            self.manalabel:SetText("Raid: "..self.raidmana)
+        else
+            self.manalabel:SetText(self.raidmana)
+        end
+        self.healermanalabel:SetText("")
+    end
+    self:UpdateManaLabelLayout()
+end
+
 function PTUnitFrameGroup:SetFrameTitle()
     if(self.name == "Raid") then
-        self.label:SetText("")
-        self.manalabel:SetText(self.raidmana)
+        if PTOptions.ShowRaidMana then
+            self.label:SetText("")
+            self:UpdateManaLabels()
+        else
+            self.label:SetText("Raid")
+            self.manalabel:SetText("")
+            self.healermanalabel:SetText("")
+        end
     else
         self.label:SetText(self.name)
         self.manalabel:SetText("")
+        self.healermanalabel:SetText("")
     end
 end
 
@@ -409,8 +553,7 @@ function PTUnitFrameGroup:UpdateUIPositions()
     local label = self.label
     label:SetPoint("CENTER", header, "CENTER", 0, 0)
 
-    local manalabel = self.manalabel
-    manalabel:SetPoint("CENTER", header, "CENTER", 0, 0)
+    self:UpdateManaLabels()
 end
 
 -- Returns an array with the index being the group number, and the value being an array of units
