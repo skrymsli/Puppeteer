@@ -30,13 +30,6 @@ AllUnitsSet = util.AllUnitsSet
 AllCustomUnits = util.CustomUnits
 AllCustomUnitsSet = util.CustomUnitsSet
 
-ResurrectionSpells = {
-    ["PRIEST"] = "Resurrection",
-    ["PALADIN"] = "Redemption",
-    ["SHAMAN"] = "Ancestral Spirit",
-    ["DRUID"] = "Rebirth"
-}
-
 local ptBarsPath = util.GetAssetsPath().."textures\\bars\\"
 BarStyles = {
     ["Blizzard"] = "Interface\\TargetingFrame\\UI-StatusBar",
@@ -48,8 +41,6 @@ BarStyles = {
     ["Puppeteer Shineless"] = ptBarsPath.."Puppeteer-Shineless",
     ["Puppeteer Shineless Borderless"] = ptBarsPath.."Puppeteer-Shineless-Borderless"
 }
-
-GameTooltip = CreateFrame("GameTooltip", "PTGameTooltip", UIParent, "GameTooltipTemplate")
 
 CurrentlyHeldButton = nil
 
@@ -108,7 +99,7 @@ local function OpenUnitFramesIterator()
                 end
                 table.setn(uis, 0)
                 for _, unit in pairs(GuidUnitMap[unit]) do
-                    for _, frame in ipairs(PTUnitFrames[unit]) do
+                    for _, frame in ipairs(PTUnitFrames[unit] or EMPTY_UIS) do
                         table.insert(uis, frame)
                     end
                 end
@@ -190,12 +181,13 @@ function CreateUnitFrameGroup(groupName, environment, units, petGroup, profile, 
         end
         table.insert(PTUnitFrames[unit], ui)
         table.insert(AllUnitFrames, ui)
-        uiGroup:AddUI(ui)
+        uiGroup:AddUI(ui, true)
         if unit ~= "target" then
             ui:Hide()
         end
     end
     UnitFrameGroups[groupName] = uiGroup
+    uiGroup:UpdateUIPositions()
     return uiGroup
 end
 
@@ -208,6 +200,7 @@ local function initUnitFrames()
     CreateUnitFrameGroup("Target", "all", TargetUnits, false, getSelectedProfile("Target"), false)
     if util.IsSuperWowPresent() then
         CreateUnitFrameGroup("Focus", "all", PTUnitProxy.CustomUnitsMap["focus"], false, getSelectedProfile("Focus"), false)
+        CreateUnitFrameGroup("Enemy", "all", PTUnitProxy.CustomUnitsMap["enemy"], false, getSelectedProfile("Enemy"), false)
     end
 
     local baseCondition = UnitFrameGroups["Target"].ShowCondition
@@ -230,6 +223,11 @@ function OnAddonLoaded()
 
     InitOverrideBindingsMapping()
     InitBindingDisplayCache()
+
+    if util.HasModVersion("Nampower", util.Nampower_v3_0) then
+        SetCVar("NP_EnableAuraCastEvents", 1)
+        SetCVar("NP_EnableSpellHealEvents", 1)
+    end
 
     if util.IsSuperWowPresent() then
         -- In case other addons override unit functions, we want to make sure we're using their functions
@@ -377,6 +375,12 @@ function OnAddonLoaded()
     InitRoleDropdown()
     
     SetLFTAutoRoleEnabled(PTOptions.LFTAutoRole)
+
+    SetOutOfRangeArrowEnabled(PTOptions.OutOfRangeArrow)
+
+    if util.IsSuperWowPresent() then
+        SetEnemyTrackingEnabled(PuppeteerSettings.IsExperimentEnabled("Enemy"))
+    end
 
     TestUI = PTOptions.TestUI
 
@@ -662,12 +666,8 @@ function UnitFrame_OnClick(button, unit, unitFrame)
         end
         return
     end
-    local targetCastable = UnitIsConnected(unit) and UnitIsVisible(unit)
-    local wantToRes = PTOptions.AutoResurrect and util.IsDeadFriend(unit) and ResurrectionSpells[GetClass("player")]
     if not binding then
-        if targetCastable and wantToRes then
-            RunBinding_Spell(emptySpell, unit)
-        end
+        RunBinding_Spell(emptySpell, unit)
         return
     end
 
@@ -761,6 +761,7 @@ function CheckGroup()
     for _, ui in ipairs(AllUnitFrames) do
         if ui:IsShown() then
             ui:UpdateRange()
+            ui:UpdateSight()
             ui:UpdateAuras()
             ui:UpdateIncomingHealing()
             ui:UpdateOutline()
@@ -799,6 +800,10 @@ end
 
 function IsRelevantUnit(unit)
     return AllUnitsSet[unit] ~= nil or GUIDCustomUnitMap[unit]
+end
+
+function Info(msg)
+    DEFAULT_CHAT_FRAME:AddMessage(colorize("[Puppeteer] ", 0.5, 1, 0.5)..colorize(msg, 1, 1, 0.4))
 end
 
 function print(msg)

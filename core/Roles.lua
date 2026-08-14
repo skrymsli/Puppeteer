@@ -133,10 +133,10 @@ function SetUnitRoleAndUpdate(unit, role)
 end
 
 -- Players will be considered as the role in the index if they have the highest talent points in said index.
--- Clases not listed have only DPS specs and are not bothered to be scanned.
+-- Classes not listed have only DPS specs and are not bothered to be scanned.
 TalentCountRoleMap = {
     PRIEST = {
-        "Healer", "Healer", "Damage"
+        "Damage", "Healer", "Damage"
     },
     PALADIN = {
         "Healer", "Tank", "Damage"
@@ -152,8 +152,46 @@ TalentCountRoleMap = {
     }
 }
 
+
+local processingRoles = false
+local isHooked = false
+local function hookTalentMessageHandler()
+    if not isHooked and InspectTalentsFrame_HandleMessage then
+        isHooked = true
+        InspectTalentsFrame_HandleMessage_Original = InspectTalentsFrame_HandleMessage
+        _G.InspectTalentsFrame_HandleMessage = function(message, sender)
+            -- Only pass through talent requests while scanning talents
+            if not processingRoles or strfind(message, "INSTalentShow", 1, true) then
+                InspectTalentsFrame_HandleMessage_Original(message, sender)
+            end
+        end
+    end
+end
+
+local function disableTalentMessageProcessing()
+    if not IsAddOnLoaded("Blizzard_InspectUI") or not IsAddOnLoaded("Blizzard_TalentUI") then
+        LoadAddOn("Blizzard_InspectUI")
+        LoadAddOn("Blizzard_TalentUI")
+    end
+    hookTalentMessageHandler()
+    processingRoles = true
+end
+
+local function enableTalentMessageProcessing()
+    processingRoles = false
+end
+
 local PlayerTalentData = {}
+local SCAN_TIMEOUT = 4
+local scanTimeoutAt
 local talentScanner = CreateFrame("Frame", "PTTalentScanner")
+local function TalentScanner_OnUpdate()
+    if GetTime() >= scanTimeoutAt then
+        talentScanner:SetScript("OnUpdate", nil)
+        util.ClearTable(PlayerTalentData)
+        enableTalentMessageProcessing()
+    end
+end
 talentScanner:RegisterEvent("CHAT_MSG_ADDON")
 talentScanner:SetScript("OnEvent", function()
     if arg1 == "TW_CHAT_MSG_WHISPER" then
@@ -186,27 +224,47 @@ talentScanner:SetScript("OnEvent", function()
             local data = PlayerTalentData[sender]
             local trees = data.trees
             local mostPoints = 0
-            local mostIndex = 1
+            local mostIndex = 0
             for i = 1, 3 do
-                if trees[i].points > mostPoints then
+                if trees[i] and trees[i].points > mostPoints then -- TODO: Error
                     mostPoints = trees[i].points
                     mostIndex = i
                 end
             end
             local class = data.class
-            -- Check for Druid Thick Hide talent, set as tank if they have it
-            if class == "DRUID" and (trees[2].talents["2-3"] or 0) > 0 then
-                SetRoleAndUpdate(sender, "Tank")
-            else
-                SetRoleAndUpdate(sender, mostPoints > 0 and TalentCountRoleMap[class][mostIndex] or "Damage")
+            if mostIndex > 0 then
+                -- Check for Druid Thick Hide talent, set as tank if they have it
+                if class == "DRUID" and mostIndex == 2 and (trees[2].talents["2-3"] or 0) > 0 then
+                    SetRoleAndUpdate(sender, "Tank")
+                else
+                    SetRoleAndUpdate(sender, mostPoints > 0 and TalentCountRoleMap[class][mostIndex] or "Damage")
+                end
             end
             PlayerTalentData[sender] = nil
+            if util.IsTableEmpty(PlayerTalentData) then
+                scanTimeoutAt = 0 -- Re-enable inspect comm next frame
+            end
         end
     end
 end)
 
 local function requestTalents(name)
-    SendAddonMessage("TW_CHAT_MSG_WHISPER<"..name..">", "INSShowTalents", "GUILD")
+    if name == UnitName("player") then
+        if InspectTalentsFrame_HandleMessage then
+            -- Send our own talents to ourself (lol)
+            InspectTalentsFrame_HandleMessage("INSTalentShow", UnitName("player"))
+            return
+        end
+    end
+    SendAddonMessage("TW_CHAT_MSG_WHISPER<"..name..">", "INSTalentShow", "GUILD")
+end
+
+local function startTalentScan(name, class)
+    PlayerTalentData[name] = {class = class, trees = {}}
+    talentScanner:SetScript("OnUpdate", TalentScanner_OnUpdate)
+    scanTimeoutAt = GetTime() + SCAN_TIMEOUT
+    disableTalentMessageProcessing()
+    requestTalents(name)
 end
 
 function AutoRole(unit)
@@ -218,8 +276,7 @@ function AutoRole(unit)
     if not UnitIsConnected(unit) then -- Can't request offline player's talents
         return
     end
-    PlayerTalentData[UnitName(unit)] = {class = class, trees = {}}
-    requestTalents(UnitName(unit))
+    startTalentScan(UnitName(unit), class)
 end
 
 function AutoRoleByNameClass(name, class)
@@ -227,8 +284,7 @@ function AutoRoleByNameClass(name, class)
         SetRoleAndUpdate(name, "Damage")
         return
     end
-    PlayerTalentData[name] = {class = class, trees = {}}
-    requestTalents(name)
+    startTalentScan(name, class)
 end
 
 RoleAssignInfo = {}
@@ -308,7 +364,7 @@ function InitRoleDropdown()
             func = massRoleFunc
         }
     }
-    if PTGlobalOptions.Experiments.AutoRole then
+    if PuppeteerSettings.IsExperimentEnabled("AutoRole") then
         table.insert(options, 6, {
             text = colorize("Auto Detect", 1, 0.6, 0),
             func = function()
@@ -330,7 +386,7 @@ function InitRoleDropdown()
                     return
                 end
                 if lastMassRole + 6 > GetTime() then
-                    DEFAULT_CHAT_FRAME:AddMessage("Please wait a moment before requesting roles again")
+                    Puppeteer.Info("Please wait a moment before requesting roles again")
                     return
                 end
                 lastMassRole = GetTime()

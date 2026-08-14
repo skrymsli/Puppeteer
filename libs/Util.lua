@@ -19,11 +19,13 @@ UnitXPSP3_Version = -1
 if UnitXPSP3 and pcall(UnitXP, "version", "coffTimeDateStamp") then
     UnitXPSP3_Version = UnitXP("version", "coffTimeDateStamp") or -1
 end
+UnitXPSP3Latest = 0
 SuperWoW = SpellInfo ~= nil
 SuperWoWFeatureLevel = 0
 SuperWoW_v1_2 = 1
 SuperWoW_v1_3 = 2
 SuperWoW_v1_4 = 3
+SuperWoWLatest = SuperWoW_v1_4
 if SUPERWOW_VERSION then
     if SUPERWOW_VERSION == "1.2" then
         SuperWoWFeatureLevel = SuperWoW_v1_2
@@ -34,6 +36,195 @@ if SUPERWOW_VERSION then
     end
 end
 Nampower = QueueSpellByName ~= nil
+NampowerFeatureLevel = 0
+Nampower_v3_0 = 1
+NampowerLatest = Nampower_v3_0
+if GetNampowerVersion then
+    local major, minor, patch = GetNampowerVersion()
+    if major >= 3 then
+        NampowerFeatureLevel = Nampower_v3_0
+    end
+end
+VanillaUtils = pcall(UnitXP, "unitPosition", "player")
+
+EnabledMods = {
+    ["SuperWoW"] = SuperWoW and SuperWoWFeatureLevel,
+    ["Nampower"] = Nampower and NampowerFeatureLevel,
+    ["UnitXP SP3"] = UnitXPSP3 and 0,
+    ["VanillaUtils"] = VanillaUtils and 0
+}
+
+-- Providers are ordered by preference
+ModFeatures = {
+    {
+        Name = "GUID Units",
+        Description = "Better tracking of players/mobs. Grants the ability to add players/mobs to a separate Focus frame.",
+        Providers = {{"Nampower", Nampower_v3_0}, {"SuperWoW"}}
+    },
+    {
+        Name = "Aura Timers",
+        Description = "See timers on buffs and debuffs, with Nampower providing many more than SuperWoW.",
+        Providers = {{"Nampower", Nampower_v3_0}, {"SuperWoW"}}
+    },
+    {
+        Name = "Friendly Distance",
+        Description = "See precise distance to friendly players, with UnitXP SP3 being more accurate.",
+        Providers = {{"UnitXP SP3"}, {"SuperWoW"}}
+    },
+    {
+        Name = "Enemy Distance",
+        Description = "See precise distance to enemies.",
+        Providers = {{"UnitXP SP3"}}
+    },
+    {
+        Name = "Friendly Position",
+        Hidden = true,
+        Providers = {{"SuperWoW"}, {"VanillaUtils"}}
+    },
+    {
+        Name = "Enemy Position",
+        Hidden = true,
+        Providers = {{"VanillaUtils"}}
+    },
+    {
+        Name = "Heal Predictions",
+        Description = "See incoming healing from players that do not have HealComm and predict more accurate numbers.",
+        Providers = {{"Nampower", Nampower_v3_0}, {"SuperWoW"}}
+    },
+    {
+        Name = "Mouseover",
+        Description = "Set your actual mouseover target when hovering over unit frames.",
+        Providers = {{"SuperWoW"}}
+    },
+    {
+        Name = "Direct Casting",
+        Description = "Directly cast spells rather than using split-second target switching tricks.",
+        Providers = {{"Nampower", Nampower_v3_0}, {"SuperWoW"}}
+    },
+    {
+        Name = "LOS",
+        Description = "See when someone is out of your line-of-sight.",
+        Providers = {{"UnitXP SP3"}}
+    },
+    {
+        Name = "Spell Queue",
+        Description = "Queue spell casts like in modern versions of WoW, drastically increasing casting efficiency.",
+        Providers = {{"Nampower"}}
+    }
+}
+EnabledModFeatures = {}
+for _, feature in ipairs(ModFeatures) do
+    for _, providerEntry in ipairs(feature.Providers) do
+        local modInfo = EnabledMods[providerEntry[1]]
+        if modInfo and (not providerEntry[2] or modInfo >= providerEntry[2]) then
+            feature.ChosenProvider = providerEntry[1]
+            EnabledModFeatures[feature.Name] = providerEntry[1]
+            break
+        end
+    end
+end
+
+function GetModState(present, upToDate)
+    if not present then
+        return "Not Detected"
+    end
+    if not upToDate then
+        return "Outdated"
+    end
+    return "Detected"
+end
+
+function IsSuperWowPresent()
+    return SuperWoW
+end
+
+function GetSuperWoWVersionText()
+    if not SuperWoW then
+        return ""
+    end
+    return "Version "..(SUPERWOW_VERSION or "1.1 or older")
+end
+
+function IsSuperWoWUpToDate()
+    return SuperWoWFeatureLevel >= SuperWoWLatest
+end
+
+function GetSuperWoWVersionState()
+    return GetModState(IsSuperWowPresent(), IsSuperWoWUpToDate())
+end
+
+function IsUnitXPSP3Present()
+    return UnitXPSP3
+end
+
+function GetUnitXPSP3VersionText()
+    if not UnitXPSP3 then
+        return ""
+    end
+    return UnitXPSP3_Version > -1 and "Version "..date("%x", UnitXPSP3_Version) or "Old Version"
+end
+
+function IsUnitXPSP3UpToDate()
+    return UnitXPSP3_Version >= UnitXPSP3Latest
+end
+
+function GetUnitXPSP3VersionState()
+    return GetModState(IsUnitXPSP3Present(), IsUnitXPSP3UpToDate())
+end
+
+-- Doesn't detect Namreeb's Nampower
+function IsNampowerPresent()
+    return Nampower
+end
+
+function GetNampowerVersionText()
+    if not Nampower then
+        return ""
+    end
+    if not GetNampowerVersion then
+        return "Old Version"
+    end
+    local major, minor, patch = GetNampowerVersion()
+    return "Version "..major.."."..minor.."."..patch
+end
+
+function IsNampowerUpToDate()
+    return NampowerFeatureLevel >= NampowerLatest
+end
+
+function GetNampowerVersionState()
+    return GetModState(IsNampowerPresent(), IsNampowerUpToDate())
+end
+
+function GetModVersionText(mod)
+    if mod == "SuperWoW" then
+        return GetSuperWoWVersionText()
+    elseif mod == "UnitXP SP3" then
+        return GetUnitXPSP3VersionText()
+    elseif mod == "Nampower" then
+        return GetNampowerVersionText()
+    elseif mod == "VanillaUtils" then
+        return "Unknown"
+    end
+    return "Invalid Mod: "..tostring(mod)
+end
+
+function GetModVersionState(mod)
+    if mod == "SuperWoW" then
+        return GetSuperWoWVersionState()
+    elseif mod == "UnitXP SP3" then
+        return GetUnitXPSP3VersionState()
+    elseif mod == "Nampower" then
+        return GetNampowerVersionState()
+    elseif mod == "VanillaUtils" then
+        return GetModState(true, true)
+    end
+    return "Invalid Mod: "..tostring(mod)
+end
+
+function HasModVersion(mod, version)
+    return EnabledMods[mod] and EnabledMods[mod] >= version
+end
 
 TurtleWow = TURTLE_WOW_VERSION ~= nil
 
@@ -62,6 +253,19 @@ PowerTypeMap = {
     [1] = "rage", 
     [2] = "focus", 
     [3] = "energy"
+}
+
+ResurrectionSpells = {
+    ["PRIEST"] = "Resurrection",
+    ["PALADIN"] = "Redemption",
+    ["SHAMAN"] = "Ancestral Spirit",
+    ["DRUID"] = "Rebirth"
+}
+ResurrectionSpellsSet = {
+    ["Resurrection"] = "PRIEST",
+    ["Redemption"] = "PALADIN",
+    ["Ancestral Spirit"] = "SHAMAN",
+    ["Rebirth"] = "DRUID"
 }
 
 -- The default color Blizzard uses for text
@@ -154,6 +358,14 @@ function IndexOf(table, value)
     return -1
 end
 
+function KeyOf(table, value)
+    for k, v in pairs(table) do
+        if v == value then
+            return k
+        end
+    end
+end
+
 function ArrayContains(table, value)
     for _, v in ipairs(table) do
         if v == value then
@@ -185,7 +397,36 @@ function CloneTable(table, deep)
     return clone
 end
 
+function ApplyTableDiffs(t, overrides)
+    for k, v in pairs(overrides) do
+        if t[k] ~= nil then
+            if type(v) == "table" then
+                if type(t[k]) == "table" then
+                    ApplyTableDiffs(t[k], v)
+                else
+                    t[k] = CloneTable(v, true)
+                end
+            else
+                t[k] = v
+            end
+        else
+            t[k] = type(v) == "table" and CloneTable(v, true) or v
+        end
+    end
+end
+
 local compost = AceLibrary("Compost-2.0")
+
+-- Recursively reclaims all tables this table contains
+function CompostReclaim(t)
+    for k, v in pairs(t) do
+        if type(v) == "table" then
+            CompostReclaim(v)
+        end
+    end
+    compost:Reclaim(t)
+end
+
 function CloneTableCompost(t, deep)
     local clone = compost:GetTable()
     local n = 0
@@ -249,6 +490,18 @@ function TableEquals(t1, t2)
         end
     end
     return true
+end
+
+function TraverseTable(v, k1, k2, k3, k4, k5)
+    local keys = compost:Acquire(k1, k2, k3, k4, k5)
+    for _, k in ipairs(keys) do
+        if type(v) ~= "table" then
+            return nil, k
+        end
+        v = v[k]
+    end
+    compost:Reclaim(keys)
+    return v
 end
 
 -- Courtesy of ChatGPT
@@ -473,10 +726,10 @@ ScanningTooltip:AddFontStrings(
     ScanningTooltip:CreateFontString( "$parentTextLeft1", nil, "GameTooltipText" ),
     ScanningTooltip:CreateFontString( "$parentTextRight1", nil, "GameTooltipText" ) );
 
--- Thanks ChatGPT
+local spellRankString = RANK.." "
 function ExtractSpellRank(spellname)
     -- Find the starting position of "Rank "
-    local start_pos = string.find(spellname, "Rank ")
+    local start_pos = string.find(spellname, spellRankString)
 
     -- Check if "Rank " was found
     if start_pos then
@@ -497,42 +750,16 @@ function ExtractSpellRank(spellname)
     return nil
 end
 
--- Thanks again ChatGPT
-local tooltipResources = {["Mana"] = "mana", ["Rage"] = "rage", ["Energy"] = "energy"}
+local resourceCostPatterns = {[MANA_COST] = "mana", [RAGE_COST] = "rage", [ENERGY_COST] = "energy", [FOCUS_COST] = "focus"}
 function ExtractResourceCost(costText)
-
-    -- First extract resource type
-    local resource
-    for tooltipName, lowerName in pairs(tooltipResources) do
-        if string.find(costText, tooltipName) then
-            resource = lowerName
-            break
+    for costPattern, resourceName in pairs(resourceCostPatterns) do
+        local cost = cmatch(costText, costPattern)
+        if cost then
+            return tonumber(cost), resourceName
         end
     end
-
-    -- No resource found, this spell is probably free
-    if not resource then
-        return 0
-    end
-
-    -- Find the position where non-digit characters start
-    local num_end = string.find(costText, "%D")
-
-    -- If a non-digit character is found, extract the number
-    if num_end then
-        -- Extract the number substring from the start to the position before the non-digit character
-        local number_str = string.sub(costText, 1, num_end - 1)
-        -- Convert the substring to a number
-        local number = tonumber(number_str)
-        -- Print the result
-        return number or 0, resource
-    else
-        -- If no non-digit character is found, the entire string is a number
-        local number = tonumber(costText)
-        return number or 0, resource
-    end
+    return 0
 end
-
 
 function GetSpellID(spellname)
     local id = 1
@@ -609,6 +836,18 @@ function GetResourceCost(spellName)
     return 0
 end
 
+if HasModVersion("Nampower", Nampower_v3_0) then
+    function GetResourceCost(spellName)
+        local spellID = GetSpellIdForName(spellName)
+        local cost = GetSpellRecField(spellID, "manaCost")
+        local powerType = GetSpellRecField(spellID, "powerType")
+        if powerType == 1 then -- Rage is 10x for some reason
+            cost = cost / 10
+        end
+        return cost or "unknown", PowerTypeMap[powerType]
+    end
+end
+
 -- Returns the aura's name and its school type
 function ScanAuraInfo(unit, index, type)
     -- Make these texts blank since they don't clear otherwise
@@ -652,6 +891,56 @@ if SuperWoW or TurtleWow then
     end
 else
     GetAuraInfo = ScanAuraInfo
+end
+
+function GetActionSlotName(slot)
+    _G["PTScanningTooltipTextLeft1"]:SetText("")
+    ScanningTooltip:SetAction(slot)
+    return _G["PTScanningTooltipTextLeft1"]:GetText() or ""
+end
+
+local actionCache = {}
+function FindAction(name)
+    if actionCache[name] then
+        local data = actionCache[name]
+        if GetActionTexture(data.slot) == data.texture then
+            return data.slot
+        end
+        actionCache[name] = nil
+    end
+    for i = 1, 120 do
+        if GetActionTexture(i) then
+            local slotName = GetActionSlotName(i)
+            if slotName == name then
+                actionCache[name] = {
+                    slot = i,
+                    texture = GetActionTexture(i)
+                }
+                return i
+            end
+        end
+    end
+end
+
+function IsCurrentActionByName(name)
+    local slot = FindAction(name)
+    if slot then
+        return IsCurrentAction(slot)
+    end
+end
+
+function IsAutoRepeatActionByName(name)
+    local slot = FindAction(name)
+    if slot then
+        return IsAutoRepeatAction(slot)
+    end
+end
+
+-- Casts an action if it's not already being used. Very useful for auto attack abilities. They must be somewhere on your bars.
+function CastActionByName(name, target)
+    if not (IsAutoRepeatActionByName(name) or IsCurrentActionByName(name)) then
+        CastSpellByName(name, target)
+    end
 end
 
 -- Returns an array of the units in the party number or the unit's raid group
@@ -798,6 +1087,7 @@ local offTaskQueue = {}
 local PTTaskExecutor_OnUpdate = function()
     local runningQueue = taskQueue
     taskQueue = offTaskQueue
+    offTaskQueue = runningQueue
     for _, task in ipairs(runningQueue) do
         local ok, result = pcall(task)
         if not ok then
@@ -1113,6 +1403,11 @@ function GetPowerColor(unit)
     return PowerColors[GetPowerType(unit)]
 end
 
+-- You never really know these days
+function IsReallyInInstance()
+    return IsInInstance() and not InstanceWorldZones[GetRealZoneText()]
+end
+
 -- Returns distance if UnitXP SP3 or SuperWoW is present;
 -- 0 if unit is offline, or unit is enemy and SuperWoW is the distance provider;
 -- 9999 if unit is not visible or UnitXP SP3 is not present.
@@ -1204,6 +1499,18 @@ function CanClientGetPreciseDistance(alsoEnemies)
     return UnitXPSP3 or (SuperWoW and not alsoEnemies)
 end
 
+function GetUnitPosition(unit)
+    return nil
+end
+
+if VanillaUtils then
+    GetUnitPosition = function(unit)
+        return UnitXP("unitPosition", unit)
+    end
+elseif SuperWoW then
+    GetUnitPosition = UnitPosition
+end
+
 -- Returns whether unit is in sight if UnitXP SP3 is present, otherwise always true.
 IsInSight = function()
     return true
@@ -1213,9 +1520,11 @@ do -- This is done to prevent crashes from checking sight too early
     local sightEnableFrame = CreateFrame("Frame")
     sightEnableFrame:RegisterEvent("ADDON_LOADED")
     sightEnableFrame:SetScript("OnEvent", function()
-        if arg1 == "Puppeteer" and UnitXPSP3 then
-            IsInSight = function(unit)
-                return UnitXP("inSight", "player", unit) -- UnitXP SP3 modded function
+        if arg1 == "Puppeteer" then
+            if UnitXPSP3 then
+                IsInSight = function(unit)
+                    return UnitXP("inSight", "player", unit) -- UnitXP SP3 modded function
+                end
             end
             sightEnableFrame:SetScript("OnEvent", nil)
         end
@@ -1226,21 +1535,55 @@ function CanClientSightCheck()
     return UnitXPSP3
 end
 
+-- From pfQuest
+local minimaparrow = ({Minimap:GetChildren()})[9]
+for k, v in pairs({Minimap:GetChildren()}) do
+    if v:IsObjectType("Model") and not v:GetName() then
+        if string.find(strlower(v:GetModel()), "interface\\minimap\\minimaparrow") then
+        minimaparrow = v
+        break
+        end
+    end
+end
+function GetPlayerFacing()
+    return minimaparrow:GetFacing()
+end
+
+function GetUnitDirection(from, to)
+    local sx, sz = GetUnitPosition(from)
+    local tx, tz = GetUnitPosition(to)
+
+    local dx = tx - sx
+    local dz = tz - sz
+
+    return math.atan2(dz, dx)
+end
+
+function GetFacingAngle(unit)
+    local angle = GetUnitDirection("player", unit) - GetPlayerFacing()
+    angle = modulo(angle, math.pi * 2)
+    return angle
+end
+
+if VanillaUtils then
+    function GetCameraFacing()
+        local sx, sy = GetUnitPosition("player")
+        local cx, cy = UnitXP("cameraPosition")
+        return math.atan2(cy - sy, cx - sx) + math.pi
+    end
+else
+    GetCameraFacing = GetPlayerFacing -- Sad
+end
+
+function GetCameraFacingAngle(unit)
+    local cameraAngle = GetUnitDirection("player", unit) - GetCameraFacing()
+    cameraAngle = modulo(cameraAngle, math.pi * 2)
+    return cameraAngle
+end
+
+
 function CanClientGetAuraIDs()
-    return SuperWoW or TurtleWow
-end
-
-function IsSuperWowPresent()
-    return SuperWoW
-end
-
-function IsUnitXPSP3Present()
-    return UnitXPSP3
-end
-
--- Only detects Pepopo's Nampower
-function IsNampowerPresent()
-    return Nampower
+    return SuperWoW-- or TurtleWow -- Turtle ID fetching is not reliable
 end
 
 function IsTurtleWow()
@@ -1249,3 +1592,9 @@ end
 
 AllUnitsSet = ToSet(AllUnits)
 FocusUnitsSet = ToSet(FocusUnits)
+RunLater(function()
+    PTLocale.Values(ResurrectionSpells)
+    PTLocale.Keys(ResurrectionSpellsSet)
+end)
+
+InstanceWorldZones = ToSet({"Winter Veil Vale"}) -- Why is this an instance??

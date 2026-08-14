@@ -1,5 +1,5 @@
 ## Interface: 11200
-## Version: 1.0.7
+## Version: 1.1.3
 ## Title: Puppeteer
 ## Notes: Unit frames addon tailored for healers
 ## Author: OldManAlpha, Richard Truax(i2ichardt)
@@ -26,6 +26,13 @@ libs\ace\HealComm-1.0\HealComm-1.0.lua
 libs\UnitProxy.lua
 libs\Util.lua
 
+locale\Locale.lua
+locale\esES.lua
+locale\ptBR.lua
+locale\deDE.lua
+locale\ruRU.lua
+locale\zhCN.lua
+
 libs\gui\PTGuiLib.lua
 libs\gui\Component.lua
 
@@ -48,6 +55,8 @@ libs\gui\component\ColorSelect.lua
 libs\gui\frame\TabFrame.lua
 libs\gui\frame\SimpleDialog.lua
 
+gui\component\uf\Arrow.lua
+
 Puppeteer.lua
 core\SpellsTooltip.lua
 core\EventHandler.lua
@@ -57,6 +66,7 @@ core\OverrideBindings.lua
 core\Bindings.lua
 core\ActionBindings.lua
 core\Roles.lua
+core\EnemyTracker.lua
 
 PuppeteerSettings.lua
 PTUnitFrame.lua
@@ -75,6 +85,9 @@ gui\component\ButtonEditor.lua
 gui\component\NewLoadout.lua
 gui\component\LoadScriptEditor.lua
 gui\Settings.lua
+
+gui\component\uf\CastIcon.lua
+gui\component\uf\HighlightBorder.lua
 
 libs\GuidRoster.lua
 libs\AuraTracker.lua

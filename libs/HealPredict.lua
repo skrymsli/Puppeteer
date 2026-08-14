@@ -39,13 +39,15 @@ local PRAYER_OF_HEALING_IDS = PTUtil.ToSet({596, 996, 10960, 10961, 25316})
 local ResurrectionSpells = PTUtil.ToSet({
     "Resurrection", "Revive Champion", "Redemption", "Ancestral Spirit", "Rebirth"
 })
+PTLocale.Keys(ResurrectionSpells)
 
 local TRACKED_HOTS = PTUtil.ToSet({
     "Rejuvenation", "Regrowth", -- Druid
-    "Renew", -- Priest
+    "Renew", "Greater Heal", -- Priest
     "Mend Pet", -- Hunter
     "First Aid" -- Generic
 })
+PTLocale.Keys(TRACKED_HOTS)
 
 function OnLoad()
     print = Puppeteer.print
@@ -165,6 +167,17 @@ function AddIncomingMultiCast(targets, caster, spellID, healAmount, castTime)
     end
 end
 
+local castIcons = {}
+function RemoveAllCastIcons()
+    for caster, icons in pairs(castIcons) do
+        for _, icon in ipairs(castIcons[caster]) do
+            icon:End(false)
+        end
+        compost:Reclaim(icons)
+        castIcons[caster] = nil
+    end
+end
+
 function AddIncomingCast(target, caster, spellID, healAmount, castTime, multi)
     if not multi then
         Casts[caster] = compost:AcquireHash(
@@ -188,7 +201,7 @@ function AddIncomingCast(target, caster, spellID, healAmount, castTime, multi)
     UpdateTarget(target)
 end
 
-function RemoveIncomingCast(caster)
+function RemoveIncomingCast(caster, successful)
     local cast = Casts[caster]
     if cast then
         for _, target in ipairs(cast["targets"]) do
@@ -206,7 +219,7 @@ end
 function GetCurrentCast(caster)
     local cast = Casts[caster]
     if cast then
-        return IncomingHeals[cast["targets"][1]][caster]
+        return table.getn(cast["targets"]) > 0 and IncomingHeals[cast["targets"][1]][caster] or nil
     end
 end
 
@@ -385,6 +398,8 @@ local function getSelfGuid()
     return guid
 end
 
+local autoShotName = PTLocale.Translate("Auto Shot")
+
 local eventFrame = CreateFrame("Frame", "PTHealPredictCasts")
 eventFrame:RegisterEvent("UNIT_CASTEVENT")
 eventFrame:SetScript("OnEvent", function()
@@ -414,7 +429,7 @@ eventFrame:SetScript("OnEvent", function()
             if cast then
                 local target = cast["targets"][1]
                 local resses = ResurrectionTargets[target]
-                if resses[caster] then
+                if resses and resses[caster] then
                     compost:Reclaim(resses[caster])
                     resses[caster] = nil
                     
@@ -460,35 +475,105 @@ eventFrame:SetScript("OnEvent", function()
                 local _, guid = UnitExists(petUnit)
                 target = guid
             end
-            AddHot(target, caster, spellID, spellName, GetExpectedHeal(UnitName(caster), spellID.."-HoT"))
+            if spellName ~= "Greater Heal" or spellID == 22009 then
+                AddHot(target, caster, spellID, spellName, GetExpectedHeal(UnitName(caster), spellID.."-HoT"))
+            end
         end
     end
 
     -- Check started cast spell ID to prevent instant mid-cast spells from removing incoming healing
     local currentCast = GetCurrentCast(caster)
     if event == "CAST" and currentCast and currentCast["spellID"] == spellID then
-        RemoveIncomingCast(caster)
+        RemoveIncomingCast(caster, true)
         LastCastedSpells[UnitName(caster)] = compost:AcquireHash("unit", caster, "target", target, "spellID", spellID)
         return
     end
 
     if event == "START" or event == "FAIL" then
-        RemoveIncomingCast(caster)
+        if spellName ~= autoShotName then -- Don't remove the cast when Auto Shot fails
+            RemoveIncomingCast(caster, event == "START")
+        end
     end
 
-    if event == "START" then
-        if target and target ~= "" and UnitCanAssist(caster, target) and duration > 0 then
-            local casterName = UnitName(caster)
-            local expectedHeal = GetExpectedHeal(casterName, spellID)
-            AddIncomingCast(target, caster, spellID, expectedHeal, duration)
-        elseif PRAYER_OF_HEALING_IDS[spellID] then
-            local inRange = PTUtil.GetSurroundingPartyMembers(caster)
-            local casterName = UnitName(caster)
-            local expectedHeal = GetExpectedHeal(casterName, spellID)
-            AddIncomingMultiCast(inRange, caster, spellID, expectedHeal, duration)
+    if event == "START" and target then
+        if UnitCanAssist(caster, target ~= "" and target or caster) and duration > 0 then
+            if PRAYER_OF_HEALING_IDS[spellID] then
+                local inRange = PTUtil.GetSurroundingPartyMembers(target ~= "" and target or caster, 28)
+                local casterName = UnitName(caster)
+                local expectedHeal = GetExpectedHeal(casterName, spellID)
+                AddIncomingMultiCast(inRange, caster, spellID, expectedHeal, duration)
+            elseif target ~= "" then
+                local casterName = UnitName(caster)
+                local expectedHeal = GetExpectedHeal(casterName, spellID)
+                AddIncomingCast(target, caster, spellID, expectedHeal, duration)
+            end
         end
     end
 end)
+
+local trackedHostileSpells = PTUtil.ToSet({"Shackle Undead", "Mind Control", "Fear", "Polymorph", "Polymorph: Turtle", "Polymorph: Cow"})
+local castIconFrame = CreateFrame("Frame", "PTCastIcons")
+castIconFrame:RegisterEvent("UNIT_CASTEVENT")
+castIconFrame:SetScript("OnEvent", function()
+    local caster, target, event, spellID, duration = arg1, arg2, arg3, arg4, arg5
+
+    local spellName = SpellInfo(spellID)
+    if event == "CAST" then
+        if castIcons[caster] and castIcons[caster][1].spellName == spellName then
+            for _, icon in ipairs(castIcons[caster]) do
+                icon:End(true)
+            end
+            compost:Reclaim(castIcons[caster])
+            castIcons[caster] = nil
+        end
+    end
+    if event == "START" or event == "FAIL" then
+        if spellName ~= autoShotName then -- Don't remove the cast when Auto Shot fails
+            if castIcons[caster] then
+                for _, icon in ipairs(castIcons[caster]) do
+                    icon:End(false)
+                end
+                compost:Reclaim(castIcons[caster])
+                castIcons[caster] = nil
+            end
+        end
+    end
+
+    if event == "START" then
+        if not PuppeteerSettings.IsExperimentEnabled("CastIcons") or (not UnitCanAssist(caster, target) 
+                and not trackedHostileSpells[spellName] and not PRAYER_OF_HEALING_IDS[spellID]) then
+            return
+        end
+        local inRange
+        if PRAYER_OF_HEALING_IDS[spellID] then
+            inRange = PTUtil.GetSurroundingPartyMembers(target ~= "" and target or caster, 28)
+        end
+        inRange = inRange or compost:Acquire(target)
+        
+        for _, target in ipairs(inRange) do
+            local spellName, _, tex = SpellInfo(spellID)
+            local targetFrame
+            for f in Puppeteer.UnitFrames(target) do
+                if f.owningGroup:GetContainer():IsShown() then
+                    targetFrame = f
+                    break
+                end
+            end
+            if targetFrame then
+                local icon = PTGuiLib.Get("puppeteer_cast_icon")
+                local healAmount = UnitCanAssist(caster, target) and GetExpectedHeal(UnitName(caster), spellID) or 0
+                icon:Start(spellName, tex, duration / 1000, caster, healAmount, targetFrame)
+                if not castIcons[caster] then
+                    castIcons[caster] = compost:GetTable()
+                end
+                table.insert(castIcons[caster], icon)
+            end
+        end
+        compost:Reclaim(inRange)
+    end
+end)
+
+
 -- Because the prediction code is not currently bullet-proof to infinite incoming heals, we're checking once a while for old casts
 local GARBAGE_CHECK_INTERVAL = 10
 local nextGarbageCheck = GetTime() + GARBAGE_CHECK_INTERVAL
@@ -533,6 +618,17 @@ eventFrame:SetScript("OnUpdate", function()
             end
             if not ResurrectionTargets[target] then -- Must've been removed
                 compost:Reclaim(resses)
+            end
+        end
+
+        for caster, icons in pairs(castIcons) do
+            local icon = icons[1]
+            if icon:GetOvertime() > 10 then
+                for _, icon in ipairs(castIcons[caster]) do
+                    icon:End(false)
+                end
+                compost:Reclaim(castIcons[caster])
+                castIcons[caster] = nil
             end
         end
     end
@@ -622,10 +718,9 @@ end)
 local auraCombatLogFrame = CreateFrame("Frame", "PTHealPredictAuraCombatLog")
 auraCombatLogFrame:RegisterEvent("CHAT_MSG_SPELL_AURA_GONE_OTHER")
 auraCombatLogFrame:RegisterEvent("CHAT_MSG_SPELL_AURA_GONE_PARTY")
-auraCombatLogFrame:RegisterEvent("CHAT_MSG_SPELL_AURA_GONE_SELF")
 auraCombatLogFrame:SetScript("OnEvent", function()
     local spell, name = cmatch(arg1, AURAREMOVEDOTHER) -- "%s fades from %s."
-    if spell and name and name ~= "you" then
+    if spell and name then
         local guid = getGuidFromLogName(name)
         if not guid then
             return
@@ -633,7 +728,11 @@ auraCombatLogFrame:SetScript("OnEvent", function()
         RemoveHoT(spell, guid)
         return
     end
+end)
 
+local selfAuraCombatLogFrame = CreateFrame("Frame", "PTHealPredictSelfAuraCombatLog")
+selfAuraCombatLogFrame:RegisterEvent("CHAT_MSG_SPELL_AURA_GONE_SELF")
+selfAuraCombatLogFrame:SetScript("OnEvent", function()
     local spell = cmatch(arg1, AURAREMOVEDSELF) -- "%s fades from you."
     if spell then
         RemoveHoT(spell, getSelfGuid())

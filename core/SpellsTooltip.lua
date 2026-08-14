@@ -8,6 +8,7 @@ local GetClass = util.GetClass
 local GetItemCount = util.GetItemCount
 local IsValidMacro = util.IsValidMacro
 local GetResourceCost = util.GetResourceCost
+local T = PTLocale.T
 
 local lowToHighColors = {
     {1, 0, 0}, 
@@ -37,16 +38,16 @@ BindingDisplayCache = nil
 DirtyDisplayModifiers = {}
 
 SpecialSpellBindings = {}
-for class, spell in pairs(ResurrectionSpells) do
+for class, spell in pairs(util.ResurrectionSpells) do
     local binding = {
         ["Type"] = "SPELL",
         ["Data"] = spell
     }
     SpecialSpellBindings[spell] = binding
 end
-SpecialSpellBindings["Revive Champion"] = {
+SpecialSpellBindings[T("Revive Champion")] = {
     ["Type"] = "SPELL",
-    ["Data"] = "Revive Champion"
+    ["Data"] = T("Revive Champion")
 }
 
 BindTypeTooltipColors = {
@@ -156,7 +157,7 @@ function _UpdateBindingDisplay(binding, entry)
     local powerType = currentPowerType or util.GetPowerType("player")
     local needsUpdate = not entry.Normal
     local textColor = binding.Tooltip and binding.Tooltip.TextColor or BindTypeTooltipColors[binding.Type]
-    local text = binding.Tooltip and binding.Tooltip.Data
+    local text = binding.Tooltip and binding.Tooltip.Type == "CUSTOM" and binding.Tooltip.Data
     if binding.Type == "SPELL" then
         local spell = binding.Data
         if spell == "" then
@@ -306,14 +307,14 @@ function ApplySpellsTooltip(attachTo, unit, owner)
     
     local deadFriend = util.IsDeadFriend(unit)
     local selfClass = GetClass("player")
-    local canResurrect = PTOptions.AutoResurrect and deadFriend and ResurrectionSpells[selfClass]
-    local canReviveChampion = canResurrect and util.GetSpellID("Revive Champion") and 
-        PTUnit.Get(unit):HasBuffIDOrName(45568, "Holy Champion") and UnitAffectingCombat("player")
+    local canResurrect = PTOptions.AutoResurrect and deadFriend and util.ResurrectionSpells[selfClass]
+    local canReviveChampion = canResurrect and util.GetSpellID(T("Revive Champion")) and 
+        PTUnit.Get(unit):HasBuffIDOrName(45568, T("Holy Champion")) and UnitAffectingCombat("player")
     local resEntry
     if canReviveChampion then
-        resEntry = UpdateBindingDisplay(SpecialSpellBindings["Revive Champion"], compost:GetTable())
+        resEntry = UpdateBindingDisplay(SpecialSpellBindings[T("Revive Champion")], compost:GetTable())
     elseif canResurrect then
-        resEntry = UpdateBindingDisplay(SpecialSpellBindings[ResurrectionSpells[selfClass]], compost:GetTable())
+        resEntry = UpdateBindingDisplay(SpecialSpellBindings[util.ResurrectionSpells[selfClass]], compost:GetTable())
     end
     
     --StartTiming("BindingDisplays")

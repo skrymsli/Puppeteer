@@ -409,13 +409,13 @@ function CreateUnitProxies()
     UnitProxy("UnitAffectingCombat", _G.UnitAffectingCombat, false)
     UnitProxy("UnitIsPVP", _G.UnitIsPVP, false)
     UnitProxy("UnitFactionGroup", _G.UnitFactionGroup, nil)
+    UnitProxy("UnitPosition", _G.UnitPosition, 0)
     DoubleUnitProxy("UnitIsFriend", _G.UnitIsFriend, false)
     DoubleUnitProxy("UnitIsEnemy", _G.UnitIsEnemy, false)
     DoubleUnitProxy("UnitIsUnit", _G.UnitIsUnit, false)
     DoubleUnitProxy("UnitCanAttack", _G.UnitCanAttack, false)
     DoubleUnitProxy("CheckInteractDistance", _G.CheckInteractDistance, false)
     CustomProxy("CastSpellByName", function()
-        local CastSpellByName = _G.CastSpellByName
         return function(spell, unit)
             if AllCustomUnitsSet[unit] then
                 unit = CustomUnitGUIDMap[unit]
@@ -423,7 +423,7 @@ function CreateUnitProxies()
                     return
                 end
             end
-            return CastSpellByName(spell, unit)
+            return _G.CastSpellByName(spell, unit)
         end
     end)
     -- UnitXP SP3 compatibility
@@ -453,6 +453,17 @@ function CreateUnitProxies()
             return UnitXP(a1, a2, a3, a4, a5)
         end
     end)
+    if _G.GetUnitGUID then
+        UnitProxy("UnitGUID", _G.GetUnitGUID, nil)
+        UnitProxy("GetUnitGUID", _G.GetUnitGUID, nil)
+    else
+        CustomProxy("UnitGUID", function()
+            return function(unit)
+                local _, guid = UnitExists(unit)
+                return guid
+            end
+        end)
+    end
 
     UpdateImports()
 end

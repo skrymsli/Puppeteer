@@ -6,31 +6,33 @@ local util = PTUtil
 
 local _, playerClass = UnitClass("player")
 
-function UpdateTrackedDebuffTypes()
-    local debuffTypeCureSpells = {
-        ["PALADIN"] = {
-            ["Purify"] = {"Poison", "Disease"},
-            ["Cleanse"] = {"Poison", "Disease", "Magic"}
-        },
-        ["PRIEST"] = {
-            ["Cure Disease"] = {"Disease"},
-            ["Abolish Disease"] = {"Disease"},
-            ["Dispel Magic"] = {"Magic"}
-        },
-        ["DRUID"] = {
-            ["Cure Poison"] = {"Poison"},
-            ["Abolish Poison"] = {"Poison"},
-            ["Remove Curse"] = {"Curse"}
-        },
-        ["SHAMAN"] = {
-            ["Cure Poison"] = {"Poison"},
-            ["Cure Disease"] = {"Disease"}
-        },
-        ["MAGE"] = {
-            ["Remove Lesser Curse"] = {"Curse"}
-        }
+local debuffTypeCureSpells = {
+    ["PALADIN"] = {
+        ["Purify"] = {"Poison", "Disease"},
+        ["Cleanse"] = {"Poison", "Disease", "Magic"}
+    },
+    ["PRIEST"] = {
+        ["Cure Disease"] = {"Disease"},
+        ["Abolish Disease"] = {"Disease"},
+        ["Dispel Magic"] = {"Magic"}
+    },
+    ["DRUID"] = {
+        ["Cure Poison"] = {"Poison"},
+        ["Abolish Poison"] = {"Poison"},
+        ["Remove Curse"] = {"Curse"}
+    },
+    ["SHAMAN"] = {
+        ["Cure Poison"] = {"Poison"},
+        ["Cure Disease"] = {"Disease"}
+    },
+    ["MAGE"] = {
+        ["Remove Lesser Curse"] = {"Curse"}
     }
-
+}
+for _, spells in pairs(debuffTypeCureSpells) do
+    PTLocale.Keys(spells)
+end
+function UpdateTrackedDebuffTypes()
     for _, class in ipairs(util.GetClasses()) do
         if not debuffTypeCureSpells[class] then
             debuffTypeCureSpells[class] = {}
@@ -83,7 +85,7 @@ function SetDefaults()
         _G.PTGlobalOptions = {}
     end
     
-    local OPTIONS_VERSION = 3
+    local OPTIONS_VERSION = 4
 
     if PTOptions.OptionsVersion and (PTOptions.OptionsVersion > OPTIONS_VERSION) then
         LetsCrashOut()
@@ -137,13 +139,13 @@ function SetDefaults()
                 ["EvaluateInterval"] = 1.25, -- How often everyone is fully scanned to determine if they should be closely tracked
                 ["DistanceUpdateInterval"] = 0.1, -- How often distance tracked units are updated
                 ["SightUpdateInterval"] = 0.1, -- How often sight tracked units are updated
-                ["MinDistanceTracking"] = 20, -- The minimum distance to start closely tracking distance
-                ["MaxDistanceTracking"] = 60, -- The maxmimum distance to start closely tracking distance
+                ["MinDistanceTracking"] = 0, -- The minimum distance to start closely tracking distance
+                ["MaxDistanceTracking"] = 80, -- The maxmimum distance to start closely tracking distance
                 ["MaxSightTracking"] = 80 -- The maximum distance to closely track sight
             },
             ["CastWhen"] = "Mouse Up", -- Mouse Up, Mouse Down
             ["CastWhenKey"] = "Key Up", -- Key Up, Key Down
-            ["AutoResurrect"] = Puppeteer.ResurrectionSpells[util.GetClass("player")] ~= nil,
+            ["AutoResurrect"] = util.ResurrectionSpells[util.GetClass("player")] ~= nil,
             ["UseHealPredictions"] = true,
             ["PVPFlagProtection"] = true,
             ["SetMouseover"] = true,
@@ -152,19 +154,25 @@ function SetDefaults()
             ["TestUI"] = false,
             ["Hidden"] = false,
             ["HideWhileSolo"] = false,
+            ["OutOfRangeArrow"] = true,
             ["ChosenProfiles"] = {
-                ["Party"] = "Default",
-                ["Pets"] = "Default",
+                ["Party"] = PTProfileManager.DEFAULT_PROFILE_NAME,
+                ["Pets"] = PTProfileManager.DEFAULT_PROFILE_NAME,
                 ["Raid"] = "Small",
                 ["Raid Pets"] = "Small",
                 ["Target"] = "Long",
-                ["Focus"] = "Default"
+                ["Focus"] = PTProfileManager.DEFAULT_PROFILE_NAME,
+                ["Enemy"] = "Enemy"
             },
             ["StyleOverrides"] = {},
             ["FrameOptions"] = {},
             ["Scripts"] = {
                 ["OnLoad"] = "",
                 ["OnPostLoad"] = ""
+            },
+            ["Experiments"] = {
+                ["Enemy"] = false,
+                ["CastIcons"] = false
             },
             ["OptionsVersion"] = OPTIONS_VERSION
         }
@@ -210,73 +218,93 @@ function SetDefaults()
             }
         }
 
-        local optionsUpgrades = {
-            {
-                version = 2,
-                upgrade = function(self, options)
-                    local upgraded = util.CloneTable(options, true)
-                    if options["ShowSpellsTooltip"] ~= nil then
-                        if not options["SpellsTooltip"] then
-                            upgraded["SpellsTooltip"] = {}
+        if PTOptions.OptionsVersion and PTOptions.OptionsVersion < OPTIONS_VERSION then
+            local optionsUpgrades = {
+                {
+                    version = 2,
+                    upgrade = function(self, options)
+                        local upgraded = util.CloneTable(options, true)
+                        if options["ShowSpellsTooltip"] ~= nil then
+                            if not options["SpellsTooltip"] then
+                                upgraded["SpellsTooltip"] = {}
+                            end
+                            upgraded["SpellsTooltip"]["Enabled"] = options["ShowSpellsTooltip"]
+                            upgraded["ShowSpellsTooltip"] = nil
                         end
-                        upgraded["SpellsTooltip"]["Enabled"] = options["ShowSpellsTooltip"]
-                        upgraded["ShowSpellsTooltip"] = nil
-                    end
-                    if options["ChosenProfiles"] ~= nil then
-                        local groupNames = {"Party", "Pets", "Raid", "Raid Pets", "Target"}
-                        local changedProfileNames = {
-                            ["Compact"] = "Default",
-                            ["Compact (Small)"] = "Small",
-                            ["Compact (Short Bar)"] = "Default (Short Bar)"
-                        }
-                        for _, name in ipairs(groupNames) do
-                            local currentlySelected = options["ChosenProfiles"][name]
-                            if changedProfileNames[currentlySelected] then
-                                upgraded["ChosenProfiles"][name] = changedProfileNames[currentlySelected]
+                        if options["ChosenProfiles"] ~= nil then
+                            local groupNames = {"Party", "Pets", "Raid", "Raid Pets", "Target"}
+                            local changedProfileNames = {
+                                ["Compact"] = "Default",
+                                ["Compact (Small)"] = "Small",
+                                ["Compact (Short Bar)"] = "Default (Short Bar)"
+                            }
+                            for _, name in ipairs(groupNames) do
+                                local currentlySelected = options["ChosenProfiles"][name]
+                                if changedProfileNames[currentlySelected] then
+                                    upgraded["ChosenProfiles"][name] = changedProfileNames[currentlySelected]
+                                end
                             end
                         end
+                        upgraded["OptionsVersion"] = self.version
+                        return upgraded
+                    end,
+                    shouldUpgrade = function(self, options)
+                        return options.OptionsVersion < self.version
                     end
-                    upgraded["OptionsVersion"] = self.version
-                    return upgraded
-                end,
-                shouldUpgrade = function(self, options)
-                    return options.OptionsVersion < self.version
-                end
-            },
-            {
-                version = 3,
-                upgrade = function(self, options)
-                    local upgraded = util.CloneTable(options, true)
-                    if options["AutoTarget"] then
-                        upgraded["TargetWhileCasting"] = true
-                        upgraded["TargetAfterCasting"] = true
-                    end
-                    if options["Scripts"] then
-                        local guard = "-- Auto-generated guard to prevent errors in new addon version, remove if you're sure "..
-                            "your script won't produce errors\nif true then return end\n\n"
-                        if options["Scripts"]["OnLoad"] ~= nil and options["Scripts"]["OnLoad"] ~= "" then
-                            upgraded["Scripts"]["OnLoad"] = guard..options["Scripts"]["OnLoad"]
+                },
+                { -- HealersMate -> Puppeteer 1.0.0
+                    version = 3,
+                    upgrade = function(self, options)
+                        local upgraded = util.CloneTable(options, true)
+                        if options["AutoTarget"] then
+                            upgraded["TargetWhileCasting"] = true
+                            upgraded["TargetAfterCasting"] = true
                         end
-                        if options["Scripts"]["OnPostLoad"] ~= nil and options["Scripts"]["OnPostLoad"] ~= "" then
-                            upgraded["Scripts"]["OnPostLoad"] = guard..options["Scripts"]["OnPostLoad"]
+                        if options["Scripts"] then
+                            local guard = "-- Auto-generated guard to prevent errors in new addon version, remove if you're sure "..
+                                "your script won't produce errors\nif true then return end\n\n"
+                            if options["Scripts"]["OnLoad"] ~= nil and options["Scripts"]["OnLoad"] ~= "" then
+                                upgraded["Scripts"]["OnLoad"] = guard..options["Scripts"]["OnLoad"]
+                            end
+                            if options["Scripts"]["OnPostLoad"] ~= nil and options["Scripts"]["OnPostLoad"] ~= "" then
+                                upgraded["Scripts"]["OnPostLoad"] = guard..options["Scripts"]["OnPostLoad"]
+                            end
                         end
+                        upgraded["OptionsVersion"] = self.version
+                        return upgraded
+                    end,
+                    shouldUpgrade = function(self, options)
+                        return options.OptionsVersion < self.version
                     end
-                    upgraded["OptionsVersion"] = self.version
-                    return upgraded
-                end,
-                shouldUpgrade = function(self, options)
-                    return options.OptionsVersion < self.version
-                end
+                },
+                { -- Puppeteer 1.0.5 -> 1.1.0
+                    version = 4,
+                    upgrade = function(self, options)
+                        local upgraded = util.CloneTable(options, true)
+                        if options["Tracking"] then
+                            if options["Tracking"]["MinDistanceTracking"] == 20 then
+                                upgraded["Tracking"]["MinDistanceTracking"] = 0
+                            end
+                            if options["Tracking"]["MaxDistanceTracking"] == 60 then
+                                upgraded["Tracking"]["MaxDistanceTracking"] = 80
+                            end
+                        end
+                        if options["ChosenProfiles"] and not options["ChosenProfiles"]["Enemy"] then
+                            upgraded["ChosenProfiles"]["Enemy"] = "Enemy"
+                        end
+                        upgraded["OptionsVersion"] = self.version
+                        return upgraded
+                    end,
+                    shouldUpgrade = function(self, options)
+                        return options.OptionsVersion < self.version
+                    end
+                }
             }
-        }
-
-        if PTOptions.OptionsVersion and PTOptions.OptionsVersion < OPTIONS_VERSION then
             for _, upgrade in ipairs(optionsUpgrades) do
                 if upgrade:shouldUpgrade(PTOptions) then
                     local prevVersion = PTOptions.OptionsVersion
                     _G.PTOptions = upgrade:upgrade(PTOptions)
-                    DEFAULT_CHAT_FRAME:AddMessage("[Puppeteer] Upgraded options from version "..
-                        prevVersion.." to "..upgrade.version)
+                    Puppeteer.Info("Upgraded options from version "..prevVersion.." to "..upgrade.version)
                 end
             end
         end
@@ -338,24 +366,24 @@ function SetOption(location, value)
 end
 
 -- Buffs/debuffs that significantly modify healing
-DefaultTrackedHealingBuffs = {"Amplify Magic", "Dampen Magic"}
-DefaultTrackedHealingDebuffs = {"Mortal Strike", "Wound Poison", "Curse of the Deadwood", "Veil of Shadow", "Gehennas' Curse", 
-    "Necrotic Poison", "Blood Fury", "Necrotic Aura", 
-    "Shadowbane Curse" -- Turtle WoW
+DefaultTrackedHealingBuffs = {"Amplify Magic", "Dampen Magic", "Master Demonologist", "Apotheosis"}
+DefaultTrackedHealingDebuffs = {"Mortal Strike", "Wound Poison", "Curse of the Deadwood", "Veil of Shadow", "Mortal Wound", 
+    "Gehennas' Curse", "Necrotic Poison", "Blood Fury", "Necrotic Aura", "Brood Affliction: Green",
+    "Shadowbane Curse", "Leeching Bite", "Foulfire Bolt", "Spores of Corruption" -- Turtle WoW
 }
 -- Tracked buffs for all classes
 DefaultTrackedBuffs = {
     "Blessing of Protection", "Hand of Protection", "Divine Protection", "Divine Shield", "Divine Intervention", -- Paladin
         "Bulwark of the Righteous", "Blessing of Sacrifice", "Hand of Sacrifice",
-    "Power Infusion", "Spirit of Redemption", "Inner Focus", "Abolish Disease", "Power Word: Shield", -- Priest
+    "Power Infusion", "Ascendance", "Spirit of Redemption", "Inner Focus", "Abolish Disease", "Power Word: Shield", "Mind Control", -- Priest
     "Shield Wall", "Recklessness", "Last Stand", -- Warrior
     "Evasion", "Vanish", -- Rogue
     "Deterrence", "Feign Death", "Mend Pet", -- Hunter
-    "Frenzied Regeneration", "Innervate", "Abolish Poison", -- Druid
-    "Soulstone Resurrection", "Hellfire", "Health Funnel", -- Warlock
+    "Tranquility", "Frenzied Regeneration", "Berserk", "Barkskin", "Barkskin (Feral)", "Innervate", "Abolish Poison", -- Druid
+    "Soulstone Resurrection", "Sacrifice", "Hellfire", "Health Funnel", -- Warlock
     "Ice Block", "Evocation", "Ice Barrier", "Mana Shield", -- Mage
-    "Quel'dorei Meditation", "Grace of the Sunwell", -- Racial
-    "First Aid", "Food", "Drink" -- Generic
+    "Quel'dorei Meditation", "Grace of the Sunwell", "Cannibalize", -- Racial
+    "First Aid", "Food", "Drink", "Invulnerability", "Living Free Action", "Persistent Shield", "Rapid Healing" -- Generic
 }
 -- Tracked buffs for specific classes
 DefaultClassTrackedBuffs = {
@@ -364,35 +392,87 @@ DefaultClassTrackedBuffs = {
         "Greater Blessing of Salvation", "Greater Blessing of Sanctuary", "Greater Blessing of Kings", 
         "Greater Blessing of Light", "Daybreak", "Blessing of Freedom", "Hand of Freedom", "Redoubt", "Holy Shield"},
     ["PRIEST"] = {"Prayer of Fortitude", "Power Word: Fortitude", "Prayer of Spirit", "Divine Spirit", 
-        "Prayer of Shadow Protection", "Shadow Protection", "Holy Champion", "Champion's Grace", "Empower Champion", 
+        "Prayer of Shadow Protection", "Shadow Protection", "Lightwell", "Holy Champion", "Champion's Grace", "Empower Champion", 
         "Champion's Bond", "Fear Ward", "Inner Fire", "Renew", "Greater Heal", "Lightwell Renew", "Inspiration", 
-        "Fade", "Spirit Tap", "Enlighten", "Enlightened"},
+        "Fade", "Reactive Fade", "Spirit Tap", "Enlighten", "Enlightened"},
     ["WARRIOR"] = {"Battle Shout"},
-    ["DRUID"] = {"Gift of the Wild", "Mark of the Wild", "Thorns", "Rejuvenation", "Regrowth"},
+    ["DRUID"] = {"Gift of the Wild", "Mark of the Wild", "Thorns", "Rejuvenation", "Regrowth", "Dash", "Blooming Bud"},
     ["SHAMAN"] = {"Water Walking", "Healing Way", "Ancestral Fortitude"},
-    ["MAGE"] = {"Arcane Brilliance", "Arcane Intellect", "Frost Armor", "Ice Armor", "Mage Armor"},
-    ["WARLOCK"] = {"Demon Armor", "Demon Skin", "Unending Breath", "Shadow Ward", "Fire Shield"},
+    ["MAGE"] = {"Arcane Brilliance", "Arcane Intellect", "Frost Armor", "Ice Armor", "Mage Armor", "Fire Ward", "Frost Ward", 
+        "Arcane Power"},
+    ["WARLOCK"] = {"Demon Armor", "Demon Skin", "Unending Breath", "Shadow Ward", "Fire Shield", "Consume Shadows"},
     ["HUNTER"] = {"Rapid Fire", "Quick Shots", "Quick Strikes", "Aspect of the Pack", 
         "Aspect of the Wild", "Bestial Wrath", "Feed Pet Effect"}
 }
 
 -- Tracked debuffs for all classes
 DefaultTrackedDebuffs = {
-    "Forbearance", -- Paladin
-    "Death Wish", -- Warrior
-    "Enrage", -- Druid
-    "Recently Bandaged", "Resurrection Sickness", "Ghost", -- Generic
-    "Deafening Screech" -- Applied by mobs
+    "Forbearance", "Hammer of Justice", -- Paladin
+    "Silence", "Mind Control", "Psychic Scream", -- Priest
+    "Blind", "Sap", "Cheap Shot", -- Rogue
+    "Death Wish", "Intimidating Shout", -- Warrior
+    "Enrage", "Entangling Roots", -- Druid
+    "Frost Nova", "Polymorph", -- Mage
+    "Fear", "Seduction", "Enslave Demon", -- Warlock
+    "Recently Bandaged", "Greater Dreamless Sleep", "Dreamless Sleep", "Resurrection Sickness", "Ghost", "Net", -- Generic
+    "Deafening Screech", "Hooked Net", "Web Explosion", "Chains of Ice", "Acid Spit", -- Applied by mobs
+    "Gust of Wind", -- Windhorn Canyon
+    "Fungal Spores", -- Stormwrought Castle
+    "Sonic Burst", -- Uldaman
+    "Hex", "Freeze Solid", "Petrify", -- Zul'Farrak
+    "Howl of Terror", -- Gilneas City
+    "Living Bomb", "Ancient Dread", "Withering Heat", -- Molten Core
+    "Bellowing Roar", -- Onyxia/Nefarian
+    "Intimidating Roar", "Curse of Blood", "Wyvern Sting", -- ZG
+    "Brood Affliction: Bronze", "Corrupted Healing", "Shadow of Ebonroc", -- BWL
+    "Frost Breath", "Death Coil", -- Karazhan Crypts
+    "Phantom Scream", "Smoke Bomb", "Terrifying Presence", "Moroes Curse", -- Kara10
+    "Acid Breath", "Call of Nightmare", "Dreamstate", "Fever Dream", -- Emerald Sanctum
+    "Withered Defiling", "Paralyzing Poison", "Seed of Corruption", "Fearful Roar", "Poison Cloud", "Phasebound", -- Timbermaw Hold
+    "Lucid Nightmare", "Dream Fever", "Mind-Shattering Rumble", "Fixate",
+    "Poison Bolt", "Plague", -- AQ40
+    "Corrupted Mind", "Frost Blast", "Veil of Darkness", "Web Wrap", "Poison Charge", "Life Drain", "Intercept Stun", -- Naxxramas
+    "Red Moon", "Blue Moon", "Blood Siphon", "Invoked Silence", "Dragon Roar", "Surge of Mana", "Gaze of Incantagos" -- Kara40
 }
 -- Tracked debuffs for specific classes
 DefaultClassTrackedDebuffs = {
-    ["PRIEST"] = {"Weakened Soul"}
+    ["PRIEST"] = {"Weakened Soul", "Holy Attenuation"}
 }
+
+-- Debuffs which should highlight the unit frame
+DefaultImportantDebuffs = {
+    "Living Bomb", "Plague", "Web Wrap", "Frost Blast", "Poison Charge", "Withered Defiling", "Seed of Corruption", 
+    "Blood Siphon", "Surge of Mana"
+}
+
+-- Debuffs which are dispellable but should not change the health bar color
+DefaultIgnoredDispellableDebuffs = {
+    "Frostbolt", "Icicles", -- Mage
+    "Greater Dreamless Sleep", "Dreamless Sleep", -- Generic
+    "Emerald Rot", "Sanctum Mind Decay", "Emerald Instability", -- Emerald Sanctum
+    "Frost Shock", -- Kara10
+    "Arcane Overload", "Doom of Medivh" -- Kara40
+}
+
+PTLocale.Array(DefaultTrackedHealingBuffs)
+PTLocale.Array(DefaultTrackedHealingDebuffs)
+PTLocale.Array(DefaultTrackedBuffs)
+PTLocale.Array(DefaultTrackedDebuffs)
+for _, buffs in pairs(DefaultClassTrackedBuffs) do
+    PTLocale.Array(buffs)
+end
+for _, debuffs in pairs(DefaultClassTrackedDebuffs) do
+    PTLocale.Array(debuffs)
+end
+PTLocale.Array(DefaultImportantDebuffs)
+PTLocale.Array(DefaultIgnoredDispellableDebuffs)
 
 -- The baked aura sets
 TrackedBuffs = {}
 TrackedDebuffs = {}
 TrackedDebuffTypes = {}
+ImportantDebuffs = {}
+IgnoredDispellableDebuffs = {}
 TrackedHealingBuffs = {}
 TrackedHealingDebuffs = {}
 
@@ -401,12 +481,14 @@ function BakeTrackedAuras()
     util.ClearTable(TrackedDebuffs)
     util.ClearTable(TrackedHealingBuffs)
     util.ClearTable(TrackedHealingDebuffs)
+    util.ClearTable(ImportantDebuffs)
+    util.ClearTable(IgnoredDispellableDebuffs)
 
     local trackedBuffsArray = {}
     if DefaultClassTrackedBuffs[playerClass] then
         util.AppendArrayElements(trackedBuffsArray, DefaultClassTrackedBuffs[playerClass])
     end
-    util.AppendArrayElements(trackedBuffsArray, TrackedHealingBuffs)
+    util.AppendArrayElements(trackedBuffsArray, DefaultTrackedHealingBuffs)
     util.AppendArrayElements(trackedBuffsArray, DefaultTrackedBuffs)
     util.ToSet(trackedBuffsArray, true, TrackedBuffs)
 
@@ -414,12 +496,15 @@ function BakeTrackedAuras()
     if DefaultClassTrackedDebuffs[playerClass] then
         util.AppendArrayElements(trackedDebuffsArray, DefaultClassTrackedDebuffs[playerClass])
     end
-    util.AppendArrayElements(trackedDebuffsArray, TrackedHealingDebuffs)
+    util.AppendArrayElements(trackedDebuffsArray, DefaultTrackedHealingDebuffs)
     util.AppendArrayElements(trackedDebuffsArray, DefaultTrackedDebuffs)
     util.ToSet(trackedDebuffsArray, true, TrackedDebuffs)
 
     util.ToSet(DefaultTrackedHealingBuffs, false, TrackedHealingBuffs)
     util.ToSet(DefaultTrackedHealingDebuffs, false, TrackedHealingDebuffs)
+
+    util.ToSet(DefaultImportantDebuffs, false, ImportantDebuffs)
+    util.ToSet(DefaultIgnoredDispellableDebuffs, false, IgnoredDispellableDebuffs)
 end
 
 BakeTrackedAuras()
@@ -532,4 +617,8 @@ function SaveFramePositions()
         local anchor, _, _, x, y = group:GetContainer():GetPoint(1)
         PTOptions.FrameOptions[frameName].Position = {anchor, x, y}
     end
+end
+
+function IsExperimentEnabled(experiment)
+    return PTOptions.Experiments[experiment] or PTGlobalOptions.Experiments[experiment]
 end
