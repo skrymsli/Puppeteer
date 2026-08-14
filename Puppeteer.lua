@@ -6,6 +6,7 @@ _G.PuppeteerLib = AceLibrary("AceAddon-2.0"):new("AceEvent-2.0")
 VERSION = GetAddOnMetadata("Puppeteer", "version")
 
 TestUI = false
+TestUICount = 40
 
 Banzai = AceLibrary("Banzai-1.0")
 HealComm = AceLibrary("HealComm-1.0")

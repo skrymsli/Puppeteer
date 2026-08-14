@@ -24,13 +24,28 @@ SlashCmdList["PUPPETEER"] = function(args)
             group:ApplyProfile()
             group:UpdateUIPositions()
         end
-    elseif args == "testui" then
-        PTOptions.TestUI = not PTOptions.TestUI
-        Puppeteer.TestUI = PTOptions.TestUI
+    elseif args == "testui" or string.find(args, "^testui %d") then
+        local _, _, countStr = string.find(args, "testui (%d+)")
+        local count = tonumber(countStr) or 40
+        if count < 1 then count = 1 end
+        if count > 40 then count = 40 end
+        -- If a count is given while already on, just update the count
+        if countStr and PTOptions.TestUI then
+            Puppeteer.TestUICount = count
+        else
+            PTOptions.TestUI = not PTOptions.TestUI
+            Puppeteer.TestUI = PTOptions.TestUI
+            Puppeteer.TestUICount = count
+        end
         if PTOptions.TestUI then
             for _, ui in ipairs(Puppeteer.AllUnitFrames) do
                 ui.fakeStats = ui.GenerateFakeStats()
-                ui:Show()
+                if ui:IsFake() then
+                    ui:Show()
+                else
+                    ui.container:Hide()
+                    ui.rootContainer:Hide()
+                end
             end
         end
         Puppeteer.CheckGroup()
@@ -82,8 +97,8 @@ SlashCmdList["PUPPETEER"] = function(args)
     elseif args == "help" or args == "?" then
         DEFAULT_CHAT_FRAME:AddMessage(PTUtil.Colorize("/pt", 0, 0.8, 0).." -- Opens the addon configuration")
         DEFAULT_CHAT_FRAME:AddMessage(PTUtil.Colorize("/pt reset", 0, 0.8, 0).." -- Resets all frame positions")
-        DEFAULT_CHAT_FRAME:AddMessage(PTUtil.Colorize("/pt testui", 0, 0.8, 0)..
-            " -- Toggles fake players to see how the UI would look")
+        DEFAULT_CHAT_FRAME:AddMessage(PTUtil.Colorize("/pt testui [count]", 0, 0.8, 0)..
+            " -- Toggles fake players (1-40, default 40)")
         DEFAULT_CHAT_FRAME:AddMessage(PTUtil.Colorize("/pt toggle", 0, 0.8, 0).." -- Shows/hides the UI")
         DEFAULT_CHAT_FRAME:AddMessage(PTUtil.Colorize("/pt show", 0, 0.8, 0).." -- Shows the UI")
         DEFAULT_CHAT_FRAME:AddMessage(PTUtil.Colorize("/pt hide", 0, 0.8, 0).." -- Hides the UI")

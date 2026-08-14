@@ -1674,7 +1674,15 @@ function PTUnitFrame:IsEnemy()
 end
 
 function PTUnitFrame:IsFake()
-    return Puppeteer.TestUI and not UnitExists(self.unit)
+    if not Puppeteer.TestUI or UnitExists(self.unit) then
+        return false
+    end
+    -- Extract trailing number from any unit ID
+    local _, _, num = string.find(self.unit, "(%d+)$")
+    if num and tonumber(num) > Puppeteer.TestUICount then
+        return false
+    end
+    return true
 end
 
 function PTUnitFrame:GetRole()

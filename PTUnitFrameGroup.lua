@@ -16,7 +16,9 @@ PTUnitFrameGroup.borderFrame = nil
 PTUnitFrameGroup.header = nil
 PTUnitFrameGroup.label = nil
 PTUnitFrameGroup.manalabel = nil
+PTUnitFrameGroup.manaTooltipFrame = nil
 PTUnitFrameGroup.healermanalabel = nil
+PTUnitFrameGroup.healerManaTooltipFrame = nil
 PTUnitFrameGroup.reportManaButton = nil
 PTUnitFrameGroup.uis = nil
 PTUnitFrameGroup.units = nil
@@ -320,9 +322,49 @@ function PTUnitFrameGroup:Initialize()
     self.manalabel = mana
     mana:SetTextColor(0, 0.7, 1, 1)
 
+    local manaTooltip = CreateFrame("Frame", nil, header)
+    self.manaTooltipFrame = manaTooltip
+    manaTooltip:SetAllPoints(mana)
+    manaTooltip:EnableMouse(true)
+    manaTooltip:RegisterForDrag("LeftButton")
+    manaTooltip:SetScript("OnEnter", function()
+        GameTooltip:SetOwner(manaTooltip, "ANCHOR_BOTTOM")
+        GameTooltip:SetText("Raid Mana")
+        GameTooltip:Show()
+    end)
+    manaTooltip:SetScript("OnLeave", function()
+        GameTooltip:Hide()
+    end)
+    manaTooltip:SetScript("OnMouseDown", function()
+        container:GetScript("OnMouseDown")()
+    end)
+    manaTooltip:SetScript("OnMouseUp", function()
+        container:GetScript("OnMouseUp")()
+    end)
+
     local healerMana = header:CreateFontString(header, "OVERLAY", "GameFontNormal")
     self.healermanalabel = healerMana
     healerMana:SetTextColor(0.2, 1, 0.4, 1)
+
+    local healerManaTooltip = CreateFrame("Frame", nil, header)
+    self.healerManaTooltipFrame = healerManaTooltip
+    healerManaTooltip:SetAllPoints(healerMana)
+    healerManaTooltip:EnableMouse(true)
+    healerManaTooltip:RegisterForDrag("LeftButton")
+    healerManaTooltip:SetScript("OnEnter", function()
+        GameTooltip:SetOwner(healerManaTooltip, "ANCHOR_BOTTOM")
+        GameTooltip:SetText("Healer Mana")
+        GameTooltip:Show()
+    end)
+    healerManaTooltip:SetScript("OnLeave", function()
+        GameTooltip:Hide()
+    end)
+    healerManaTooltip:SetScript("OnMouseDown", function()
+        container:GetScript("OnMouseDown")()
+    end)
+    healerManaTooltip:SetScript("OnMouseUp", function()
+        container:GetScript("OnMouseUp")()
+    end)
 
     local reportBtn = CreateFrame("Button", "$parentReportMana", header)
     self.reportManaButton = reportBtn
@@ -365,7 +407,9 @@ function PTUnitFrameGroup:UpdateManaLabelLayout(headerWidth)
     local fontSize = 12
     if self.healermana ~= "" then
         -- Two labels sharing space need more aggressive sizing
-        if availableWidth < 90 then
+        if availableWidth < 50 then
+            fontSize = 7
+        elseif availableWidth < 90 then
             fontSize = 8
         elseif availableWidth < 130 then
             fontSize = 9
@@ -373,7 +417,9 @@ function PTUnitFrameGroup:UpdateManaLabelLayout(headerWidth)
             fontSize = 10
         end
     else
-        if availableWidth < 60 then
+        if availableWidth < 40 then
+            fontSize = 7
+        elseif availableWidth < 60 then
             fontSize = 9
         end
     end
@@ -382,7 +428,8 @@ function PTUnitFrameGroup:UpdateManaLabelLayout(headerWidth)
 
     self.manalabel:ClearAllPoints()
     self.healermanalabel:ClearAllPoints()
-    if self.healermana ~= "" then
+    local healerVisible = self.healermanalabel:GetText() and self.healermanalabel:GetText() ~= ""
+    if healerVisible then
         local halfWidth = (availableWidth - 4) / 2
         self.manalabel:SetWidth(halfWidth)
         self.healermanalabel:SetWidth(halfWidth)
@@ -422,21 +469,30 @@ function PTUnitFrameGroup:UpdateManaLabels()
         elseif availableWidth >= 80 then
             self.manalabel:SetText(self.raidmana)
             self.healermanalabel:SetText(self.healermana)
-        else
-            -- Strip % to fit in very narrow headers
+        elseif availableWidth >= 50 then
             local r = string.gsub(self.raidmana, "%%", "")
             local h = string.gsub(self.healermana, "%%", "")
             self.manalabel:SetText(r)
             self.healermanalabel:SetText(h)
+        else
+            local r = string.gsub(self.raidmana, "%%", "")
+            self.manalabel:SetText(r)
+            self.healermanalabel:SetText("")
         end
     else
         if availableWidth >= 200 then
             self.manalabel:SetText("Raid: "..self.raidmana)
-        else
+        elseif availableWidth >= 40 then
             self.manalabel:SetText(self.raidmana)
+        else
+            self.manalabel:SetText("")
         end
         self.healermanalabel:SetText("")
     end
+    -- Show tooltips only when labels lack descriptive prefixes
+    local needsTooltip = availableWidth < 130
+    self.manaTooltipFrame:EnableMouse(needsTooltip)
+    self.healerManaTooltipFrame:EnableMouse(needsTooltip)
     self:UpdateManaLabelLayout()
 end
 
@@ -573,12 +629,15 @@ function PTUnitFrameGroup:GetSortedUIs()
         end
         -- If testing, fill empty slots with fake players
         if Puppeteer.TestUI then
+            local maxFake = Puppeteer.TestUICount
             for groupNumber = 1, 8 do
                 local group = groups[groupNumber]
                 for frameNumber = 1, 5 do
                     if not group[frameNumber] then
                         numRaidMembers = numRaidMembers + 1
-                        table.insert(group, uis[raidUnits[numRaidMembers]])
+                        if numRaidMembers <= maxFake then
+                            table.insert(group, uis[raidUnits[numRaidMembers]])
+                        end
                     end
                 end
             end
